@@ -3,20 +3,85 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width,initial-scale=1">
-<title>Fotbolls-AI Backtest V2</title>
+
+<title>Fotbolls-AI Backtest V3</title>
+
 <style>
-body{font-family:Arial,sans-serif;background:#f2f2f2;margin:0;padding:18px}
-.box{max-width:700px;margin:auto;background:#fff;padding:20px;border-radius:16px;box-shadow:0 2px 10px #0002}
-h1{text-align:center;margin-top:0}
-label{display:block;font-weight:bold;margin-top:14px}
-input,select{width:100%;box-sizing:border-box;padding:12px;margin-top:5px;border:1px solid #ccc;border-radius:8px;font-size:16px}
-button{width:100%;padding:15px;margin-top:20px;border:0;border-radius:10px;background:#111;color:#fff;font-size:17px;font-weight:bold}
-button:disabled{opacity:.5}
-#status,#result{margin-top:18px;line-height:1.55;white-space:pre-line}
-.small{font-size:13px;color:#666}
-.ok{color:#176b2c}
-.warn{color:#9a5a00}
-.err{color:#a40000}
+body{
+  font-family:Arial,sans-serif;
+  background:#f2f2f2;
+  margin:0;
+  padding:15px;
+}
+
+.box{
+  max-width:700px;
+  margin:auto;
+  background:white;
+  padding:20px;
+  border-radius:14px;
+  box-shadow:0 2px 10px rgba(0,0,0,.08);
+}
+
+h1{
+  text-align:center;
+  margin-top:0;
+}
+
+label{
+  display:block;
+  font-weight:bold;
+  margin-top:14px;
+}
+
+input,select{
+  width:100%;
+  box-sizing:border-box;
+  padding:12px;
+  font-size:16px;
+  margin-top:5px;
+  border:1px solid #ccc;
+  border-radius:7px;
+}
+
+button{
+  width:100%;
+  padding:15px;
+  margin-top:20px;
+  font-size:17px;
+  font-weight:bold;
+  border:0;
+  border-radius:8px;
+  background:#111;
+  color:white;
+}
+
+button:disabled{
+  opacity:.5;
+}
+
+#status{
+  margin-top:15px;
+  padding:12px;
+  background:#eee;
+  border-radius:8px;
+}
+
+.good{
+  background:#e5f7e5!important;
+}
+
+.bad{
+  background:#ffe5e5!important;
+}
+
+pre{
+  white-space:pre-wrap;
+  font-family:Arial,sans-serif;
+  font-size:15px;
+  line-height:1.55;
+  margin-top:15px;
+}
 </style>
 </head>
 
@@ -24,24 +89,19 @@ button:disabled{opacity:.5}
 
 <div class="box">
 
-<h1>⚽ Fotbolls-AI Backtest V2</h1>
-
-<p>
-Historiskt backtest med riktiga Premier League-resultat och bookmakerodds.
-Modellen använder endast matcher som redan spelats när den gör sin uppskattning.
-</p>
+<h1>⚽ Fotbolls-AI Backtest V3</h1>
 
 <label>Startkapital (kr)</label>
-<input id="start" type="number" value="1" min="0.01" step="0.01">
+<input id="capital" type="number" value="1" step="0.01">
 
 <label>Max insats per kalenderdag (kr)</label>
-<input id="daily" type="number" value="1" min="0.01" step="0.01">
+<input id="daily" type="number" value="1" step="0.01">
 
 <label>Mål (kr)</label>
-<input id="target" type="number" value="10000" min="1">
+<input id="target" type="number" value="10000" step="1">
 
 <label>Minsta edge (%)</label>
-<input id="edge" type="number" value="5" min="0" step="0.5">
+<input id="edge" type="number" value="5" step="0.1">
 
 <label>Första säsong</label>
 <select id="from">
@@ -67,992 +127,1088 @@ Modellen använder endast matcher som redan spelats när den gör sin uppskattni
 <option value="2025" selected>2025/26</option>
 </select>
 
-<button id="load" onclick="runBacktest()">
+<button id="run" onclick="runBacktest()">
 LADDA DATA & KÖR BACKTEST
 </button>
 
-<div id="status">
-Redo.
-</div>
+<div id="status">Redo.</div>
 
-<div id="result"></div>
-
-<p class="small">
-Datakälla: Football-Data.co.uk. Detta är ett historiskt experiment,
-inte ett löfte om framtida vinst. Ingen riktig insats eller automatisk
-betting sker.
-</p>
+<pre id="result"></pre>
 
 </div>
 
 <script>
 
-const DATA_BASE="https://www.football-data.co.uk/mmz4281/";
+const BASE =
+"https://www.football-data.co.uk/mmz4281/";
 
-const seasons={
-2018:"1819",
-2019:"1920",
-2020:"2021",
-2021:"2122",
-2022:"2223",
-2023:"2324",
-2024:"2425",
-2025:"2526"
+const seasons = {
+  2018:"1819",
+  2019:"1920",
+  2020:"2021",
+  2021:"2122",
+  2022:"2223",
+  2023:"2324",
+  2024:"2425",
+  2025:"2526"
 };
 
 
-function csvParse(text){
+/* =========================
+   CSV
+========================= */
 
-const rows=[];
-let row=[];
-let cell="";
-let quote=false;
+function parseCSV(text){
 
-for(let i=0;i<text.length;i++){
+  const lines =
+    text.replace(/\r/g,"").split("\n");
 
-const c=text[i];
-const n=text[i+1];
+  if(!lines.length) return [];
 
-if(c=='"'){
+  const headers =
+    lines[0].split(",").map(x=>x.trim());
 
-if(quote && n=='"'){
-cell+='"';
-i++;
-}else{
-quote=!quote;
-}
+  return lines.slice(1).map(line=>{
 
-}
-else if(c==',' && !quote){
+    if(!line.trim()) return null;
 
-row.push(cell);
-cell="";
+    const vals = line.split(",");
+    const obj = {};
 
-}
-else if((c=='\n'||c=='\r')&&!quote){
+    headers.forEach((h,i)=>{
+      obj[h] = (vals[i] || "").trim();
+    });
 
-if(c=='\r'&&n=='\n')i++;
+    return obj;
 
-row.push(cell);
-cell="";
-
-if(row.some(x=>x.trim()!==""))
-rows.push(row);
-
-row=[];
-
-}
-else{
-
-cell+=c;
-
-}
-
-}
-
-if(cell!==""||row.length){
-
-row.push(cell);
-
-if(row.some(x=>x.trim()!==""))
-rows.push(row);
-
-}
-
-return rows;
-
+  }).filter(Boolean);
 }
 
 
-function norm(s){
-return String(s||"").trim().toLowerCase();
+/* =========================
+   HÄMTA DATA
+========================= */
+
+async function fetchCSV(url){
+
+  const proxies = [
+
+    "https://api.allorigins.win/raw?url="
+      + encodeURIComponent(url),
+
+    "https://api.allorigins.win/get?url="
+      + encodeURIComponent(url)
+
+  ];
+
+  let lastError = null;
+
+  for(const proxy of proxies){
+
+    try{
+
+      const response =
+        await fetch(proxy,{cache:"no-store"});
+
+      if(!response.ok){
+        throw new Error(
+          "HTTP "+response.status
+        );
+      }
+
+      let text =
+        await response.text();
+
+      /*
+        allOrigins /get kan returnera
+        JSON med CSV:n i contents.
+      */
+
+      if(text.trim().startsWith("{")){
+
+        try{
+
+          const json =
+            JSON.parse(text);
+
+          if(json.contents){
+            text = json.contents;
+          }
+
+        }catch(e){}
+
+      }
+
+      if(text && text.length > 100){
+        return text;
+      }
+
+    }catch(error){
+
+      lastError = error;
+
+    }
+
+  }
+
+  throw lastError ||
+    new Error("Kunde inte hämta data.");
 }
 
 
-function poisson(k,l){
+/* =========================
+   NUMMER
+========================= */
 
-let p=Math.exp(-l);
+function num(value){
 
-for(let i=1;i<=k;i++)
-p*=l/i;
+  const n = parseFloat(value);
 
-return p;
-
+  return Number.isFinite(n)
+    ? n
+    : null;
 }
 
 
-function probs(hg,ag){
+/* =========================
+   DATUM
+========================= */
 
-let ph=0;
-let pd=0;
-let pa=0;
+function dateValue(value){
 
-for(let h=0;h<=8;h++){
+  if(!value) return 0;
 
-for(let a=0;a<=8;a++){
+  const parts =
+    value.split("/");
 
-let p=
-poisson(h,hg)*
-poisson(a,ag);
+  if(parts.length === 3){
 
-if(h>a)
-ph+=p;
-else if(h===a)
-pd+=p;
-else
-pa+=p;
+    let day =
+      parseInt(parts[0]);
 
-}
+    let month =
+      parseInt(parts[1]);
 
-}
+    let year =
+      parseInt(parts[2]);
 
-let z=ph+pd+pa;
+    if(year < 100){
+      year += 2000;
+    }
 
-return [
-ph/z,
-pd/z,
-pa/z
-];
+    return new Date(
+      year,
+      month-1,
+      day
+    ).getTime();
+  }
 
-}
+  const t =
+    new Date(value).getTime();
 
-
-function avg(arr){
-
-return arr.length
-?
-arr.reduce((a,b)=>a+b,0)/arr.length
-:
-0;
-
+  return Number.isFinite(t)
+    ? t
+    : 0;
 }
 
 
-function clamp(x,a,b){
+/* =========================
+   POISSON
+========================= */
 
-return Math.max(a,Math.min(b,x));
+function poisson(k,lambda){
 
+  if(lambda <= 0) return 0;
+
+  let p =
+    Math.exp(-lambda);
+
+  for(let i=1;i<=k;i++){
+
+    p *= lambda/i;
+
+  }
+
+  return p;
 }
 
 
-async function loadSeason(start){
+/* =========================
+   MODELLENS SANNOLIKHETER
+========================= */
 
-const code=seasons[start];
-
-const url=
-DATA_BASE+
-code+
-"/E0.csv";
-
-const res=await fetch(
-url,
-{cache:"no-store"}
-);
-
-if(!res.ok){
-
-throw new Error(
-"Kunde inte hämta "+
-start+
-"/"+
-(start+1)+
-" ("+
-res.status+
-")"
-);
-
-}
-
-const rows=
-csvParse(
-await res.text()
-);
-
-if(!rows.length)
-throw new Error(
-"Tom CSV för "+start
-);
-
-const head=
-rows[0].map(norm);
-
-const idx={};
-
-head.forEach(
-(x,i)=>idx[x]=i
-);
-
-const need=[
-"date",
-"hometeam",
-"awayteam",
-"fthg",
-"ftag",
-"ftr"
-];
-
-for(const x of need){
-
-if(idx[x]===undefined)
-throw new Error(
-"Saknar kolumn "+x
-);
-
-}
-
-const get=(r,n)=>
-r[idx[n]];
-
-const out=[];
-
-for(const r of rows.slice(1)){
-
-const hg=
-Number(
-get(r,"fthg")
-);
-
-const ag=
-Number(
-get(r,"ftag")
-);
-
-if(
-!get(r,"hometeam")||
-!get(r,"awayteam")||
-!Number.isFinite(hg)||
-!Number.isFinite(ag)
-)
-continue;
-
-
-const oddsH=
-firstNum(
-r,
-idx,
-[
-"b365h",
-"bwh",
-"whh",
-"avgh",
-"psh"
-]
-);
-
-const oddsD=
-firstNum(
-r,
-idx,
-[
-"b365d",
-"bwd",
-"whd",
-"avgd",
-"psd"
-]
-);
-
-const oddsA=
-firstNum(
-r,
-idx,
-[
-"b365a",
-"bwa",
-"wha",
-"avga",
-"psa"
-]
-);
-
-if(
-!(oddsH>1&&
-oddsD>1&&
-oddsA>1)
-)
-continue;
-
-
-out.push({
-
-date:get(r,"date"),
-
-home:get(r,"hometeam"),
-
-away:get(r,"awayteam"),
-
-hg:hg,
-
-ag:ag,
-
-odds:[
-oddsH,
-oddsD,
-oddsA
-],
-
-season:start
-
-});
-
-}
-
-return out;
-
-}
-
-
-function firstNum(r,idx,names){
-
-for(const n of names){
-
-if(idx[n]!==undefined){
-
-let x=
-Number(
-r[idx[n]]
-);
-
-if(x>1)
-return x;
-
-}
-
-}
-
-return NaN;
-
-}
-
-
-function outcomeIndex(hg,ag){
-
-return hg>ag
-?
-0
-:
-hg===ag
-?
-1
-:
-2;
-
-}
-
-
-function blankTeam(){
-
-return {
-
-gfHome:[],
-gaHome:[],
-
-gfAway:[],
-gaAway:[],
-
-n:0
-
-};
-
-}
-
-
-function modelFor(
-home,
-away,
-teams,
-league
+function modelProbabilities(
+  homeLambda,
+  awayLambda
 ){
 
-const H=
-teams[home]||
-blankTeam();
+  let home = 0;
+  let draw = 0;
+  let away = 0;
 
-const A=
-teams[away]||
-blankTeam();
+  /*
+    Vi räknar mål 0-8.
+  */
 
+  for(let h=0;h<=8;h++){
 
-const hp=
-H.gfHome.length
-?
-avg(H.gfHome)
-:
-league.gfH;
+    for(let a=0;a<=8;a++){
 
-const hc=
-H.gaHome.length
-?
-avg(H.gaHome)
-:
-league.gaH;
+      const p =
+        poisson(h,homeLambda) *
+        poisson(a,awayLambda);
 
-const ap=
-A.gfAway.length
-?
-avg(A.gfAway)
-:
-league.gfA;
+      if(h>a){
+        home += p;
+      }
+      else if(h===a){
+        draw += p;
+      }
+      else{
+        away += p;
+      }
 
-const ac=
-A.gaAway.length
-?
-avg(A.gaAway)
-:
-league.gaA;
+    }
 
+  }
 
-const shrink=6;
+  const total =
+    home+draw+away;
 
-
-const hAttack=
-(
-hp*H.gfHome.length+
-league.gfH*shrink
-)/
-(
-H.gfHome.length+shrink
-);
-
-
-const hDef=
-(
-hc*H.gaHome.length+
-league.gaA*shrink
-)/
-(
-H.gaHome.length+shrink
-);
-
-
-const aAttack=
-(
-ap*A.gfAway.length+
-league.gfA*shrink
-)/
-(
-A.gfAway.length+shrink
-);
-
-
-const aDef=
-(
-ac*A.gaAway.length+
-league.gfH*shrink
-)/
-(
-A.gaAway.length+shrink
-);
-
-
-const hg=
-clamp(
-(
-hAttack/
-Math.max(.1,league.gfH)
-)*
-league.gfH*
-(
-aDef/
-Math.max(.1,league.gfH)
-),
-.15,
-4.5
-);
-
-
-const ag=
-clamp(
-(
-aAttack/
-Math.max(.1,league.gfA)
-)*
-league.gfA*
-(
-hDef/
-Math.max(.1,league.gfA)
-),
-.1,
-4
-);
-
-
-return probs(hg,ag);
-
+  return [
+    home/total,
+    draw/total,
+    away/total
+  ];
 }
 
 
-function addMatch(
-m,
-teams,
-league
+/* =========================
+   MARKNADENS ODDS
+========================= */
+
+function getOdds(row){
+
+  /*
+    Prioritering:
+    Bet365 -> Betway -> William Hill -> Average
+  */
+
+  const home =
+    num(row.B365H) ??
+    num(row.BWH) ??
+    num(row.WHH) ??
+    num(row.AvgH);
+
+  const draw =
+    num(row.B365D) ??
+    num(row.BWD) ??
+    num(row.WHD) ??
+    num(row.AvgD);
+
+  const away =
+    num(row.B365A) ??
+    num(row.BWA) ??
+    num(row.WHA) ??
+    num(row.AvgA);
+
+  if(
+    home===null ||
+    draw===null ||
+    away===null
+  ){
+    return null;
+  }
+
+  if(
+    home<=1 ||
+    draw<=1 ||
+    away<=1
+  ){
+    return null;
+  }
+
+  return {
+    odds:[home,draw,away],
+
+    /*
+      Normaliserade marknadssannolikheter.
+    */
+
+    probabilities:(()=>{
+
+      const ih=1/home;
+      const id=1/draw;
+      const ia=1/away;
+
+      const total =
+        ih+id+ia;
+
+      return [
+        ih/total,
+        id/total,
+        ia/total
+      ];
+
+    })()
+  };
+}
+
+
+/* =========================
+   LAGSTATISTIK
+========================= */
+
+function addTeam(
+  stats,
+  team,
+  goalsFor,
+  goalsAgainst
 ){
 
-if(!teams[m.home])
-teams[m.home]=blankTeam();
+  if(!stats[team]){
 
-if(!teams[m.away])
-teams[m.away]=blankTeam();
+    stats[team] = {
+      gf:0,
+      ga:0,
+      n:0
+    };
 
+  }
 
-const H=teams[m.home];
-const A=teams[m.away];
-
-
-H.gfHome.push(m.hg);
-H.gaHome.push(m.ag);
-
-A.gfAway.push(m.ag);
-A.gaAway.push(m.hg);
-
-H.n++;
-A.n++;
-
-
-league.gfH=
-(
-league.gfH*league.n+
-m.hg
-)/
-(
-league.n+1
-);
-
-
-league.gaH=
-(
-league.gaH*league.n+
-m.ag
-)/
-(
-league.n+1
-);
-
-
-league.gfA=
-(
-league.gfA*league.n+
-m.ag
-)/
-(
-league.n+1
-);
-
-
-league.gaA=
-(
-league.gaA*league.n+
-m.hg
-)/
-(
-league.n+1
-);
-
-
-league.n++;
+  stats[team].gf += goalsFor;
+  stats[team].ga += goalsAgainst;
+  stats[team].n++;
 
 }
 
+
+/* =========================
+   HUVUDFUNKTION
+========================= */
 
 async function runBacktest(){
 
-const btn=
-document.getElementById("load");
+  const button =
+    document.getElementById("run");
 
-const status=
-document.getElementById("status");
+  const status =
+    document.getElementById("status");
 
-const out=
-document.getElementById("result");
+  const result =
+    document.getElementById("result");
 
+  button.disabled = true;
 
-btn.disabled=true;
+  result.textContent = "";
 
-out.textContent="";
+  status.className = "";
 
+  try{
 
-try{
+    const from =
+      parseInt(
+        document.getElementById("from").value
+      );
 
-let s=
-Number(
-document.getElementById("start").value
-);
+    const to =
+      parseInt(
+        document.getElementById("to").value
+      );
 
-let daily=
-Number(
-document.getElementById("daily").value
-);
+    if(from > to){
 
-let target=
-Number(
-document.getElementById("target").value
-);
+      throw new Error(
+        "Första säsong måste vara före sista säsong."
+      );
 
-let edge=
-Number(
-document.getElementById("edge").value
-)/100;
+    }
 
-let from=
-Number(
-document.getElementById("from").value
-);
 
-let to=
-Number(
-document.getElementById("to").value
-);
+    /* =========================
+       INSTÄLLNINGAR
+    ========================= */
 
+    const startCapital =
+      num(
+        document.getElementById("capital").value
+      ) || 1;
 
-if(
-!(s>0&&
-daily>0&&
-target>0&&
-from<=to)
-){
+    const dailyLimit =
+      num(
+        document.getElementById("daily").value
+      ) || 1;
 
-throw new Error(
-"Kontrollera värdena och säsongsintervallet."
-);
+    const target =
+      num(
+        document.getElementById("target").value
+      ) || 10000;
 
-}
+    const minEdge =
+      (
+        num(
+          document.getElementById("edge").value
+        ) || 5
+      ) / 100;
 
 
-let all=[];
+    /* =========================
+       HÄMTA MATCHER
+    ========================= */
 
+    let matches = [];
 
-for(
-let y=from;
-y<=to;
-y++
-){
+    for(
+      let season=from;
+      season<=to;
+      season++
+    ){
 
-status.textContent=
-"Laddar "+
-y+
-"/"+
-(y+1)+
-"…";
+      status.textContent =
+        "⏳ Hämtar säsong " +
+        season +
+        "/" +
+        String(season+1).slice(2) +
+        "...";
 
+      const url =
+        BASE +
+        seasons[season] +
+        "/E0.csv";
 
-const data=
-await loadSeason(y);
+      const csv =
+        await fetchCSV(url);
 
-all.push(...data);
+      const rows =
+        parseCSV(csv);
 
-}
 
+      for(const row of rows){
 
-all.sort(
-(a,b)=>
-dateValue(a.date)-
-dateValue(b.date)
-);
+        const homeGoals =
+          num(row.FTHG);
 
+        const awayGoals =
+          num(row.FTAG);
 
-if(!all.length)
-throw new Error(
-"Inga matcher hittades."
-);
+        if(
+          homeGoals===null ||
+          awayGoals===null
+        ){
+          continue;
+        }
 
+        if(
+          !row.HomeTeam ||
+          !row.AwayTeam
+        ){
+          continue;
+        }
 
-status.className="ok";
+        const odds =
+          getOdds(row);
 
-status.textContent=
-"Klart: "+
-all.length+
-" matcher laddade. Kör modellen…";
+        matches.push({
 
+          date:row.Date,
 
-let money=s;
+          time:
+            dateValue(row.Date),
 
-let spent=0;
+          home:
+            row.HomeTeam,
 
-let wins=0;
+          away:
+            row.AwayTeam,
 
-let bets=0;
+          homeGoals:
+            homeGoals,
 
-let profit=0;
+          awayGoals:
+            awayGoals,
 
-let high=s;
+          odds:odds
 
-let lastDay="";
+        });
 
-let dayStake=0;
+      }
 
-let teams={};
+    }
 
-let league={
 
-gfH:1.5,
-gaH:1.1,
-gfA:1.1,
-gaA:1.5,
-n:0
+    matches.sort(
+      (a,b)=>a.time-b.time
+    );
 
-};
 
+    if(!matches.length){
 
-for(const m of all){
+      throw new Error(
+        "Inga matcher hittades."
+      );
 
-const day=
-String(m.date).slice(0,10);
+    }
 
 
-if(day!==lastDay){
+    status.textContent =
+      "🧠 Kör modellen på " +
+      matches.length +
+      " matcher...";
 
-lastDay=day;
-dayStake=0;
 
-}
+    /* =========================
+       STARTVÄRDEN
+    ========================= */
 
+    const stats = {};
 
-if(money>=target)
-break;
+    let capital =
+      startCapital;
 
+    let bets = 0;
 
-const p=
-modelFor(
-m.home,
-m.away,
-teams,
-league
-);
+    let wins = 0;
 
+    let totalStaked = 0;
 
-const implied=[
-1/m.odds[0],
-1/m.odds[1],
-1/m.odds[2]
-];
+    let profit = 0;
 
+    let maxCapital =
+      capital;
 
-const sumImp=
-implied.reduce(
-(a,b)=>a+b,
-0
-);
+    let targetReached = null;
 
+    let currentDay = "";
 
-const market=
-implied.map(
-x=>x/sumImp
-);
+    let dailyStake = 0;
 
 
-const edges=
-p.map(
-(x,i)=>x-market[i]
-);
+    /*
+      Statistik per utfall.
+    */
 
+    const outcomeStats = {
 
-let pick=0;
+      home:{
+        bets:0,
+        wins:0,
+        profit:0
+      },
 
+      draw:{
+        bets:0,
+        wins:0,
+        profit:0
+      },
 
-for(let i=1;i<3;i++){
+      away:{
+        bets:0,
+        wins:0,
+        profit:0
+      }
 
-if(
-edges[i]>
-edges[pick]
-)
-pick=i;
+    };
 
-}
 
+    /* =========================
+       BACKTEST
+    ========================= */
 
-if(
-edges[pick]>=edge&&
-dayStake<daily&&
-money>0
-){
+    for(const match of matches){
 
-const stake=
-Math.min(
-daily-dayStake,
-money
-);
+      /*
+        Ny kalenderdag.
+      */
 
+      if(match.date !== currentDay){
 
-const won=
-outcomeIndex(
-m.hg,
-m.ag
-)===pick;
+        currentDay =
+          match.date;
 
+        dailyStake = 0;
 
-const delta=
-won
-?
-stake*
-(m.odds[pick]-1)
-:
--stake;
+      }
 
 
-money+=delta;
+      const homeStats =
+        stats[match.home];
 
-spent+=stake;
+      const awayStats =
+        stats[match.away];
 
-dayStake+=stake;
 
-bets++;
+      /*
+        Kräver minst 5 tidigare matcher
+        för båda lagen.
+      */
 
-profit+=delta;
+      if(
+        homeStats &&
+        awayStats &&
+        homeStats.n>=5 &&
+        awayStats.n>=5 &&
+        match.odds
+      ){
 
+        /*
+          Genomsnittlig målproduktion.
+        */
 
-if(won)
-wins++;
+        const leagueGoals =
+          1.35;
 
 
-if(money>high)
-high=money;
+        const homeAttack =
+          (
+            homeStats.gf /
+            homeStats.n
+          ) / leagueGoals;
 
-}
 
+        const homeDefense =
+          (
+            homeStats.ga /
+            homeStats.n
+          ) / leagueGoals;
 
-addMatch(
-m,
-teams,
-league
-);
 
-}
+        const awayAttack =
+          (
+            awayStats.gf /
+            awayStats.n
+          ) / leagueGoals;
 
 
-const roi=
-spent
-?
-profit/spent*100
-:
-0;
+        const awayDefense =
+          (
+            awayStats.ga /
+            awayStats.n
+          ) / leagueGoals;
 
 
-out.textContent=
+        /*
+          Förväntade mål.
 
-"BACKTEST RESULTAT\n\n"+
+          1.08 = enkel hemmafördel.
+        */
 
-"Period: "+
-from+
-"/"+
-(from+1)+
-" – "+
-to+
-"/"+
-(to+1)+
-"\n"+
+        let homeLambda =
+          leagueGoals *
+          homeAttack *
+          awayDefense *
+          1.08;
 
-"Matcher: "+
-all.length+
-"\n"+
 
-"Spel: "+
-bets+
-"\n"+
+        let awayLambda =
+          leagueGoals *
+          awayAttack *
+          homeDefense;
 
-"Träffprocent: "+
-(
-bets
-?
-wins/bets*100
-:
-0
-).toFixed(2)+
-"%\n"+
 
-"Omsatt insats: "+
-spent.toFixed(2)+
-" kr\n"+
+        /*
+          Skydd mot extrema värden.
+        */
 
-"Resultat: "+
-profit.toFixed(2)+
-" kr\n"+
+        homeLambda =
+          Math.max(
+            0.15,
+            Math.min(
+              4.5,
+              homeLambda
+            )
+          );
 
-"ROI: "+
-roi.toFixed(2)+
-"%\n"+
 
-"Slutkapital: "+
-money.toFixed(2)+
-" kr\n"+
+        awayLambda =
+          Math.max(
+            0.15,
+            Math.min(
+              4.5,
+              awayLambda
+            )
+          );
 
-"Högsta kapital: "+
-high.toFixed(2)+
-" kr\n"+
 
-"Mål nått: "+
-(
-money>=target
-?
-"JA"
-:
-"NEJ"
-);
+        /*
+          Modellens sannolikheter.
+        */
 
+        const model =
+          modelProbabilities(
+            homeLambda,
+            awayLambda
+          );
 
-status.className=
-money>=target
-?
-"ok"
-:
-"warn";
 
-status.textContent=
-"Backtest klart.";
+        /*
+          Marknadens normaliserade sannolikheter.
+        */
 
-}
-catch(e){
+        const market =
+          match.odds.probabilities;
 
-status.className="err";
 
-status.textContent=
-"Fel: "+
-e.message;
+        /*
+          Edge = modellens sannolikhet
+               minus marknadens.
+        */
 
+        let bestEdge =
+          -Infinity;
 
-out.textContent=
-"Om felet säger att data inte kan hämtas kan webbläsaren blockera externa CSV-filer (CORS). Då gör vi nästa version med data inbyggd direkt i sidan.";
+        let pick = -1;
 
-}
-finally{
 
-btn.disabled=false;
+        for(
+          let i=0;
+          i<3;
+          i++
+        ){
 
-}
+          const edge =
+            model[i]-market[i];
 
-}
+          if(edge > bestEdge){
 
+            bestEdge =
+              edge;
 
-function dateValue(s){
+            pick = i;
 
-let x=
-String(s||"").trim();
+          }
 
+        }
 
-if(x.includes("/")){
 
-let p=x.split("/");
+        /*
+          Bara spela om edge
+          överstiger gränsen.
+        */
 
+        if(
+          pick>=0 &&
+          bestEdge>=minEdge &&
+          dailyStake<dailyLimit
+        ){
 
-return new Date(
+          /*
+            Max 1 kr per spel som standard,
+            men aldrig mer än dagens gräns
+            eller tillgängligt kapital.
+          */
 
-Number(
-p[2].length===2
-?
-("20"+p[2])
-:
-p[2]
-),
+          const stake =
+            Math.min(
+              1,
+              dailyLimit-dailyStake,
+              Math.max(0,capital)
+            );
 
-Number(p[1])-1,
 
-Number(p[0])
+          if(stake>0){
 
-).getTime();
+            /*
+              RIKTIGA ODDS från datan.
+            */
 
-}
+            const selectedOdds =
+              match.odds.odds[pick];
 
 
-return new Date(x).getTime()||0;
+            let won = false;
+
+
+            if(pick===0){
+
+              won =
+                match.homeGoals >
+                match.awayGoals;
+
+            }
+
+            if(pick===1){
+
+              won =
+                match.homeGoals ===
+                match.awayGoals;
+
+            }
+
+            if(pick===2){
+
+              won =
+                match.homeGoals <
+                match.awayGoals;
+
+            }
+
+
+            /*
+              Bokför insatsen.
+            */
+
+            capital -= stake;
+
+            dailyStake += stake;
+
+            totalStaked += stake;
+
+            bets++;
+
+
+            const key =
+              pick===0
+                ? "home"
+                : pick===1
+                  ? "draw"
+                  : "away";
+
+
+            outcomeStats[key].bets++;
+
+
+            if(won){
+
+              wins++;
+
+              const winnings =
+                stake *
+                selectedOdds;
+
+              capital += winnings;
+
+              const betProfit =
+                stake *
+                (selectedOdds-1);
+
+              profit +=
+                betProfit;
+
+              outcomeStats[key].wins++;
+
+              outcomeStats[key].profit +=
+                betProfit;
+
+            }else{
+
+              profit -= stake;
+
+              outcomeStats[key].profit -=
+                stake;
+
+            }
+
+
+            maxCapital =
+              Math.max(
+                maxCapital,
+                capital
+              );
+
+
+            /*
+              Kontrollera mål.
+            */
+
+            if(
+              targetReached===null &&
+              capital>=target
+            ){
+
+              targetReached =
+                match.date;
+
+            }
+
+          }
+
+        }
+
+      }
+
+
+      /*
+        Lägg till matchen i lagens
+        historik EFTER att matchen
+        analyserats.
+
+        Detta förhindrar look-ahead bias.
+      */
+
+      addTeam(
+        stats,
+        match.home,
+        match.homeGoals,
+        match.awayGoals
+      );
+
+
+      addTeam(
+        stats,
+        match.away,
+        match.awayGoals,
+        match.homeGoals
+      );
+
+    }
+
+
+    /* =========================
+       RESULTAT
+    ========================= */
+
+    const roi =
+      totalStaked>0
+        ? profit /
+          totalStaked *
+          100
+        : 0;
+
+
+    const hitRate =
+      bets>0
+        ? wins /
+          bets *
+          100
+        : 0;
+
+
+    const averageStake =
+      bets>0
+        ? totalStaked /
+          bets
+        : 0;
+
+
+    status.textContent =
+      "✅ Backtest klart.";
+
+    status.className =
+      "good";
+
+
+    result.textContent =
+
+`RESULTAT
+══════════════════════════════
+
+Period:
+${from}/${String(from+1).slice(2)}
+–
+${to}/${String(to+1).slice(2)}
+
+Matcher analyserade:
+${matches.length}
+
+Antal spel:
+${bets}
+
+Vunna spel:
+${wins}
+
+Förlorade spel:
+${bets-wins}
+
+Träffsäkerhet:
+${hitRate.toFixed(2)} %
+
+══════════════════════════════
+
+STARTKAPITAL
+${startCapital.toFixed(2)} kr
+
+SLUTKAPITAL
+${capital.toFixed(2)} kr
+
+MAX KAPITAL
+${maxCapital.toFixed(2)} kr
+
+TOTALT SATSAT
+${totalStaked.toFixed(2)} kr
+
+GENOMSNITTLIG INSATS
+${averageStake.toFixed(2)} kr
+
+RESULTAT
+${profit.toFixed(2)} kr
+
+ROI
+${roi.toFixed(2)} %
+
+══════════════════════════════
+
+MÅL
+${target.toFixed(2)} kr
+
+MÅLET NÅDDES
+${targetReached || "NEJ"}
+
+══════════════════════════════
+
+UTFALL
+
+HEMMA:
+Spel: ${outcomeStats.home.bets}
+Vunna: ${outcomeStats.home.wins}
+Resultat: ${outcomeStats.home.profit.toFixed(2)} kr
+
+KRYSS:
+Spel: ${outcomeStats.draw.bets}
+Vunna: ${outcomeStats.draw.wins}
+Resultat: ${outcomeStats.draw.profit.toFixed(2)} kr
+
+BORTA:
+Spel: ${outcomeStats.away.bets}
+Vunna: ${outcomeStats.away.wins}
+Resultat: ${outcomeStats.away.profit.toFixed(2)} kr
+
+══════════════════════════════
+
+MODELL
+
+Poisson-baserad modell
+Historiska lagprestationer
+Minst 5 tidigare matcher
+Hemmafördel inkluderad
+Marknadens sannolikheter normaliserade
+Endast spel över vald edge
+
+══════════════════════════════
+
+⚠️ VIKTIGT
+
+Detta är ett historiskt backtest
+för forskning och simulering.
+
+Resultatet är ingen garanti för
+framtida resultat och systemet
+placerar inga riktiga spel.
+
+Historiska data:
+Football-Data.co.uk
+`;
+
+  }
+
+  catch(error){
+
+    status.textContent =
+      "❌ Fel";
+
+    status.className =
+      "bad";
+
+    result.textContent =
+      "Kunde inte köra backtest.\n\n" +
+      (error.message || error);
+
+  }
+
+  finally{
+
+    button.disabled = false;
+
+  }
 
 }
 
