@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width,initial-scale=1">
-<title>Fotbolls-AI Backtest V7</title>
+<title>Fotbolls-AI Backtest V8</title>
 
 <style>
 body{
@@ -13,38 +13,35 @@ body{
   padding:12px;
 }
 .box{
-  max-width:950px;
+  max-width:1000px;
   margin:auto;
-  background:#fff;
+  background:white;
   padding:18px;
   border-radius:14px;
 }
 h1{text-align:center}
 h2{margin-top:28px}
-button{
+label{
+  display:block;
+  font-weight:bold;
+  margin-top:12px;
+}
+select,input,button{
   width:100%;
-  padding:16px;
-  margin-top:20px;
-  border:0;
+  box-sizing:border-box;
+  padding:12px;
+  margin-top:5px;
   border-radius:8px;
+  font-size:16px;
+}
+button{
   background:#111;
-  color:#fff;
-  font-size:17px;
+  color:white;
+  border:0;
+  margin-top:20px;
   font-weight:bold;
 }
 button:disabled{opacity:.5}
-select{
-  width:100%;
-  padding:12px;
-  margin-top:5px;
-  font-size:16px;
-  border-radius:8px;
-}
-label{
-  display:block;
-  margin-top:12px;
-  font-weight:bold;
-}
 #status{
   margin-top:15px;
   padding:12px;
@@ -62,9 +59,7 @@ th,td{
   padding:7px;
   text-align:center;
 }
-th{
-  background:#eee;
-}
+th{background:#eee}
 pre{
   white-space:pre-wrap;
   line-height:1.5;
@@ -74,12 +69,8 @@ pre{
   font-size:13px;
   line-height:1.5;
 }
-.good{
-  background:#e5f7e5!important;
-}
-.warn{
-  background:#fff2cc!important;
-}
+.good{background:#e5f7e5!important}
+.warn{background:#fff2cc!important}
 </style>
 </head>
 
@@ -87,12 +78,12 @@ pre{
 
 <div class="box">
 
-<h1>⚽ Fotbolls-AI<br>Backtest V7</h1>
+<h1>⚽ Fotbolls-AI<br>Backtest V8</h1>
 
 <p class="note">
-V7 testar om modellens sannolikheter är kalibrerade.
-Den äldre delen av historiken används för modellens utveckling
-och den nyare delen behandlas som out-of-sample.
+V8 använder walk-forward-testning och kalibrerar modellens
+råa sannolikheter mot tidigare historiska resultat.
+Värde beräknas med verkligt EV: kalibrerad sannolikhet × odds − 1.
 </p>
 
 <label>Första säsong</label>
@@ -119,20 +110,21 @@ och den nyare delen behandlas som out-of-sample.
 <option value="2025" selected>2025/26</option>
 </select>
 
-<label>Out-of-sample från säsong</label>
-<select id="testFrom">
-<option value="2022">2022/23</option>
-<option value="2023">2023/24</option>
-<option value="2024" selected>2024/25</option>
-<option value="2025">2025/26</option>
+<label>Minsta EV för värdespel</label>
+<select id="minEV">
+<option value="0">0%</option>
+<option value="0.02">2%</option>
+<option value="0.05">5%</option>
+<option value="0.10" selected>10%</option>
+<option value="0.15">15%</option>
+<option value="0.20">20%</option>
 </select>
 
-<button id="run" onclick="runV7()">
-KÖR V7 KALIBRERING
+<button id="run" onclick="runV8()">
+KÖR V8 WALK-FORWARD
 </button>
 
 <div id="status">Redo.</div>
-
 <div id="result"></div>
 
 </div>
@@ -154,7 +146,7 @@ const seasons={
 
 
 /* =====================================================
-CSV-PARSER
+CSV
 ===================================================== */
 
 function parseCSV(text){
@@ -240,11 +232,7 @@ HJÄLP
 
 function num(v){
 
-  if(
-    v===undefined||
-    v===null||
-    v===""
-  ){
+  if(v===undefined||v===null||v===""){
     return null;
   }
 
@@ -276,9 +264,7 @@ function dateSort(v){
 
   }
 
-  const t=new Date(v).getTime();
-
-  return Number.isFinite(t)?t:0;
+  return new Date(v).getTime()||0;
 }
 
 
@@ -306,19 +292,11 @@ function getOdds(row){
     num(row.WHA) ??
     num(row.AvgA);
 
-  if(
-    h===null||
-    d===null||
-    a===null
-  ){
+  if(h===null||d===null||a===null){
     return null;
   }
 
-  if(
-    h<=1||
-    d<=1||
-    a<=1
-  ){
+  if(h<=1||d<=1||a<=1){
     return null;
   }
 
@@ -326,18 +304,15 @@ function getOdds(row){
   const id=1/d;
   const ia=1/a;
 
-  const total=ih+id+ia;
+  const sum=ih+id+ia;
 
   return{
-
     odds:[h,d,a],
-
     probabilities:[
-      ih/total,
-      id/total,
-      ia/total
+      ih/sum,
+      id/sum,
+      ia/sum
     ]
-
   };
 }
 
@@ -360,9 +335,9 @@ function poisson(k,l){
 
 function modelProb(h,a){
 
-  let home=0;
-  let draw=0;
-  let away=0;
+  let H=0;
+  let D=0;
+  let A=0;
 
   for(let hg=0;hg<=10;hg++){
 
@@ -372,44 +347,44 @@ function modelProb(h,a){
         poisson(hg,h)*
         poisson(ag,a);
 
-      if(hg>ag){
-        home+=p;
-      }else if(hg===ag){
-        draw+=p;
-      }else{
-        away+=p;
-      }
+      if(hg>ag)H+=p;
+      else if(hg===ag)D+=p;
+      else A+=p;
 
     }
 
   }
 
-  const total=
-    home+draw+away;
+  const total=H+D+A;
 
   return[
-    home/total,
-    draw/total,
-    away/total
+    H/total,
+    D/total,
+    A/total
   ];
 }
 
 
 /* =====================================================
-LAGSTATISTIK
+LAG
 ===================================================== */
+
+function newTeam(){
+
+  return{
+    gf:0,
+    ga:0,
+    n:0,
+    recent:[]
+  };
+
+}
+
 
 function addTeam(stats,team,gf,ga){
 
   if(!stats[team]){
-
-    stats[team]={
-      gf:0,
-      ga:0,
-      n:0,
-      recent:[]
-    };
-
+    stats[team]=newTeam();
   }
 
   stats[team].gf+=gf;
@@ -435,364 +410,220 @@ function formStats(team){
     !team.recent||
     !team.recent.length
   ){
-
-    return{
-      gf:0,
-      ga:0
-    };
-
+    return{gf:0,ga:0};
   }
 
   let gf=0;
   let ga=0;
 
   for(const x of team.recent){
-
     gf+=x.gf;
     ga+=x.ga;
-
   }
 
   return{
-
-    gf:
-      gf/team.recent.length,
-
-    ga:
-      ga/team.recent.length
-
+    gf:gf/team.recent.length,
+    ga:ga/team.recent.length
   };
 
 }
 
 
 /* =====================================================
-SKAPA MODELLSIGNALER
+RÅ MODELL
 ===================================================== */
 
-function buildSignals(matches){
+function rawPrediction(
+  stats,
+  home,
+  away
+){
 
-  const stats={};
+  const hs=stats[home];
+  const as=stats[away];
 
-  const signals=[];
-
-  let ready=0;
-
-
-  for(const m of matches){
-
-    const hs=stats[m.home];
-    const as=stats[m.away];
-
-
-    if(
-      hs &&
-      as &&
-      hs.n>=5 &&
-      as.n>=5 &&
-      m.odds
-    ){
-
-      ready++;
-
-
-      const hf=formStats(hs);
-      const af=formStats(as);
-
-      const leagueGoals=1.35;
-
-
-      let homeAttack=
-        (hs.gf/hs.n)/leagueGoals;
-
-      let homeDefense=
-        (hs.ga/hs.n)/leagueGoals;
-
-      let awayAttack=
-        (as.gf/as.n)/leagueGoals;
-
-      let awayDefense=
-        (as.ga/as.n)/leagueGoals;
-
-
-      /*
-        30 % senaste form.
-      */
-
-      const fw=.30;
-
-
-      homeAttack=
-        homeAttack*(1-fw)+
-        (hf.gf/leagueGoals)*fw;
-
-      homeDefense=
-        homeDefense*(1-fw)+
-        (hf.ga/leagueGoals)*fw;
-
-      awayAttack=
-        awayAttack*(1-fw)+
-        (af.gf/leagueGoals)*fw;
-
-      awayDefense=
-        awayDefense*(1-fw)+
-        (af.ga/leagueGoals)*fw;
-
-
-      let hLambda=
-        leagueGoals*
-        homeAttack*
-        awayDefense*
-        1.08;
-
-
-      let aLambda=
-        leagueGoals*
-        awayAttack*
-        homeDefense;
-
-
-      hLambda=Math.max(
-        .15,
-        Math.min(4.5,hLambda)
-      );
-
-      aLambda=Math.max(
-        .15,
-        Math.min(4.5,aLambda)
-      );
-
-
-      const model=
-        modelProb(
-          hLambda,
-          aLambda
-        );
-
-
-      const market=
-        m.odds.probabilities;
-
-
-      let result="";
-
-      if(m.hg>m.ag){
-        result="H";
-      }else if(m.hg===m.ag){
-        result="D";
-      }else{
-        result="A";
-      }
-
-
-      for(let i=0;i<3;i++){
-
-        signals.push({
-
-          season:m.season,
-
-          date:m.date,
-
-          home:m.home,
-
-          away:m.away,
-
-          outcome:i,
-
-          outcomeName:
-            i===0
-            ?"Hemma"
-            :i===1
-              ?"Kryss"
-              :"Borta",
-
-          model:model[i],
-
-          market:market[i],
-
-          edge:
-            model[i]-market[i],
-
-          odds:m.odds.odds[i],
-
-          won:
-            (
-              i===0&&result==="H"
-            )||
-            (
-              i===1&&result==="D"
-            )||
-            (
-              i===2&&result==="A"
-            ),
-
-          actual:result
-
-        });
-
-      }
-
-    }
-
-
-    /*
-      Uppdatera först efter matchen.
-    */
-
-    addTeam(
-      stats,
-      m.home,
-      m.hg,
-      m.ag
-    );
-
-    addTeam(
-      stats,
-      m.away,
-      m.ag,
-      m.hg
-    );
-
+  if(
+    !hs||
+    !as||
+    hs.n<5||
+    as.n<5
+  ){
+    return null;
   }
 
 
-  return{
-    signals,
-    ready
-  };
+  const hf=formStats(hs);
+  const af=formStats(as);
+
+  const leagueGoals=1.35;
+
+
+  let homeAttack=
+    (hs.gf/hs.n)/leagueGoals;
+
+  let homeDefense=
+    (hs.ga/hs.n)/leagueGoals;
+
+  let awayAttack=
+    (as.gf/as.n)/leagueGoals;
+
+  let awayDefense=
+    (as.ga/as.n)/leagueGoals;
+
+
+  /*
+    30 % senaste tio matcher.
+  */
+
+  const fw=.30;
+
+
+  homeAttack=
+    homeAttack*(1-fw)+
+    (hf.gf/leagueGoals)*fw;
+
+  homeDefense=
+    homeDefense*(1-fw)+
+    (hf.ga/leagueGoals)*fw;
+
+  awayAttack=
+    awayAttack*(1-fw)+
+    (af.gf/leagueGoals)*fw;
+
+  awayDefense=
+    awayDefense*(1-fw)+
+    (af.ga/leagueGoals)*fw;
+
+
+  let hLambda=
+    leagueGoals*
+    homeAttack*
+    awayDefense*
+    1.08;
+
+  let aLambda=
+    leagueGoals*
+    awayAttack*
+    homeDefense;
+
+
+  hLambda=Math.max(
+    .15,
+    Math.min(4.5,hLambda)
+  );
+
+  aLambda=Math.max(
+    .15,
+    Math.min(4.5,aLambda)
+  );
+
+
+  return modelProb(
+    hLambda,
+    aLambda
+  );
 
 }
 
 
 /* =====================================================
 KALIBRERING
+=====================================================
+
+  Vi använder tidigare matcher för att uppskatta
+  faktisk träffsäkerhet inom sannolikhetsintervall.
+
+  Viktigt:
+  Endast historik före testmatchen används.
 ===================================================== */
 
-function calibration(arr){
+function calibratedProbability(
+  rawProbability,
+  history
+){
 
-  const bins=[
-    [0.30,0.40],
-    [0.40,0.50],
-    [0.50,0.60],
-    [0.60,0.70],
-    [0.70,0.80],
-    [0.80,0.90],
-    [0.90,1.01]
-  ];
+  /*
+    10 %-intervall.
+  */
 
-
-  return bins.map(b=>{
-
-    const x=
-      arr.filter(
-        s=>
-          s.model>=b[0]&&
-          s.model<b[1]
-      );
+  const center=
+    Math.min(
+      .95,
+      Math.max(
+        .05,
+        Math.floor(
+          rawProbability*10
+        )/10+.05
+      )
+    );
 
 
-    let wins=0;
+  /*
+    Ta historiska observationer nära
+    den aktuella råsannolikheten.
+  */
 
-    for(const s of x){
-
-      if(s.won)wins++;
-
-    }
-
-
-    const actual=
-      x.length
-      ?wins/x.length
-      :0;
+  const tolerance=.10;
 
 
-    const avg=
-      x.length
-      ?x.reduce(
-        (sum,s)=>sum+s.model,
-        0
-      )/x.length
-      :0;
+  const nearby=
+    history.filter(
+      x=>
+        Math.abs(
+          x.raw-center
+        )<=tolerance
+    );
 
 
-    return{
+  /*
+    Minst 40 observationer för att
+    undvika extremt brusiga estimat.
+  */
 
-      low:b[0],
-      high:b[1],
+  if(nearby.length<40){
 
-      bets:x.length,
-
-      wins,
-
-      predicted:avg*100,
-
-      actual:actual*100,
-
-      difference:
-        (actual-avg)*100
-
-    };
-
-  });
-
-}
-
-
-/* =====================================================
-ROI
-===================================================== */
-
-function bettingStats(arr){
-
-  let profit=0;
-  let wins=0;
-
-  for(const s of arr){
-
-    if(s.won){
-
-      wins++;
-
-      profit+=
-        s.odds-1;
-
-    }else{
-
-      profit-=1;
-
-    }
+    return rawProbability;
 
   }
 
 
-  return{
+  let wins=0;
 
-    bets:arr.length,
+  for(const x of nearby){
 
-    wins,
+    if(x.won)wins++;
 
-    hit:
-      arr.length
-      ?wins/arr.length*100
-      :0,
+  }
 
-    profit,
 
-    roi:
-      arr.length
-      ?profit/arr.length*100
-      :0
+  /*
+    Enkel shrinkage mot råvärdet.
+  */
 
-  };
+  const actual=
+    wins/nearby.length;
+
+
+  const weight=
+    Math.min(
+      .70,
+      nearby.length/300
+    );
+
+
+  return(
+    rawProbability*(1-weight)+
+    actual*weight
+  );
 
 }
 
 
 /* =====================================================
-V7
+HUVUD – WALK FORWARD
 ===================================================== */
 
-async function runV7(){
+async function runV8(){
 
   const button=
     document.getElementById("run");
@@ -821,26 +652,16 @@ async function runV7(){
         document.getElementById("to").value
       );
 
-    const testFrom=
-      parseInt(
-        document.getElementById("testFrom").value
-      );
+    const minEV=
+      num(
+        document.getElementById("minEV").value
+      )||0;
 
 
     if(from>to){
+
       throw new Error(
         "Felaktigt säsongsintervall."
-      );
-    }
-
-
-    if(
-      testFrom<from||
-      testFrom>to
-    ){
-
-      throw new Error(
-        "Out-of-sample måste ligga inom valt intervall."
       );
 
     }
@@ -863,7 +684,8 @@ async function runV7(){
         "⏳ Hämtar "+
         season+
         "/"+
-        String(season+1).slice(2);
+        String(season+1).slice(2)+
+        "...";
 
 
       const response=
@@ -935,91 +757,268 @@ async function runV7(){
 
 
     matches.sort(
-      (a,b)=>
-        a.sortDate-b.sortDate
+      (a,b)=>a.sortDate-b.sortDate
     );
 
 
-    status.textContent=
-      "🧠 Beräknar modell...";
+    /* ================================================
+       WALK-FORWARD
+       ================================================ */
+
+    const stats={};
+
+    const calibrationHistory=[];
+
+    const predictions=[];
+
+    let ready=0;
 
 
-    const built=
-      buildSignals(matches);
+    for(const m of matches){
+
+      /*
+        Modellens sannolikhet beräknas
+        innan matchresultatet läggs till.
+      */
+
+      if(m.odds){
+
+        const raw=
+          rawPrediction(
+            stats,
+            m.home,
+            m.away
+          );
 
 
-    const signals=
-      built.signals;
+        if(raw){
+
+          ready++;
 
 
-    /*
-      Endast modellens bästa utfall
-      per match används i bettingdelen.
-    */
+          for(let i=0;i<3;i++){
 
-    const bestByMatch={};
+            /*
+              Kalibreringen får ENDAST
+              använda äldre observationer.
+            */
+
+            const calibrated=
+              calibratedProbability(
+                raw[i],
+                calibrationHistory
+              );
 
 
-    for(const s of signals){
+            const market=
+              m.odds.probabilities[i];
+
+            const odds=
+              m.odds.odds[i];
+
+
+            const ev=
+              calibrated*odds-1;
+
+
+            let actual="";
+
+
+            if(m.hg>m.ag){
+              actual="H";
+            }else if(m.hg===m.ag){
+              actual="D";
+            }else{
+              actual="A";
+            }
+
+
+            const won=
+              (
+                i===0&&actual==="H"
+              )||
+              (
+                i===1&&actual==="D"
+              )||
+              (
+                i===2&&actual==="A"
+              );
+
+
+            predictions.push({
+
+              season:m.season,
+
+              date:m.date,
+
+              home:m.home,
+
+              away:m.away,
+
+              outcome:i,
+
+              outcomeName:
+                i===0
+                ?"Hemma"
+                :i===1
+                  ?"Kryss"
+                  :"Borta",
+
+              raw:raw[i],
+
+              calibrated,
+
+              market,
+
+              odds,
+
+              ev,
+
+              won
+
+            });
+
+
+            /*
+              Historiken uppdateras först
+              efter att prognosen gjorts.
+            */
+
+            calibrationHistory.push({
+
+              raw:raw[i],
+
+              won
+
+            });
+
+          }
+
+        }
+
+      }
+
+
+      addTeam(
+        stats,
+        m.home,
+        m.hg,
+        m.ag
+      );
+
+      addTeam(
+        stats,
+        m.away,
+        m.ag,
+        m.hg
+      );
+
+    }
+
+
+    /* ================================================
+       BÄSTA UTFALL PER MATCH
+       ================================================ */
+
+    const best={};
+
+
+    for(const p of predictions){
 
       const key=
-        s.season+
-        "|" +
-        s.date+
-        "|" +
-        s.home+
-        "|" +
-        s.away;
+        p.season+
+        "|"+
+        p.date+
+        "|"+
+        p.home+
+        "|"+
+        p.away;
 
 
       if(
-        !bestByMatch[key]||
-        s.edge>
-        bestByMatch[key].edge
+        !best[key]||
+        p.ev>best[key].ev
       ){
 
-        bestByMatch[key]=s;
+        best[key]=p;
 
       }
 
     }
 
 
-    const bestSignals=
-      Object.values(
-        bestByMatch
-      );
+    const bets=
+      Object.values(best);
 
 
     /* ================================================
-       TRAIN / TEST
+       STATISTIKFUNKTION
        ================================================ */
 
-    const train=
-      signals.filter(
-        s=>s.season<testFrom
-      );
+    function calc(arr){
 
-    const test=
-      signals.filter(
-        s=>s.season>=testFrom
-      );
+      let wins=0;
+      let profit=0;
 
 
-    const trainBest=
-      bestSignals.filter(
-        s=>s.season<testFrom
-      );
+      for(const p of arr){
 
-    const testBest=
-      bestSignals.filter(
-        s=>s.season>=testFrom
-      );
+        if(p.won){
+
+          wins+=1;
+
+          profit+=
+            p.odds-1;
+
+        }else{
+
+          profit-=1;
+
+        }
+
+      }
+
+
+      return{
+
+        bets:arr.length,
+
+        wins,
+
+        losses:
+          arr.length-wins,
+
+        hit:
+          arr.length
+          ?wins/arr.length*100
+          :0,
+
+        profit,
+
+        roi:
+          arr.length
+          ?profit/arr.length*100
+          :0
+
+      };
+
+    }
 
 
     /* ================================================
-       OUTPUT
+       EV-INTERVALL
        ================================================ */
+
+    const ranges=[
+      [0,.02],
+      [.02,.05],
+      [.05,.10],
+      [.10,.15],
+      [.15,.20],
+      [.20,.30],
+      [.30,99]
+    ];
+
 
     let html="";
 
@@ -1031,140 +1030,58 @@ async function runV7(){
     html+=
       "<pre>"+
       "Matcher totalt: "+matches.length+"\n"+
-      "Matcher där modellen var redo: "+built.ready+"\n"+
-      "1X2-signaler: "+signals.length+"\n"+
-      "Unika matcher med odds: "+bestSignals.length+"\n"+
+      "Matcher där modellen var redo: "+ready+"\n"+
+      "1X2-prognoser: "+predictions.length+"\n"+
+      "Unika matcher: "+bets.length+
       "</pre>";
 
 
     /* ================================================
-       TRÄNING / TEST
+       EV-TABELL
        ================================================ */
 
     html+=
-      "<h2>🧪 Träning vs Out-of-sample</h2>";
-
-
-    const trainStats=
-      bettingStats(trainBest);
-
-    const testStats=
-      bettingStats(testBest);
+      "<h2>📊 EV-intervall</h2>";
 
 
     html+=
       "<table>"+
       "<tr>"+
-      "<th></th>"+
-      "<th>Träning</th>"+
-      "<th>Out-of-sample</th>"+
-      "</tr>"+
-
-      "<tr>"+
-      "<td>Matcher</td>"+
-      "<td>"+trainBest.length+"</td>"+
-      "<td>"+testBest.length+"</td>"+
-      "</tr>"+
-
-      "<tr>"+
-      "<td>Spel</td>"+
-      "<td>"+trainStats.bets+"</td>"+
-      "<td>"+testStats.bets+"</td>"+
-      "</tr>"+
-
-      "<tr>"+
-      "<td>Träff</td>"+
-      "<td>"+trainStats.hit.toFixed(2)+"%</td>"+
-      "<td>"+testStats.hit.toFixed(2)+"%</td>"+
-      "</tr>"+
-
-      "<tr>"+
-      "<td>ROI</td>"+
-      "<td>"+trainStats.roi.toFixed(2)+"%</td>"+
-      "<td>"+testStats.roi.toFixed(2)+"%</td>"+
-      "</tr>"+
-
-      "<tr>"+
-      "<td>Resultat</td>"+
-      "<td>"+trainStats.profit.toFixed(2)+" kr</td>"+
-      "<td>"+testStats.profit.toFixed(2)+" kr</td>"+
-      "</tr>"+
-
-      "</table>";
-
-
-    /* ================================================
-       KALIBRERING
-       ================================================ */
-
-    html+=
-      "<h2>🎯 Kalibrering – träning</h2>";
-
-
-    html+=
-      calibrationTable(
-        calibration(train)
-      );
-
-
-    html+=
-      "<h2>🎯 Kalibrering – out-of-sample</h2>";
-
-
-    html+=
-      calibrationTable(
-        calibration(test)
-      );
-
-
-    /* ================================================
-       EDGE
-       ================================================ */
-
-    const edgeLevels=[
-      .00,
-      .01,
-      .02,
-      .03,
-      .05,
-      .10
-    ];
-
-
-    html+=
-      "<h2>📊 Edge – out-of-sample</h2>";
-
-
-    html+=
-      "<table>"+
-      "<tr>"+
-      "<th>Edge</th>"+
+      "<th>EV</th>"+
       "<th>Spel</th>"+
+      "<th>Vunna</th>"+
       "<th>Träff</th>"+
       "<th>ROI</th>"+
       "<th>Resultat</th>"+
       "</tr>";
 
 
-    for(const edge of edgeLevels){
+    for(const r of ranges){
 
       const arr=
-        testBest.filter(
-          s=>s.edge>=edge
+        bets.filter(
+          p=>
+            p.ev>=r[0]&&
+            p.ev<r[1]
         );
 
 
-      const st=
-        bettingStats(arr);
+      const s=calc(arr);
 
 
       html+=
         "<tr>"+
-        "<td>≥ "+(edge*100).toFixed(0)+"%</td>"+
-        "<td>"+st.bets+"</td>"+
-        "<td>"+st.hit.toFixed(2)+"%</td>"+
-        "<td>"+st.roi.toFixed(2)+"%</td>"+
-        "<td>"+st.profit.toFixed(2)+" kr</td>"+
+        "<td>"+
+        (r[0]*100).toFixed(0)+
+        "–"+
+        (r[1]*100).toFixed(0)+
+        "%"+
+        "</td>"+
+        "<td>"+s.bets+"</td>"+
+        "<td>"+s.wins+"</td>"+
+        "<td>"+s.hit.toFixed(2)+"%</td>"+
+        "<td>"+s.roi.toFixed(2)+"%</td>"+
+        "<td>"+s.profit.toFixed(2)+" kr</td>"+
         "</tr>";
 
     }
@@ -1174,11 +1091,58 @@ async function runV7(){
 
 
     /* ================================================
-       1X2 OUT OF SAMPLE
+       VALD STRATEGI
+       ================================================ */
+
+    const selected=
+      bets.filter(
+        p=>p.ev>=minEV
+      );
+
+
+    const selectedStats=
+      calc(selected);
+
+
+    html+=
+      "<h2>🎯 Vald EV-strategi</h2>";
+
+
+    html+=
+      "<pre>"+
+      "Minsta EV: ≥ "+
+      (minEV*100).toFixed(0)+
+      "%\n\n"+
+
+      "Antal spel: "+
+      selectedStats.bets+"\n"+
+
+      "Vunna: "+
+      selectedStats.wins+"\n"+
+
+      "Förlorade: "+
+      selectedStats.losses+"\n"+
+
+      "Träffsäkerhet: "+
+      selectedStats.hit.toFixed(2)+
+      "%\n"+
+
+      "Resultat: "+
+      selectedStats.profit.toFixed(2)+
+      " kr\n"+
+
+      "ROI: "+
+      selectedStats.roi.toFixed(2)+
+      "%\n"+
+      "</pre>";
+
+
+    /* ================================================
+       1X2
        ================================================ */
 
     html+=
-      "<h2>⚽ 1X2 – out-of-sample</h2>";
+      "<h2>⚽ 1X2 – vald EV</h2>";
 
 
     html+=
@@ -1191,32 +1155,31 @@ async function runV7(){
       "</tr>";
 
 
-    for(const outcome of [0,1,2]){
+    for(const type of [0,1,2]){
 
       const arr=
-        testBest.filter(
-          s=>s.outcome===outcome
+        selected.filter(
+          p=>p.outcome===type
         );
 
 
-      const st=
-        bettingStats(arr);
+      const s=calc(arr);
 
 
       html+=
         "<tr>"+
         "<td>"+
         (
-          outcome===0
+          type===0
           ?"Hemma"
-          :outcome===1
+          :type===1
             ?"Kryss"
             :"Borta"
         )+
         "</td>"+
-        "<td>"+st.bets+"</td>"+
-        "<td>"+st.hit.toFixed(2)+"%</td>"+
-        "<td>"+st.roi.toFixed(2)+"%</td>"+
+        "<td>"+s.bets+"</td>"+
+        "<td>"+s.hit.toFixed(2)+"%</td>"+
+        "<td>"+s.roi.toFixed(2)+"%</td>"+
         "</tr>";
 
     }
@@ -1226,17 +1189,178 @@ async function runV7(){
 
 
     /* ================================================
-       STÖRSTA SIGNALER
+       WALK-FORWARD PER SÄSONG
        ================================================ */
 
     html+=
-      "<h2>🔥 Starkaste out-of-sample-signalerna</h2>";
+      "<h2>📅 Säsong för säsong</h2>";
+
+
+    html+=
+      "<table>"+
+      "<tr>"+
+      "<th>Säsong</th>"+
+      "<th>Spel</th>"+
+      "<th>Träff</th>"+
+      "<th>ROI</th>"+
+      "<th>Resultat</th>"+
+      "</tr>";
+
+
+    for(
+      let season=from;
+      season<=to;
+      season++
+    ){
+
+      const arr=
+        selected.filter(
+          p=>p.season===season
+        );
+
+
+      const s=calc(arr);
+
+
+      html+=
+        "<tr>"+
+        "<td>"+
+        season+
+        "/"+
+        String(season+1).slice(2)+
+        "</td>"+
+        "<td>"+s.bets+"</td>"+
+        "<td>"+s.hit.toFixed(2)+"%</td>"+
+        "<td>"+s.roi.toFixed(2)+"%</td>"+
+        "<td>"+s.profit.toFixed(2)+" kr</td>"+
+        "</tr>";
+
+    }
+
+
+    html+="</table>";
+
+
+    /* ================================================
+       KALIBRERING
+       ================================================ */
+
+    html+=
+      "<h2>🎯 Kalibrering – out-of-sample</h2>";
+
+
+    const bins=[
+      [0.30,.40],
+      [.40,.50],
+      [.50,.60],
+      [.60,.70],
+      [.70,.80],
+      [.80,.90],
+      [.90,1.01]
+    ];
+
+
+    html+=
+      "<table>"+
+      "<tr>"+
+      "<th>Modell</th>"+
+      "<th>Antal</th>"+
+      "<th>Rå</th>"+
+      "<th>Kalibrerad</th>"+
+      "<th>Verklig</th>"+
+      "</tr>";
+
+
+    for(const b of bins){
+
+      const arr=
+        predictions.filter(
+          p=>
+            p.raw>=b[0]&&
+            p.raw<b[1]
+        );
+
+
+      if(!arr.length){
+
+        html+=
+          "<tr>"+
+          "<td>"+
+          (b[0]*100).toFixed(0)+
+          "–"+
+          (b[1]*100).toFixed(0)+
+          "%</td>"+
+          "<td>0</td>"+
+          "<td>-</td>"+
+          "<td>-</td>"+
+          "<td>-</td>"+
+          "</tr>";
+
+        continue;
+
+      }
+
+
+      let wins=0;
+      let rawSum=0;
+      let calSum=0;
+
+
+      for(const p of arr){
+
+        rawSum+=p.raw;
+        calSum+=p.calibrated;
+
+        if(p.won)wins++;
+
+      }
+
+
+      html+=
+        "<tr>"+
+        "<td>"+
+        (b[0]*100).toFixed(0)+
+        "–"+
+        (b[1]*100).toFixed(0)+
+        "%</td>"+
+
+        "<td>"+arr.length+"</td>"+
+
+        "<td>"+
+        (rawSum/arr.length*100).toFixed(1)+
+        "%</td>"+
+
+        "<td>"+
+        (calSum/arr.length*100).toFixed(1)+
+        "%</td>"+
+
+        "<td>"+
+        (wins/arr.length*100).toFixed(1)+
+        "%</td>"+
+
+        "</tr>";
+
+    }
+
+
+    html+="</table>";
+
+
+    /* ================================================
+       STARKASTE EV
+       ================================================ */
+
+    html+=
+      "<h2>🔥 Starkaste EV-signaler</h2>";
 
 
     const top=
-      [...testBest]
+      [...bets]
+      .filter(
+        p=>p.ev>0
+      )
       .sort(
-        (a,b)=>b.edge-a.edge
+        (a,b)=>b.ev-a.ev
       )
       .slice(0,30);
 
@@ -1246,25 +1370,43 @@ async function runV7(){
       "<tr>"+
       "<th>Match</th>"+
       "<th>Val</th>"+
-      "<th>Modell</th>"+
-      "<th>Marknad</th>"+
-      "<th>Edge</th>"+
+      "<th>Kal.</th>"+
       "<th>Odds</th>"+
+      "<th>EV</th>"+
       "<th></th>"+
       "</tr>";
 
 
-    for(const s of top){
+    for(const p of top){
 
       html+=
         "<tr>"+
-        "<td>"+s.home+" - "+s.away+"</td>"+
-        "<td>"+s.outcomeName+"</td>"+
-        "<td>"+(s.model*100).toFixed(1)+"%</td>"+
-        "<td>"+(s.market*100).toFixed(1)+"%</td>"+
-        "<td>"+(s.edge*100).toFixed(2)+"%</td>"+
-        "<td>"+s.odds.toFixed(2)+"</td>"+
-        "<td>"+(s.won?"✅":"❌")+"</td>"+
+        "<td>"+
+        p.home+
+        " - "+
+        p.away+
+        "</td>"+
+
+        "<td>"+
+        p.outcomeName+
+        "</td>"+
+
+        "<td>"+
+        (p.calibrated*100).toFixed(1)+
+        "%</td>"+
+
+        "<td>"+
+        p.odds.toFixed(2)+
+        "</td>"+
+
+        "<td>"+
+        (p.ev*100).toFixed(2)+
+        "%</td>"+
+
+        "<td>"+
+        (p.won?"✅":"❌")+
+        "</td>"+
+
         "</tr>";
 
     }
@@ -1278,48 +1420,29 @@ async function runV7(){
        ================================================ */
 
     html+=
-      "<h2>🧠 V7 Slutsats</h2>";
+      "<h2>🧠 V8 Slutsats</h2>";
 
 
     html+=
       "<pre>"+
-      "Träningsperiod: "+
-      from+
-      "/"+
-      String(from+1).slice(2)+
-      " → "+
-      (testFrom-1)+
-      "/"+
-      String(testFrom).slice(2)+
-      "\n"+
+      "V8 använder walk-forward-principen.\n\n"+
 
-      "Out-of-sample börjar: "+
-      testFrom+
-      "/"+
-      String(testFrom+1).slice(2)+
-      "\n\n"+
+      "Varje prognos beräknas innan matchresultatet\n"+
+      "läggs till i historiken.\n\n"+
 
-      "V7 försöker besvara en viktig fråga:\n"+
-      "Är modellens sannolikheter realistiska även på\n"+
-      "matcher som modellen inte har optimerats mot?\n"+
+      "Kalibrerad sannolikhet används för EV.\n"+
+      "EV = sannolikhet × odds − 1.\n\n"+
+
+      "Det här är fortfarande ett historiskt experiment.\n"+
+      "Ett positivt backtest är inte en garanti för framtida resultat."+
       "</pre>";
-
-
-    html+=
-      "<p class='note'>"+
-      "Viktigt: V7 är fortfarande ett historiskt test. "+
-      "Ett positivt resultat betyder inte att framtida matcher "+
-      "kommer att ge positiv avkastning. "+
-      "Flera testnivåer på samma historik kan också skapa "+
-      "överanpassning."+
-      "</p>";
 
 
     result.innerHTML=html;
 
 
     status.textContent=
-      "✅ V7 klart – "+
+      "✅ V8 klart – "+
       matches.length+
       " matcher analyserade.";
 
@@ -1343,61 +1466,6 @@ async function runV7(){
     button.disabled=false;
 
   }
-
-}
-
-
-/* =====================================================
-KALIBRERINGSTABELL
-===================================================== */
-
-function calibrationTable(rows){
-
-  let html=
-    "<table>"+
-    "<tr>"+
-    "<th>Modellintervall</th>"+
-    "<th>Antal</th>"+
-    "<th>Förutspått</th>"+
-    "<th>Verkligt</th>"+
-    "<th>Skillnad</th>"+
-    "</tr>";
-
-
-  for(const r of rows){
-
-    html+=
-      "<tr>"+
-      "<td>"+
-      (r.low*100).toFixed(0)+
-      "–"+
-      (r.high*100).toFixed(0)+
-      "%</td>"+
-
-      "<td>"+r.bets+"</td>"+
-
-      "<td>"+
-      r.predicted.toFixed(1)+
-      "%</td>"+
-
-      "<td>"+
-      r.actual.toFixed(1)+
-      "%</td>"+
-
-      "<td>"+
-      (r.difference>=0?"+":"")+
-      r.difference.toFixed(1)+
-      " %-enheter"+
-      "</td>"+
-
-      "</tr>";
-
-  }
-
-
-  html+="</table>";
-
-  return html;
 
 }
 
