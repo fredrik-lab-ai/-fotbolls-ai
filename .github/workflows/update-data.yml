@@ -1,1 +1,39 @@
+name: Update football data
 
+on:
+  workflow_dispatch:
+  schedule:
+    - cron: "0 4 * * 1"
+
+permissions:
+  contents: write
+
+jobs:
+  update-data:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Create data folder
+        run: mkdir -p data
+
+      - name: Download Premier League data
+        run: |
+          curl -L --fail -o data/1819.csv https://www.football-data.co.uk/mmz4281/1819/E0.csv
+          curl -L --fail -o data/1920.csv https://www.football-data.co.uk/mmz4281/1920/E0.csv
+          curl -L --fail -o data/2021.csv https://www.football-data.co.uk/mmz4281/2021/E0.csv
+          curl -L --fail -o data/2122.csv https://www.football-data.co.uk/mmz4281/2122/E0.csv
+          curl -L --fail -o data/2223.csv https://www.football-data.co.uk/mmz4281/2223/E0.csv
+          curl -L --fail -o data/2324.csv https://www.football-data.co.uk/mmz4281/2324/E0.csv
+          curl -L --fail -o data/2425.csv https://www.football-data.co.uk/mmz4281/2425/E0.csv
+          curl -L --fail -o data/2526.csv https://www.football-data.co.uk/mmz4281/2526/E0.csv
+
+      - name: Save updated data
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add data/
+          git diff --cached --quiet || git commit -m "Update football data"
+          git push
