@@ -1,6 +1,6 @@
 name: Update football data
 
-on:
+"on":
   workflow_dispatch:
   schedule:
     - cron: "0 4 * * 1"
