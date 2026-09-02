@@ -4,7 +4,7 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width,initial-scale=1">
 
-<title>Fotbolls-AI Backtest V3</title>
+<title>Fotbolls-AI Backtest V4</title>
 
 <style>
 body{
@@ -26,32 +26,41 @@ body{
 h1{
   text-align:center;
   margin-top:0;
+  font-size:32px;
+}
+
+.intro{
+  font-size:17px;
+  line-height:1.5;
+  margin-bottom:20px;
 }
 
 label{
   display:block;
   font-weight:bold;
   margin-top:14px;
+  font-size:17px;
 }
 
 input,select{
   width:100%;
   box-sizing:border-box;
-  padding:12px;
-  font-size:16px;
-  margin-top:5px;
+  padding:13px;
+  font-size:17px;
+  margin-top:6px;
   border:1px solid #ccc;
-  border-radius:7px;
+  border-radius:8px;
+  background:white;
 }
 
 button{
   width:100%;
-  padding:15px;
-  margin-top:20px;
-  font-size:17px;
+  padding:16px;
+  margin-top:22px;
+  font-size:18px;
   font-weight:bold;
   border:0;
-  border-radius:8px;
+  border-radius:9px;
   background:#111;
   color:white;
 }
@@ -61,10 +70,10 @@ button:disabled{
 }
 
 #status{
-  margin-top:15px;
-  padding:12px;
-  background:#eee;
-  border-radius:8px;
+  margin-top:18px;
+  padding:14px;
+  border-radius:9px;
+  font-size:17px;
 }
 
 .good{
@@ -75,12 +84,19 @@ button:disabled{
   background:#ffe5e5!important;
 }
 
-pre{
+.result{
   white-space:pre-wrap;
   font-family:Arial,sans-serif;
-  font-size:15px;
+  font-size:16px;
   line-height:1.55;
-  margin-top:15px;
+  margin-top:18px;
+}
+
+.small{
+  color:#666;
+  font-size:14px;
+  line-height:1.5;
+  margin-top:20px;
 }
 </style>
 </head>
@@ -89,7 +105,13 @@ pre{
 
 <div class="box">
 
-<h1>⚽ Fotbolls-AI Backtest V3</h1>
+<h1>⚽ Fotbolls-AI<br>Backtest V4</h1>
+
+<div class="intro">
+Historiskt backtest med riktiga Premier League-resultat
+och bookmakerodds. Modellen använder endast matcher som
+redan spelats när sannolikheten beräknas.
+</div>
 
 <label>Startkapital (kr)</label>
 <input id="capital" type="number" value="1" step="0.01">
@@ -131,16 +153,28 @@ pre{
 LADDA DATA & KÖR BACKTEST
 </button>
 
-<div id="status">Redo.</div>
+<div id="status">
+Redo.
+</div>
 
-<pre id="result"></pre>
+<div id="result" class="result"></div>
+
+<div class="small">
+Datakälla: Football-Data.co.uk.<br>
+Detta är ett historiskt forsknings- och simuleringsverktyg.
+Inga riktiga spel placeras automatiskt.
+</div>
 
 </div>
 
 <script>
 
-const BASE =
-"https://www.football-data.co.uk/mmz4281/";
+/* =====================================================
+   V4
+   DATA LÄSES LOKALT FRÅN GITHUB
+   ===================================================== */
+
+const DATA_BASE = "data/";
 
 const seasons = {
   2018:"1819",
@@ -154,146 +188,193 @@ const seasons = {
 };
 
 
-/* =========================
-   CSV
-========================= */
+/* =====================================================
+   CSV-PARSER
+   Hanterar även kommatecken inne i citattecken.
+   ===================================================== */
 
 function parseCSV(text){
 
-  const lines =
-    text.replace(/\r/g,"").split("\n");
+  const rows=[];
+  let row=[];
+  let cell="";
+  let insideQuotes=false;
 
-  if(!lines.length) return [];
+  for(let i=0;i<text.length;i++){
 
-  const headers =
-    lines[0].split(",").map(x=>x.trim());
+    const char=text[i];
+    const next=text[i+1];
 
-  return lines.slice(1).map(line=>{
+    if(char==='"'){
 
-    if(!line.trim()) return null;
-
-    const vals = line.split(",");
-    const obj = {};
-
-    headers.forEach((h,i)=>{
-      obj[h] = (vals[i] || "").trim();
-    });
-
-    return obj;
-
-  }).filter(Boolean);
-}
-
-
-/* =========================
-   HÄMTA DATA
-========================= */
-
-async function fetchCSV(url){
-
-  const proxies = [
-
-    "https://api.allorigins.win/raw?url="
-      + encodeURIComponent(url),
-
-    "https://api.allorigins.win/get?url="
-      + encodeURIComponent(url)
-
-  ];
-
-  let lastError = null;
-
-  for(const proxy of proxies){
-
-    try{
-
-      const response =
-        await fetch(proxy,{cache:"no-store"});
-
-      if(!response.ok){
-        throw new Error(
-          "HTTP "+response.status
-        );
+      if(insideQuotes && next==='"'){
+        cell+='"';
+        i++;
+      }else{
+        insideQuotes=!insideQuotes;
       }
 
-      let text =
-        await response.text();
+    }else if(char===',' && !insideQuotes){
 
-      /*
-        allOrigins /get kan returnera
-        JSON med CSV:n i contents.
-      */
+      row.push(cell.trim());
+      cell="";
 
-      if(text.trim().startsWith("{")){
+    }else if(
+      (char==='\n' || char==='\r') &&
+      !insideQuotes
+    ){
 
-        try{
-
-          const json =
-            JSON.parse(text);
-
-          if(json.contents){
-            text = json.contents;
-          }
-
-        }catch(e){}
-
+      if(char==='\r' && next==='\n'){
+        i++;
       }
 
-      if(text && text.length > 100){
-        return text;
+      row.push(cell.trim());
+      cell="";
+
+      if(row.some(x=>x!=="")){
+        rows.push(row);
       }
 
-    }catch(error){
+      row=[];
 
-      lastError = error;
+    }else{
+
+      cell+=char;
 
     }
 
   }
 
-  throw lastError ||
-    new Error("Kunde inte hämta data.");
+  if(cell!=="" || row.length){
+
+    row.push(cell.trim());
+
+    if(row.some(x=>x!=="")){
+      rows.push(row);
+    }
+
+  }
+
+  if(!rows.length){
+    return [];
+  }
+
+  const headers=rows[0].map(
+    x=>x.trim()
+  );
+
+  return rows.slice(1).map(values=>{
+
+    const obj={};
+
+    headers.forEach((header,index)=>{
+      obj[header]=
+        values[index] !== undefined
+        ? values[index].trim()
+        : "";
+    });
+
+    return obj;
+
+  });
+
 }
 
 
-/* =========================
+/* =====================================================
+   LÄS LOKAL CSV-FIL
+   ===================================================== */
+
+async function fetchCSV(url){
+
+  const response =
+    await fetch(
+      url,
+      {
+        cache:"no-store"
+      }
+    );
+
+  if(!response.ok){
+
+    throw new Error(
+      "Kunde inte läsa datafilen: "+url+
+      " (HTTP "+response.status+")"
+    );
+
+  }
+
+  const text =
+    await response.text();
+
+  if(
+    !text ||
+    text.length<100
+  ){
+
+    throw new Error(
+      "Datafilen är tom: "+url
+    );
+
+  }
+
+  return text;
+
+}
+
+
+/* =====================================================
    NUMMER
-========================= */
+   ===================================================== */
 
 function num(value){
 
-  const n = parseFloat(value);
+  if(
+    value===undefined ||
+    value===null ||
+    value===""
+  ){
+    return null;
+  }
+
+  const n=
+    parseFloat(
+      String(value).replace(",",".")
+    );
 
   return Number.isFinite(n)
     ? n
     : null;
+
 }
 
 
-/* =========================
+/* =====================================================
    DATUM
-========================= */
+   ===================================================== */
 
 function dateValue(value){
 
-  if(!value) return 0;
+  if(!value){
+    return 0;
+  }
 
-  const parts =
-    value.split("/");
+  const parts=
+    String(value).split("/");
 
-  if(parts.length === 3){
+  if(parts.length===3){
 
-    let day =
+    let day=
       parseInt(parts[0]);
 
-    let month =
+    let month=
       parseInt(parts[1]);
 
-    let year =
+    let year=
       parseInt(parts[2]);
 
-    if(year < 100){
-      year += 2000;
+    if(year<100){
+      year+=2000;
     }
 
     return new Date(
@@ -301,112 +382,115 @@ function dateValue(value){
       month-1,
       day
     ).getTime();
+
   }
 
-  const t =
+  const timestamp=
     new Date(value).getTime();
 
-  return Number.isFinite(t)
-    ? t
+  return Number.isFinite(timestamp)
+    ? timestamp
     : 0;
+
 }
 
 
-/* =========================
+/* =====================================================
    POISSON
-========================= */
+   ===================================================== */
 
 function poisson(k,lambda){
 
-  if(lambda <= 0) return 0;
+  if(lambda<=0){
+    return 0;
+  }
 
-  let p =
+  let p=
     Math.exp(-lambda);
 
   for(let i=1;i<=k;i++){
 
-    p *= lambda/i;
+    p*=lambda/i;
 
   }
 
   return p;
+
 }
 
 
-/* =========================
+/* =====================================================
    MODELLENS SANNOLIKHETER
-========================= */
+   ===================================================== */
 
 function modelProbabilities(
   homeLambda,
   awayLambda
 ){
 
-  let home = 0;
-  let draw = 0;
-  let away = 0;
-
-  /*
-    Vi räknar mål 0-8.
-  */
+  let home=0;
+  let draw=0;
+  let away=0;
 
   for(let h=0;h<=8;h++){
 
     for(let a=0;a<=8;a++){
 
-      const p =
+      const probability=
         poisson(h,homeLambda) *
         poisson(a,awayLambda);
 
       if(h>a){
-        home += p;
-      }
-      else if(h===a){
-        draw += p;
-      }
-      else{
-        away += p;
+
+        home+=probability;
+
+      }else if(h===a){
+
+        draw+=probability;
+
+      }else{
+
+        away+=probability;
+
       }
 
     }
 
   }
 
-  const total =
+  const total=
     home+draw+away;
 
   return [
+
     home/total,
     draw/total,
     away/total
+
   ];
+
 }
 
 
-/* =========================
-   MARKNADENS ODDS
-========================= */
+/* =====================================================
+   ODDS
+   ===================================================== */
 
 function getOdds(row){
 
-  /*
-    Prioritering:
-    Bet365 -> Betway -> William Hill -> Average
-  */
-
-  const home =
+  const home=
     num(row.B365H) ??
     num(row.BWH) ??
     num(row.WHH) ??
     num(row.AvgH);
 
-  const draw =
+  const draw=
     num(row.B365D) ??
     num(row.BWD) ??
     num(row.WHD) ??
     num(row.AvgD);
 
-  const away =
+  const away=
     num(row.B365A) ??
     num(row.BWA) ??
     num(row.WHA) ??
@@ -417,7 +501,9 @@ function getOdds(row){
     draw===null ||
     away===null
   ){
+
     return null;
+
   }
 
   if(
@@ -425,39 +511,47 @@ function getOdds(row){
     draw<=1 ||
     away<=1
   ){
+
     return null;
+
   }
 
+  const impliedHome=
+    1/home;
+
+  const impliedDraw=
+    1/draw;
+
+  const impliedAway=
+    1/away;
+
+  const total=
+    impliedHome+
+    impliedDraw+
+    impliedAway;
+
   return {
-    odds:[home,draw,away],
 
-    /*
-      Normaliserade marknadssannolikheter.
-    */
+    odds:[
+      home,
+      draw,
+      away
+    ],
 
-    probabilities:(()=>{
+    probabilities:[
+      impliedHome/total,
+      impliedDraw/total,
+      impliedAway/total
+    ]
 
-      const ih=1/home;
-      const id=1/draw;
-      const ia=1/away;
-
-      const total =
-        ih+id+ia;
-
-      return [
-        ih/total,
-        id/total,
-        ia/total
-      ];
-
-    })()
   };
+
 }
 
 
-/* =========================
+/* =====================================================
    LAGSTATISTIK
-========================= */
+   ===================================================== */
 
 function addTeam(
   stats,
@@ -468,7 +562,7 @@ function addTeam(
 
   if(!stats[team]){
 
-    stats[team] = {
+    stats[team]={
       gf:0,
       ga:0,
       n:0
@@ -476,47 +570,46 @@ function addTeam(
 
   }
 
-  stats[team].gf += goalsFor;
-  stats[team].ga += goalsAgainst;
+  stats[team].gf+=goalsFor;
+  stats[team].ga+=goalsAgainst;
   stats[team].n++;
 
 }
 
 
-/* =========================
-   HUVUDFUNKTION
-========================= */
+/* =====================================================
+   BACKTEST
+   ===================================================== */
 
 async function runBacktest(){
 
-  const button =
+  const button=
     document.getElementById("run");
 
-  const status =
+  const status=
     document.getElementById("status");
 
-  const result =
+  const result=
     document.getElementById("result");
 
-  button.disabled = true;
+  button.disabled=true;
 
-  result.textContent = "";
-
-  status.className = "";
+  status.className="";
+  result.textContent="";
 
   try{
 
-    const from =
+    const from=
       parseInt(
         document.getElementById("from").value
       );
 
-    const to =
+    const to=
       parseInt(
         document.getElementById("to").value
       );
 
-    if(from > to){
+    if(from>to){
 
       throw new Error(
         "Första säsong måste vara före sista säsong."
@@ -525,38 +618,51 @@ async function runBacktest(){
     }
 
 
-    /* =========================
-       INSTÄLLNINGAR
-    ========================= */
+    /* INSTÄLLNINGAR */
 
-    const startCapital =
+    const startCapital=
       num(
         document.getElementById("capital").value
-      ) || 1;
+      ) ?? 1;
 
-    const dailyLimit =
+    const dailyLimit=
       num(
         document.getElementById("daily").value
-      ) || 1;
+      ) ?? 1;
 
-    const target =
+    const target=
       num(
         document.getElementById("target").value
-      ) || 10000;
+      ) ?? 10000;
 
-    const minEdge =
+    const minEdge=
       (
         num(
           document.getElementById("edge").value
-        ) || 5
-      ) / 100;
+        ) ?? 5
+      )/100;
 
 
-    /* =========================
-       HÄMTA MATCHER
-    ========================= */
+    if(startCapital<0){
+      throw new Error("Startkapital kan inte vara negativt.");
+    }
 
-    let matches = [];
+    if(dailyLimit<=0){
+      throw new Error("Max insats per dag måste vara större än 0.");
+    }
+
+    if(target<=0){
+      throw new Error("Målet måste vara större än 0.");
+    }
+
+    if(minEdge<0){
+      throw new Error("Edge kan inte vara negativ.");
+    }
+
+
+    /* HÄMTA ALLA SÄSONGER */
+
+    let matches=[];
 
     for(
       let season=from;
@@ -564,31 +670,39 @@ async function runBacktest(){
       season++
     ){
 
-      status.textContent =
-        "⏳ Hämtar säsong " +
-        season +
-        "/" +
-        String(season+1).slice(2) +
+      const code=
+        seasons[season];
+
+      if(!code){
+        continue;
+      }
+
+      status.textContent=
+        "⏳ Hämtar säsong "+
+        season+
+        "/"+
+        String(season+1).slice(2)+
         "...";
 
-      const url =
-        BASE +
-        seasons[season] +
-        "/E0.csv";
+      const url=
+        DATA_BASE+
+        code+
+        ".csv";
 
-      const csv =
+      const csv=
         await fetchCSV(url);
 
-      const rows =
+      const rows=
         parseCSV(csv);
 
+      let seasonMatches=0;
 
       for(const row of rows){
 
-        const homeGoals =
+        const homeGoals=
           num(row.FTHG);
 
-        const awayGoals =
+        const awayGoals=
           num(row.FTAG);
 
         if(
@@ -604,9 +718,6 @@ async function runBacktest(){
         ){
           continue;
         }
-
-        const odds =
-          getOdds(row);
 
         matches.push({
 
@@ -627,14 +738,28 @@ async function runBacktest(){
           awayGoals:
             awayGoals,
 
-          odds:odds
+          odds:
+            getOdds(row)
 
         });
 
+        seasonMatches++;
+
       }
+
+      status.textContent=
+        "✅ "+
+        season+
+        "/"+
+        String(season+1).slice(2)+
+        ": "+
+        seasonMatches+
+        " matcher";
 
     }
 
+
+    /* SORTERA KRONOLOGISKT */
 
     matches.sort(
       (a,b)=>a.time-b.time
@@ -644,50 +769,43 @@ async function runBacktest(){
     if(!matches.length){
 
       throw new Error(
-        "Inga matcher hittades."
+        "Inga matcher hittades i vald period."
       );
 
     }
 
 
-    status.textContent =
-      "🧠 Kör modellen på " +
-      matches.length +
+    status.textContent=
+      "🧠 Kör modellen på "+
+      matches.length+
       " matcher...";
 
 
-    /* =========================
+    /* =================================================
        STARTVÄRDEN
-    ========================= */
+       ================================================= */
 
-    const stats = {};
+    const stats={};
 
-    let capital =
+    let capital=
       startCapital;
 
-    let bets = 0;
+    let bets=0;
+    let wins=0;
 
-    let wins = 0;
+    let totalStaked=0;
+    let profit=0;
 
-    let totalStaked = 0;
-
-    let profit = 0;
-
-    let maxCapital =
+    let maxCapital=
       capital;
 
-    let targetReached = null;
+    let targetReached=null;
 
-    let currentDay = "";
+    let currentDay="";
 
-    let dailyStake = 0;
+    let dailyStake=0;
 
-
-    /*
-      Statistik per utfall.
-    */
-
-    const outcomeStats = {
+    const outcomeStats={
 
       home:{
         bets:0,
@@ -710,35 +828,35 @@ async function runBacktest(){
     };
 
 
-    /* =========================
-       BACKTEST
-    ========================= */
+    /* =================================================
+       MATCH FÖR MATCH
+       ================================================= */
 
     for(const match of matches){
 
       /*
-        Ny kalenderdag.
+        Ny kalenderdag
       */
 
-      if(match.date !== currentDay){
+      if(match.date!==currentDay){
 
-        currentDay =
+        currentDay=
           match.date;
 
-        dailyStake = 0;
+        dailyStake=0;
 
       }
 
 
-      const homeStats =
+      const homeStats=
         stats[match.home];
 
-      const awayStats =
+      const awayStats=
         stats[match.away];
 
 
       /*
-        Kräver minst 5 tidigare matcher
+        Minst 5 tidigare matcher
         för båda lagen.
       */
 
@@ -751,65 +869,67 @@ async function runBacktest(){
       ){
 
         /*
-          Genomsnittlig målproduktion.
+          Enkel ligabas.
         */
 
-        const leagueGoals =
+        const leagueGoals=
           1.35;
 
 
-        const homeAttack =
+        const homeAttack=
           (
-            homeStats.gf /
+            homeStats.gf/
             homeStats.n
-          ) / leagueGoals;
+          )/
+          leagueGoals;
 
 
-        const homeDefense =
+        const homeDefense=
           (
-            homeStats.ga /
+            homeStats.ga/
             homeStats.n
-          ) / leagueGoals;
+          )/
+          leagueGoals;
 
 
-        const awayAttack =
+        const awayAttack=
           (
-            awayStats.gf /
+            awayStats.gf/
             awayStats.n
-          ) / leagueGoals;
+          )/
+          leagueGoals;
 
 
-        const awayDefense =
+        const awayDefense=
           (
-            awayStats.ga /
+            awayStats.ga/
             awayStats.n
-          ) / leagueGoals;
+          )/
+          leagueGoals;
 
 
         /*
           Förväntade mål.
-
-          1.08 = enkel hemmafördel.
         */
 
-        let homeLambda =
-          leagueGoals *
-          homeAttack *
-          awayDefense *
+        let homeLambda=
+          leagueGoals*
+          homeAttack*
+          awayDefense*
           1.08;
 
 
-        let awayLambda =
-          leagueGoals *
-          awayAttack *
+        let awayLambda=
+          leagueGoals*
+          awayAttack*
           homeDefense;
 
 
         /*
-          Skydd mot extrema värden.
+          Begränsa extrema värden.
         */
 
-        homeLambda =
+        homeLambda=
           Math.max(
             0.15,
             Math.min(
@@ -819,7 +939,7 @@ async function runBacktest(){
           );
 
 
-        awayLambda =
+        awayLambda=
           Math.max(
             0.15,
             Math.min(
@@ -833,7 +953,7 @@ async function runBacktest(){
           Modellens sannolikheter.
         */
 
-        const model =
+        const model=
           modelProbabilities(
             homeLambda,
             awayLambda
@@ -841,22 +961,21 @@ async function runBacktest(){
 
 
         /*
-          Marknadens normaliserade sannolikheter.
+          Marknadens sannolikheter.
         */
 
-        const market =
+        const market=
           match.odds.probabilities;
 
 
         /*
-          Edge = modellens sannolikhet
-               minus marknadens.
+          Hitta bästa edge.
         */
 
-        let bestEdge =
+        let bestEdge=
           -Infinity;
 
-        let pick = -1;
+        let pick=-1;
 
 
         for(
@@ -865,15 +984,14 @@ async function runBacktest(){
           i++
         ){
 
-          const edge =
-            model[i]-market[i];
+          const edge=
+            model[i]-
+            market[i];
 
-          if(edge > bestEdge){
+          if(edge>bestEdge){
 
-            bestEdge =
-              edge;
-
-            pick = i;
+            bestEdge=edge;
+            pick=i;
 
           }
 
@@ -881,87 +999,78 @@ async function runBacktest(){
 
 
         /*
-          Bara spela om edge
-          överstiger gränsen.
+          Bara spel över vald edge.
         */
 
         if(
           pick>=0 &&
           bestEdge>=minEdge &&
-          dailyStake<dailyLimit
+          dailyStake<dailyLimit &&
+          capital>0
         ){
 
           /*
-            Max 1 kr per spel som standard,
-            men aldrig mer än dagens gräns
-            eller tillgängligt kapital.
+            Insats:
+            max 1 kr per spel,
+            max dagens gräns,
+            aldrig mer än kapital.
           */
 
-          const stake =
+          const stake=
             Math.min(
               1,
               dailyLimit-dailyStake,
-              Math.max(0,capital)
+              capital
             );
 
 
           if(stake>0){
 
-            /*
-              RIKTIGA ODDS från datan.
-            */
-
-            const selectedOdds =
+            const selectedOdds=
               match.odds.odds[pick];
 
-
-            let won = false;
+            let won=false;
 
 
             if(pick===0){
 
-              won =
-                match.homeGoals >
+              won=
+                match.homeGoals>
                 match.awayGoals;
 
-            }
+            }else if(pick===1){
 
-            if(pick===1){
-
-              won =
-                match.homeGoals ===
+              won=
+                match.homeGoals===
                 match.awayGoals;
 
-            }
+            }else{
 
-            if(pick===2){
-
-              won =
-                match.homeGoals <
+              won=
+                match.homeGoals<
                 match.awayGoals;
 
             }
 
 
             /*
-              Bokför insatsen.
+              Dra insatsen.
             */
 
-            capital -= stake;
+            capital-=stake;
 
-            dailyStake += stake;
-
-            totalStaked += stake;
+            dailyStake+=stake;
+            totalStaked+=stake;
 
             bets++;
 
 
-            const key =
+            const key=
               pick===0
-                ? "home"
-                : pick===1
-                  ? "draw"
-                  : "away";
+              ? "home"
+              : pick===1
+                ? "draw"
+                : "away";
 
 
             outcomeStats[key].bets++;
@@ -971,51 +1080,46 @@ async function runBacktest(){
 
               wins++;
 
-              const winnings =
-                stake *
+              const returned=
+                stake*
                 selectedOdds;
 
-              capital += winnings;
+              capital+=returned;
 
-              const betProfit =
-                stake *
+              const betProfit=
+                stake*
                 (selectedOdds-1);
 
-              profit +=
-                betProfit;
+              profit+=betProfit;
 
               outcomeStats[key].wins++;
 
-              outcomeStats[key].profit +=
+              outcomeStats[key].profit+=
                 betProfit;
 
             }else{
 
-              profit -= stake;
+              profit-=stake;
 
-              outcomeStats[key].profit -=
+              outcomeStats[key].profit-=
                 stake;
 
             }
 
 
-            maxCapital =
+            maxCapital=
               Math.max(
                 maxCapital,
                 capital
               );
 
 
-            /*
-              Kontrollera mål.
-            */
-
             if(
               targetReached===null &&
               capital>=target
             ){
 
-              targetReached =
+              targetReached=
                 match.date;
 
             }
@@ -1028,11 +1132,11 @@ async function runBacktest(){
 
 
       /*
-        Lägg till matchen i lagens
-        historik EFTER att matchen
-        analyserats.
+        VIKTIGT:
+        Matchens resultat läggs till först EFTER
+        att modellen gjort sin prognos.
 
-        Detta förhindrar look-ahead bias.
+        Därmed undviker vi look-ahead bias.
       */
 
       addTeam(
@@ -1053,66 +1157,66 @@ async function runBacktest(){
     }
 
 
-    /* =========================
+    /* =================================================
        RESULTAT
-    ========================= */
+       ================================================= */
 
-    const roi =
+    const roi=
       totalStaked>0
-        ? profit /
-          totalStaked *
-          100
-        : 0;
+      ? profit/
+        totalStaked*
+        100
+      : 0;
 
 
-    const hitRate =
+    const hitRate=
       bets>0
-        ? wins /
-          bets *
-          100
-        : 0;
+      ? wins/
+        bets*
+        100
+      : 0;
 
 
-    const averageStake =
+    const averageStake=
       bets>0
-        ? totalStaked /
-          bets
-        : 0;
+      ? totalStaked/
+        bets
+      : 0;
 
 
-    status.textContent =
-      "✅ Backtest klart.";
+    status.textContent=
+      "✅ Backtest klart!";
 
-    status.className =
+    status.className=
       "good";
 
 
-    result.textContent =
+    result.textContent=
 
 `RESULTAT
-══════════════════════════════
+════════════════════════════════
 
-Period:
+PERIOD
 ${from}/${String(from+1).slice(2)}
 –
 ${to}/${String(to+1).slice(2)}
 
-Matcher analyserade:
+MATCHER ANALYSERADE
 ${matches.length}
 
-Antal spel:
+ANTAL SPEL
 ${bets}
 
-Vunna spel:
+VUNNA SPEL
 ${wins}
 
-Förlorade spel:
+FÖRLORADE SPEL
 ${bets-wins}
 
-Träffsäkerhet:
+TRÄFFSÄKERHET
 ${hitRate.toFixed(2)} %
 
-══════════════════════════════
+════════════════════════════════
 
 STARTKAPITAL
 ${startCapital.toFixed(2)} kr
@@ -1135,7 +1239,7 @@ ${profit.toFixed(2)} kr
 ROI
 ${roi.toFixed(2)} %
 
-══════════════════════════════
+════════════════════════════════
 
 MÅL
 ${target.toFixed(2)} kr
@@ -1143,26 +1247,26 @@ ${target.toFixed(2)} kr
 MÅLET NÅDDES
 ${targetReached || "NEJ"}
 
-══════════════════════════════
+════════════════════════════════
 
 UTFALL
 
-HEMMA:
+HEMMA
 Spel: ${outcomeStats.home.bets}
 Vunna: ${outcomeStats.home.wins}
 Resultat: ${outcomeStats.home.profit.toFixed(2)} kr
 
-KRYSS:
+KRYSS
 Spel: ${outcomeStats.draw.bets}
 Vunna: ${outcomeStats.draw.wins}
 Resultat: ${outcomeStats.draw.profit.toFixed(2)} kr
 
-BORTA:
+BORTA
 Spel: ${outcomeStats.away.bets}
 Vunna: ${outcomeStats.away.wins}
 Resultat: ${outcomeStats.away.profit.toFixed(2)} kr
 
-══════════════════════════════
+════════════════════════════════
 
 MODELL
 
@@ -1170,43 +1274,43 @@ Poisson-baserad modell
 Historiska lagprestationer
 Minst 5 tidigare matcher
 Hemmafördel inkluderad
-Marknadens sannolikheter normaliserade
-Endast spel över vald edge
+Normaliserade marknadssannolikheter
+Valbar minsta edge
+Ingen look-ahead bias
 
-══════════════════════════════
+════════════════════════════════
 
-⚠️ VIKTIGT
+DATA
+
+Lokala CSV-filer i GitHub
+Football-Data.co.uk
 
 Detta är ett historiskt backtest
 för forskning och simulering.
 
-Resultatet är ingen garanti för
-framtida resultat och systemet
-placerar inga riktiga spel.
-
-Historiska data:
-Football-Data.co.uk
-`;
+Ingen automatisk betting sker.`;
 
   }
 
   catch(error){
 
-    status.textContent =
-      "❌ Fel";
+    status.textContent=
+      "❌ Kunde inte köra backtest";
 
-    status.className =
+    status.className=
       "bad";
 
-    result.textContent =
-      "Kunde inte köra backtest.\n\n" +
-      (error.message || error);
+    result.textContent=
+      error &&
+      error.message
+      ? error.message
+      : String(error);
 
   }
 
   finally{
 
-    button.disabled = false;
+    button.disabled=false;
 
   }
 
