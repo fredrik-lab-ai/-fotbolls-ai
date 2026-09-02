@@ -1,37 +1,157 @@
 <!DOCTYPE html>
-
 <html lang="sv">
-
 <head>
-
 <meta charset="UTF-8">
-
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
-
+<meta name="viewport" content="width=device-width,initial-scale=1">
 <title>Fotbolls-AI Simulator</title>
 
 <style>
+body{
+  font-family:Arial,sans-serif;
+  background:#f2f2f2;
+  padding:20px;
+}
+.box{
+  max-width:600px;
+  margin:auto;
+  background:white;
+  padding:20px;
+  border-radius:16px;
+}
+h1{text-align:center}
+label{
+  display:block;
+  font-weight:bold;
+  margin-top:15px;
+}
+input{
+  width:100%;
+  box-sizing:border-box;
+  padding:12px;
+  margin-top:5px;
+  font-size:16px;
+}
+button{
+  width:100%;
+  padding:15px;
+  margin-top:20px;
+  font-size:18px;
+  font-weight:bold;
+}
+#result{
+  margin-top:20px;
+  white-space:pre-line;
+  line-height:1.6;
+}
+</style>
+</head>
 
-body {
+<body>
 
-    font-family: Arial, sans-serif;
+<div class="box">
 
-    background: #f2f2f2;
+<h1>⚽ Fotbolls-AI</h1>
 
-    margin: 0;
+<p>
+Testsimulator för vår idé om värdespel.
+Inga riktiga pengar används.
+</p>
 
-    padding: 20px;
+<label>Startkapital (kr)</label>
+<input id="start" type="number" value="1">
+
+<label>Max insats per dag (kr)</label>
+<input id="daily" type="number" value="1">
+
+<label>Mål (kr)</label>
+<input id="target" type="number" value="10000">
+
+<label>Max antal dagar</label>
+<input id="days" type="number" value="365">
+
+<label>Antal simuleringar</label>
+<input id="runs" type="number" value="10000">
+
+<label>Minsta AI-edge (%)</label>
+<input id="edge" type="number" value="5">
+
+<button onclick="simulate()">KÖR SIMULERING</button>
+
+<div id="result">
+Tryck på KÖR SIMULERING.
+</div>
+
+</div>
+
+<script>
+
+function simulate(){
+
+  let start = Number(document.getElementById("start").value);
+  let daily = Number(document.getElementById("daily").value);
+  let target = Number(document.getElementById("target").value);
+  let days = Number(document.getElementById("days").value);
+  let runs = Number(document.getElementById("runs").value);
+  let edge = Number(document.getElementById("edge").value) / 100;
+
+  let reached = 0;
+  let total = 0;
+  let highest = 0;
+
+  for(let r=0;r<runs;r++){
+
+    let money = start;
+
+    for(let d=0;d<days && money<target;d++){
+
+      let odds = 1.40 + Math.random()*3.60;
+      let marketProbability = 1/odds;
+
+      let aiProbability =
+        marketProbability + edge + (Math.random()-0.5)*0.05;
+
+      if(aiProbability-marketProbability < edge){
+        continue;
+      }
+
+      let stake = Math.min(daily,money);
+
+      if(Math.random() < aiProbability){
+
+        money += stake*(odds-1);
+
+      }else{
+
+        money -= stake;
+
+      }
+
+    }
+
+    total += money;
+
+    if(money >= target){
+      reached++;
+    }
+
+    if(money > highest){
+      highest = money;
+    }
+
+  }
+
+  let success = (reached/runs)*100;
+  let average = total/runs;
+
+  document.getElementById("result").innerText =
+    "Antal simuleringar: " + runs.toLocaleString("sv-SE") +
+    "\n\nNådde målet: " + success.toFixed(2) + "%" +
+    "\n\nGenomsnittligt slutkapital: " + average.toFixed(2) + " kr" +
+    "\n\nHögsta slutkapital: " + highest.toFixed(2) + " kr";
 
 }
 
-.container {
+</script>
 
-    max-width: 600px;
-
-    margin: auto;
-
-}
-
-h1 {
-
-    text-align: cent
+</body>
+</html>
