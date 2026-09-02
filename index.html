@@ -244,21 +244,10 @@ DATA_BASE+
 code+
 "/E0.csv";
 
-const proxy =
-"https://api.allorigins.win/get?url=" +
-encodeURIComponent(url);
-
-const res = await fetch(proxy);
-
-if(!res.ok){
-throw new Error("Kunde inte hämta data");
-}
-
-const data = await res.json();
-
-if(!data.contents){
-throw new Error("Ingen data returnerades");
-}
+const res=await fetch(
+url,
+{cache:"no-store"}
+);
 
 if(!res.ok){
 
@@ -274,9 +263,9 @@ res.status+
 
 }
 
-const rows =
+const rows=
 csvParse(
-data.contents
+await res.text()
 );
 
 if(!rows.length)
