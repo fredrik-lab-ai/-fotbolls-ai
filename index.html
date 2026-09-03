@@ -3,7 +3,8 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width,initial-scale=1">
-<title>Fotbolls AI V16</title>
+<title>Fotbolls AI V16.1</title>
+
 <style>
 body{
   font-family:Arial,sans-serif;
@@ -19,7 +20,7 @@ body{
 h1{margin-bottom:5px}
 h2{margin-top:30px}
 .card{
-  background:white;
+  background:#fff;
   padding:18px;
   margin:15px 0;
   border-radius:10px;
@@ -49,7 +50,7 @@ button{
   border:0;
   border-radius:7px;
   background:#222;
-  color:white;
+  color:#fff;
   cursor:pointer;
   font-size:15px;
 }
@@ -65,13 +66,14 @@ th,td{
   padding:7px;
   text-align:right;
 }
-th:first-child,td:first-child{text-align:left}
+th:first-child,
+td:first-child{
+  text-align:left;
+}
 .small{
   font-size:12px;
   color:#666;
 }
-.good{font-weight:bold}
-.bad{font-weight:bold}
 pre{
   white-space:pre-wrap;
   background:#111;
@@ -84,14 +86,17 @@ pre{
 </head>
 
 <body>
+
 <div class="container">
 
-<h1>⚽ Fotbolls AI V16 – Calibration & Value</h1>
+<h1>⚽ Fotbolls AI V16.1 – Calibration & Value</h1>
+
 <div class="small">
-V16 fokuserar på kalibrering, H/D/A-balans och robust walk-forward-validering.
+Teknisk korrigerad version. Walk-forward, kalibrering, H/D/A-balans och Value Picker.
 </div>
 
 <div class="card">
+
 <button onclick="runAnalysis()">▶ Kör analys</button>
 
 <h2>Inställningar</h2>
@@ -119,7 +124,7 @@ Max odds
 <div>
 Min träning/lag
 <br>
-<input id="minTrain" type="number" value="40">
+<input id="minTrain" type="number" value="15">
 </div>
 
 <div>
@@ -137,15 +142,17 @@ Kalibreringsfönster
 </div>
 
 <p>
-<b>V16:</b>
-AI-prognosen hålls separat från marknaden.
-Poissonmodellen shrinkas mot ligamedel för att minska extrema styrkesignaler.
-Kalibrering använder endast tidigare matcher.
-Value Picker beräknar EV för H/D/A individuellt.
+<b>V16.1:</b>
+Modellen använder endast information som fanns före aktuell match.
+Lagets målstatistik och form startas om vid ny säsong, medan en del av ratingen behålls.
+Value Picker beräknar EV för H/D/A individuellt och väljer högsta EV.
 </p>
+
 </div>
 
+
 <div class="card">
+
 <h2>📊 Modellresultat</h2>
 
 <div class="grid">
@@ -186,71 +193,125 @@ Log Loss
 </div>
 
 </div>
+
 </div>
 
+
 <div class="card">
+
 <h2>🎯 Huvudstrategi – Value Picker</h2>
+
 <div id="mainStrategy"></div>
+
 </div>
 
+
 <div class="card">
+
 <h2>🧪 Train / Validation / OOS</h2>
+
 <div id="splitTable"></div>
+
 </div>
 
+
 <div class="card">
+
 <h2>⚖️ Riktigt blend-test</h2>
+
 <div id="blendTable"></div>
+
 </div>
 
+
 <div class="card">
+
 <h2>💰 EV-zoner</h2>
+
 <div id="evTable"></div>
+
 </div>
 
+
 <div class="card">
+
 <h2>📈 Edge-zoner</h2>
+
 <div id="edgeTable"></div>
+
 </div>
 
+
 <div class="card">
+
 <h2>🏁 Resultat per valt utfall</h2>
+
 <div id="pickResult"></div>
+
 </div>
 
+
 <div class="card">
+
 <h2>🎯 H / D / A – modellens sannolikheter</h2>
+
 <div id="probByOutcome"></div>
+
 </div>
 
+
 <div class="card">
+
 <h2>🔎 Kalibrering H / D / A</h2>
+
 <div id="calibration"></div>
+
 </div>
 
+
 <div class="card">
+
 <h2>🏠 Home / Away-bias</h2>
+
 <div id="bias"></div>
+
 </div>
 
+
 <div class="card">
+
 <h2>⚽ Poisson</h2>
+
 <div id="poissonStats"></div>
+
 </div>
 
+
 <div class="card">
+
 <h2>🔥 Högsta aktuella värdesignaler</h2>
+
 <div id="signals"></div>
+
 </div>
+
 
 <div class="card">
+
 <h2>🔧 Teknisk kontroll</h2>
+
 <div id="technical"></div>
+
 </div>
 
 </div>
+
 
 <script>
+
+/* =========================================================
+   V16.1
+   ========================================================= */
 
 const SEASONS=[
   "1819",
@@ -263,46 +324,104 @@ const SEASONS=[
   "2526"
 ];
 
-const TRAIN_SEASONS=["1819","1920","2021","2122"];
-const VALIDATION_SEASONS=["2223","2324"];
-const OOS_SEASONS=["2425","2526"];
+const TRAIN_SEASONS=[
+  "1819",
+  "1920",
+  "2021",
+  "2122"
+];
 
-let GLOBAL=[];
+const VALIDATION_SEASONS=[
+  "2223",
+  "2324"
+];
+
+const OOS_SEASONS=[
+  "2425",
+  "2526"
+];
+
+
+/* =========================================================
+   HELPERS
+   ========================================================= */
 
 function num(x){
-  const n=parseFloat(String(x).replace(",","."));
+
+  const n=parseFloat(
+    String(x).replace(",",".")
+  );
+
   return Number.isFinite(n)?n:null;
 }
 
+
 function clamp(x,a,b){
-  return Math.max(a,Math.min(b,x));
+
+  return Math.max(
+    a,
+    Math.min(b,x)
+  );
 }
+
 
 function pct(x){
-  return Number.isFinite(x)?(x*100).toFixed(2)+"%":"-";
+
+  return Number.isFinite(x)
+    ? (x*100).toFixed(2)+"%"
+    : "-";
 }
+
 
 function money(x){
-  return Number.isFinite(x)?x.toFixed(2):"0.00";
+
+  return Number.isFinite(x)
+    ? x.toFixed(2)
+    : "0.00";
 }
+
 
 function safeLog(x){
-  return Math.log(Math.max(1e-12,x));
+
+  return Math.log(
+    Math.max(1e-12,x)
+  );
 }
 
+
 function resultIndex(r){
+
   if(r==="H")return 0;
   if(r==="D")return 1;
   return 2;
 }
 
+
 function outcomeLabel(i){
+
   return ["H","D","A"][i];
 }
+
+
+function avg(arr){
+
+  if(!arr.length)return 0;
+
+  return arr.reduce(
+    (a,b)=>a+b,
+    0
+  )/arr.length;
+}
+
+
+/* =========================================================
+   CSV PARSER
+   ========================================================= */
 
 function csvParse(text){
 
   const rows=[];
+
   let row=[];
   let cell="";
   let quote=false;
@@ -312,58 +431,105 @@ function csvParse(text){
     const c=text[i];
 
     if(c==='"'){
-      if(quote && text[i+1]==='"'){
+
+      if(
+        quote &&
+        text[i+1]==='"'
+      ){
         cell+='"';
         i++;
-      }else{
+      }
+      else{
         quote=!quote;
       }
+
     }
-
-    else if(c==="," && !quote){
-      row.push(cell);
-      cell="";
-    }
-
-    else if((c==="\n" || c==="\r") && !quote){
-
-      if(c==="\r" && text[i+1]==="\n")i++;
+    else if(
+      c==="," &&
+      !quote
+    ){
 
       row.push(cell);
       cell="";
 
-      if(row.some(v=>String(v).trim()!=="")){
+    }
+    else if(
+      (c==="\n" || c==="\r") &&
+      !quote
+    ){
+
+      if(
+        c==="\r" &&
+        text[i+1]==="\n"
+      ){
+        i++;
+      }
+
+      row.push(cell);
+      cell="";
+
+      if(
+        row.some(
+          v=>String(v).trim()!==""
+        )
+      ){
         rows.push(row);
       }
 
       row=[];
-    }
 
+    }
     else{
+
       cell+=c;
+
     }
   }
 
-  if(cell!=="" || row.length){
+  if(
+    cell!=="" ||
+    row.length
+  ){
+
     row.push(cell);
-    if(row.some(v=>String(v).trim()!==""))rows.push(row);
+
+    if(
+      row.some(
+        v=>String(v).trim()!==""
+      )
+    ){
+      rows.push(row);
+    }
   }
 
   if(!rows.length)return [];
 
-  const headers=rows[0].map(x=>String(x).trim());
+  const headers=rows[0].map(
+    x=>String(x).trim()
+  );
 
   return rows.slice(1).map(r=>{
 
     const o={};
 
-    headers.forEach((h,i)=>{
-      o[h]=r[i]!==undefined?String(r[i]).trim():"";
-    });
+    headers.forEach(
+      (h,i)=>{
+        o[h]=
+          r[i]!==undefined
+          ?String(r[i]).trim()
+          :"";
+      }
+    );
 
     return o;
+
   });
 }
+
+
+/* =========================================================
+   DATE
+   ========================================================= */
 
 function parseDate(s){
 
@@ -371,7 +537,9 @@ function parseDate(s){
 
   const x=String(s).trim();
 
-  let m=x.match(/^(\d{1,2})[\/\-](\d{1,2})[\/\-](\d{2}|\d{4})$/);
+  let m=x.match(
+    /^(\d{1,2})[\/\-](\d{1,2})[\/\-](\d{2}|\d{4})$/
+  );
 
   if(m){
 
@@ -381,19 +549,34 @@ function parseDate(s){
 
     if(y<100)y+=2000;
 
-    const dt=new Date(y,mo,d);
+    const dt=new Date(
+      y,
+      mo,
+      d
+    );
 
     if(
       dt.getFullYear()===y &&
       dt.getMonth()===mo &&
       dt.getDate()===d
-    )return dt;
+    ){
+      return dt;
+    }
   }
 
   const dt=new Date(x);
 
-  return Number.isNaN(dt.getTime())?null:dt;
+  return Number.isNaN(
+    dt.getTime()
+  )
+  ?null
+  :dt;
 }
+
+
+/* =========================================================
+   ODDS
+   ========================================================= */
 
 function oddsFor(r){
 
@@ -404,23 +587,41 @@ function oddsFor(r){
     ["WHH","WHD","WHA"]
   ];
 
-  for(const s of sets){
+  for(
+    const s of sets
+  ){
 
     const h=num(r[s[0]]);
     const d=num(r[s[1]]);
     const a=num(r[s[2]]);
 
     if(
-      h && d && a &&
-      h>1 && d>1 && a>1 &&
-      h<100 && d<100 && a<100
+      h &&
+      d &&
+      a &&
+      h>1 &&
+      d>1 &&
+      a>1 &&
+      h<100 &&
+      d<100 &&
+      a<100
     ){
-      return [h,d,a];
+
+      return [
+        h,
+        d,
+        a
+      ];
     }
   }
 
   return null;
 }
+
+
+/* =========================================================
+   NORMALIZE
+   ========================================================= */
 
 function normalizeRow(r,season){
 
@@ -429,60 +630,87 @@ function normalizeRow(r,season){
   const home=r.HomeTeam;
   const away=r.AwayTeam;
 
-  const fthg=num(r.FTHG);
-  const ftag=num(r.FTAG);
+  const hg=num(r.FTHG);
+  const ag=num(r.FTAG);
 
   const odds=oddsFor(r);
 
-  let res=null;
-
-  if(r.FTR==="H" || r.FTR==="D" || r.FTR==="A"){
-    res=r.FTR;
-  }
+  const result=
+    (
+      r.FTR==="H" ||
+      r.FTR==="D" ||
+      r.FTR==="A"
+    )
+    ?r.FTR
+    :null;
 
   if(
     !date ||
     !home ||
     !away ||
     !odds ||
-    fthg===null ||
-    ftag===null ||
-    !res
-  )return null;
+    hg===null ||
+    ag===null ||
+    !result
+  ){
+    return null;
+  }
 
   return {
     season,
     date,
     home,
     away,
-    hg:fthg,
-    ag:ftag,
+    hg,
+    ag,
     odds,
-    result:res
+    result
   };
 }
 
+
+/* =========================================================
+   LOAD SEASON
+   ========================================================= */
+
 async function loadSeason(season){
 
-  const url="data/"+season+".csv";
+  const url=
+    "data/"+season+".csv";
 
-  const response=await fetch(url+"?v="+Date.now());
+  const response=
+    await fetch(
+      url+"?v="+Date.now()
+    );
 
   if(!response.ok){
-    throw new Error("Kunde inte ladda "+url);
+
+    throw new Error(
+      "Kunde inte ladda "+url
+    );
   }
 
-  const text=await response.text();
+  const text=
+    await response.text();
 
-  const raw=csvParse(text);
+  const raw=
+    csvParse(text);
 
   const matches=[];
 
-  for(const r of raw){
+  for(
+    const r of raw
+  ){
 
-    const m=normalizeRow(r,season);
+    const m=
+      normalizeRow(
+        r,
+        season
+      );
 
-    if(m)matches.push(m);
+    if(m){
+      matches.push(m);
+    }
   }
 
   return {
@@ -493,13 +721,15 @@ async function loadSeason(season){
   };
 }
 
-/* =========================
-   TEAM MODEL
-========================= */
+
+/* =========================================================
+   TEAM STATE
+   ========================================================= */
 
 function freshTeam(){
 
   return {
+
     gf:0,
     ga:0,
     n:0,
@@ -513,76 +743,111 @@ function freshTeam(){
     awayN:0,
 
     form:[],
+
     rating:0,
 
     matches:[]
   };
 }
 
+
 function freshState(){
 
   return {};
 }
 
-function getTeam(state,name){
+
+function getTeam(
+  state,
+  name
+){
 
   if(!state[name]){
-    state[name]=freshTeam();
+
+    state[name]=
+      freshTeam();
   }
 
   return state[name];
 }
 
-function avg(arr){
-
-  if(!arr.length)return 0;
-
-  return arr.reduce((a,b)=>a+b,0)/arr.length;
-}
-
-function ppg(team){
-
-  if(!team.form.length)return 0;
-
-  return avg(team.form);
-}
 
 function formGF(team){
 
-  if(!team.matches.length)return 1.35;
+  if(!team.matches.length){
+
+    return 1.52;
+  }
+
+  const n=
+    num(
+      document.getElementById(
+        "formN"
+      ).value
+    )||8;
 
   return avg(
-    team.matches.slice(-8).map(x=>x.gf)
+    team.matches
+      .slice(-n)
+      .map(x=>x.gf)
   );
 }
+
 
 function formGA(team){
 
-  if(!team.matches.length)return 1.35;
+  if(!team.matches.length){
+
+    return 1.52;
+  }
+
+  const n=
+    num(
+      document.getElementById(
+        "formN"
+      ).value
+    )||8;
 
   return avg(
-    team.matches.slice(-8).map(x=>x.ga)
+    team.matches
+      .slice(-n)
+      .map(x=>x.ga)
   );
 }
 
-/*
-  Ratings används försiktigt.
-  Rating uppdateras efter match.
-*/
 
-function updateTeam(team,gf,ga,isHome,result){
+/* =========================================================
+   UPDATE TEAM
+   ========================================================= */
 
-  const expected=1.5;
+function updateTeam(
+  team,
+  gf,
+  ga,
+  isHome,
+  result
+){
 
-  const diff=(gf-ga)-expected;
+  /*
+    Rating är långsammare än målstatistik.
+  */
 
-  team.rating += clamp(
-    0.018*diff,
-    -0.045,
-    0.045
-  );
+  const goalDiff=
+    gf-ga;
 
-  team.rating=clamp(team.rating,-1.25,1.25);
+  team.rating+=
+    clamp(
+      0.018*goalDiff,
+      -0.045,
+      0.045
+    );
+
+  team.rating=
+    clamp(
+      team.rating,
+      -1.25,
+      1.25
+    );
 
   team.gf+=gf;
   team.ga+=ga;
@@ -594,17 +859,23 @@ function updateTeam(team,gf,ga,isHome,result){
     team.homeGA+=ga;
     team.homeN++;
 
-  }else{
+  }
+  else{
 
     team.awayGF+=gf;
     team.awayGA+=ga;
     team.awayN++;
+
   }
 
   let pts=0;
 
-  if(result==="W")pts=3;
-  else if(result==="D")pts=1;
+  if(result==="W"){
+    pts=3;
+  }
+  else if(result==="D"){
+    pts=1;
+  }
 
   team.form.push(pts);
 
@@ -622,187 +893,366 @@ function updateTeam(team,gf,ga,isHome,result){
   }
 }
 
-function updateState(state,m){
 
-  const h=getTeam(state,m.home);
-  const a=getTeam(state,m.away);
+/* =========================================================
+   UPDATE STATE
+   ========================================================= */
 
-  let hr,ar;
+function updateState(
+  state,
+  m
+){
+
+  const h=
+    getTeam(
+      state,
+      m.home
+    );
+
+  const a=
+    getTeam(
+      state,
+      m.away
+    );
+
+  let hr;
+  let ar;
 
   if(m.result==="H"){
+
     hr="W";
     ar="L";
+
   }
   else if(m.result==="D"){
+
     hr="D";
     ar="D";
+
   }
   else{
+
     hr="L";
     ar="W";
   }
 
-  updateTeam(h,m.hg,m.ag,true,hr);
-  updateTeam(a,m.ag,m.hg,false,ar);
+  updateTeam(
+    h,
+    m.hg,
+    m.ag,
+    true,
+    hr
+  );
+
+  updateTeam(
+    a,
+    m.ag,
+    m.hg,
+    false,
+    ar
+  );
 }
 
-function ready(state,m,minTrain){
 
-  const h=getTeam(state,m.home);
-  const a=getTeam(state,m.away);
+/* =========================================================
+   READY
+   ========================================================= */
 
-  return h.n>=minTrain && a.n>=minTrain;
+function ready(
+  state,
+  m,
+  minTrain
+){
+
+  const h=
+    getTeam(
+      state,
+      m.home
+    );
+
+  const a=
+    getTeam(
+      state,
+      m.away
+    );
+
+  return (
+    h.n>=minTrain &&
+    a.n>=minTrain
+  );
 }
 
-/* =========================
-   MARKET
-========================= */
+
+/* =========================================================
+   MARKET PROBABILITY
+   ========================================================= */
 
 function marketProb(odds){
 
-  const inv=odds.map(o=>1/o);
+  const inv=
+    odds.map(
+      o=>1/o
+    );
 
-  const s=inv[0]+inv[1]+inv[2];
+  const sum=
+    inv[0]+
+    inv[1]+
+    inv[2];
 
-  return inv.map(x=>x/s);
+  return inv.map(
+    x=>x/sum
+  );
 }
 
-/* =========================
+
+/* =========================================================
    POISSON
-========================= */
+   ========================================================= */
 
-function poisson(k,lambda){
+function poisson(
+  k,
+  lambda
+){
 
-  let p=Math.exp(-lambda);
+  let p=
+    Math.exp(-lambda);
 
-  for(let i=1;i<=k;i++){
+  for(
+    let i=1;
+    i<=k;
+    i++
+  ){
+
     p*=lambda/i;
   }
 
   return p;
 }
 
-function poissonMatrix(hLambda,aLambda){
+
+function poissonMatrix(
+  homeLambda,
+  awayLambda
+){
 
   const maxGoals=10;
 
   const ph=[];
   const pa=[];
 
-  for(let i=0;i<=maxGoals;i++){
-    ph.push(poisson(i,hLambda));
-    pa.push(poisson(i,aLambda));
+  for(
+    let i=0;
+    i<=maxGoals;
+    i++
+  ){
+
+    ph.push(
+      poisson(
+        i,
+        homeLambda
+      )
+    );
+
+    pa.push(
+      poisson(
+        i,
+        awayLambda
+      )
+    );
   }
 
   let H=0;
   let D=0;
   let A=0;
 
-  for(let h=0;h<=maxGoals;h++){
+  for(
+    let h=0;
+    h<=maxGoals;
+    h++
+  ){
 
-    for(let a=0;a<=maxGoals;a++){
+    for(
+      let a=0;
+      a<=maxGoals;
+      a++
+    ){
 
-      const p=ph[h]*pa[a];
+      const p=
+        ph[h]*pa[a];
 
-      if(h>a)H+=p;
-      else if(h===a)D+=p;
-      else A+=p;
+      if(h>a){
+
+        H+=p;
+
+      }
+      else if(h===a){
+
+        D+=p;
+
+      }
+      else{
+
+        A+=p;
+      }
     }
   }
 
-  const s=H+D+A;
+  const sum=
+    H+D+A;
 
   return [
-    H/s,
-    D/s,
-    A/s
+    H/sum,
+    D/sum,
+    A/sum
   ];
 }
 
-/* =========================
-   V16 POISSON MODEL
-========================= */
 
-function modelProbability(state,m){
+/* =========================================================
+   MODEL
+   ========================================================= */
 
-  const h=getTeam(state,m.home);
-  const a=getTeam(state,m.away);
+function modelProbability(
+  state,
+  m
+){
 
-  /*
-    Ligamedel.
+  const h=
+    getTeam(
+      state,
+      m.home
+    );
 
-    Shrinkage gör att ett lag med få/ovanliga
-    observationer inte kan skapa extrema lambda.
-  */
+  const a=
+    getTeam(
+      state,
+      m.away
+    );
 
   const LEAGUE_GF=1.52;
   const LEAGUE_GA=1.52;
 
-  const hGames=Math.max(1,h.n);
-  const aGames=Math.max(1,a.n);
+  const hGames=
+    Math.max(
+      1,
+      h.n
+    );
 
-  const hAttackRaw=h.gf/hGames;
-  const hDefenseRaw=h.ga/hGames;
+  const aGames=
+    Math.max(
+      1,
+      a.n
+    );
 
-  const aAttackRaw=a.gf/aGames;
-  const aDefenseRaw=a.ga/aGames;
+  const hAttackRaw=
+    h.gf/hGames;
+
+  const hDefenseRaw=
+    h.ga/hGames;
+
+  const aAttackRaw=
+    a.gf/aGames;
+
+  const aDefenseRaw=
+    a.ga/aGames;
 
   /*
-    Shrink mot ligamedel.
-    40 matcher = relativt stor påverkan.
+    Shrinkage ökar gradvis med antalet
+    tidigare matcher.
   */
 
-  const shrinkH=clamp(
-    h.n/(h.n+80),
-    0,
-    0.70
-  );
+  const shrinkH=
+    clamp(
+      h.n/(h.n+80),
+      0,
+      0.70
+    );
 
-  const shrinkA=clamp(
-    a.n/(a.n+80),
-    0,
-    0.70
-  );
+  const shrinkA=
+    clamp(
+      a.n/(a.n+80),
+      0,
+      0.70
+    );
 
   const hAttack=
     LEAGUE_GF+
-    shrinkH*(hAttackRaw-LEAGUE_GF);
+    shrinkH*
+    (
+      hAttackRaw-
+      LEAGUE_GF
+    );
 
   const hDefense=
     LEAGUE_GA+
-    shrinkH*(hDefenseRaw-LEAGUE_GA);
+    shrinkH*
+    (
+      hDefenseRaw-
+      LEAGUE_GA
+    );
 
   const aAttack=
     LEAGUE_GF+
-    shrinkA*(aAttackRaw-LEAGUE_GF);
+    shrinkA*
+    (
+      aAttackRaw-
+      LEAGUE_GF
+    );
 
   const aDefense=
     LEAGUE_GA+
-    shrinkA*(aDefenseRaw-LEAGUE_GA);
-
-  /*
-    Attack/defense-strength.
-  */
+    shrinkA*
+    (
+      aDefenseRaw-
+      LEAGUE_GA
+    );
 
   let homeAttack=
-    hAttack/LEAGUE_GF;
+    hAttack/
+    LEAGUE_GF;
 
   let awayAttack=
-    aAttack/LEAGUE_GF;
+    aAttack/
+    LEAGUE_GF;
 
   let homeDefense=
-    hDefense/LEAGUE_GA;
+    hDefense/
+    LEAGUE_GA;
 
   let awayDefense=
-    aDefense/LEAGUE_GA;
+    aDefense/
+    LEAGUE_GA;
 
-  homeAttack=clamp(homeAttack,0.70,1.30);
-  awayAttack=clamp(awayAttack,0.70,1.30);
-  homeDefense=clamp(homeDefense,0.70,1.30);
-  awayDefense=clamp(awayDefense,0.70,1.30);
+  homeAttack=
+    clamp(
+      homeAttack,
+      0.70,
+      1.30
+    );
+
+  awayAttack=
+    clamp(
+      awayAttack,
+      0.70,
+      1.30
+    );
+
+  homeDefense=
+    clamp(
+      homeDefense,
+      0.70,
+      1.30
+    );
+
+  awayDefense=
+    clamp(
+      awayDefense,
+      0.70,
+      1.30
+    );
 
   /*
-    Basmodell.
+    Bas-λ.
   */
 
   let lambdaH=
@@ -818,13 +1268,20 @@ function modelProbability(state,m){
     0.96;
 
   /*
-    Form påverkar endast svagt.
+    Form påverkar endast lite.
   */
 
-  const hf=formGF(h);
-  const hga=formGA(h);
-  const af=formGF(a);
-  const aga=formGA(a);
+  const hf=
+    formGF(h);
+
+  const hga=
+    formGA(h);
+
+  const af=
+    formGF(a);
+
+  const aga=
+    formGA(a);
 
   const homeFormAttack=
     clamp(
@@ -835,7 +1292,11 @@ function modelProbability(state,m){
 
   const homeFormDefense=
     clamp(
-      1.52/Math.max(hga,0.3),
+      1.52/
+      Math.max(
+        hga,
+        0.30
+      ),
       0.88,
       1.12
     );
@@ -849,61 +1310,112 @@ function modelProbability(state,m){
 
   const awayFormDefense=
     clamp(
-      1.52/Math.max(aga,0.3),
+      1.52/
+      Math.max(
+        aga,
+        0.30
+      ),
       0.88,
       1.12
     );
 
-  lambdaH *=
-    Math.pow(homeFormAttack,0.18) *
-    Math.pow(awayFormDefense,0.18);
+  lambdaH*=
+    Math.pow(
+      homeFormAttack,
+      0.18
+    )*
+    Math.pow(
+      awayFormDefense,
+      0.18
+    );
 
-  lambdaA *=
-    Math.pow(awayFormAttack,0.18) *
-    Math.pow(homeFormDefense,0.18);
+  lambdaA*=
+    Math.pow(
+      awayFormAttack,
+      0.18
+    )*
+    Math.pow(
+      homeFormDefense,
+      0.18
+    );
 
   /*
-    Rating påverkar svagt.
+    Rating mycket försiktigt.
   */
 
   const ratingDiff=
-    clamp(h.rating-a.rating,-1.0,1.0);
+    clamp(
+      h.rating-
+      a.rating,
+      -1,
+      1
+    );
 
-  lambdaH *= clamp(
-    1+ratingDiff*0.055,
-    0.94,
-    1.06
-  );
+  lambdaH*=
+    clamp(
+      1+
+      ratingDiff*
+      0.055,
+      0.94,
+      1.06
+    );
 
-  lambdaA *= clamp(
-    1-ratingDiff*0.045,
-    0.95,
-    1.05
-  );
+  lambdaA*=
+    clamp(
+      1-
+      ratingDiff*
+      0.045,
+      0.95,
+      1.05
+    );
 
   /*
-    Extra V16-shrink mot neutral modell.
+    Strukturell shrinkage.
 
-    Detta är INTE en betting threshold.
-    Det är en strukturell modellbegränsning
-    mot överdriven styrka.
+    Viktigt:
+    detta är en del av modellen,
+    inte en bettinggräns.
   */
 
   lambdaH=
     1.52+
-    (lambdaH-1.52)*0.72;
+    (
+      lambdaH-
+      1.52
+    )*
+    0.72;
 
   lambdaA=
     1.52+
-    (lambdaA-1.52)*0.72;
+    (
+      lambdaA-
+      1.52
+    )*
+    0.72;
 
-  lambdaH=clamp(lambdaH,0.45,3.35);
-  lambdaA=clamp(lambdaA,0.40,3.05);
+  /*
+    Säkerhetsgränser.
+  */
 
-  const probs=poissonMatrix(
-    lambdaH,
-    lambdaA
-  );
+  lambdaH=
+    clamp(
+      lambdaH,
+      0.45,
+      3.35
+    );
+
+  lambdaA=
+    clamp(
+      lambdaA,
+      0.40,
+      3.05
+    );
+
+  const probs=
+    poissonMatrix(
+      lambdaH,
+      lambdaA
+    );
 
   return {
     probs,
@@ -912,162 +1424,255 @@ function modelProbability(state,m){
   };
 }
 
-/* =========================
+
+/* =========================================================
    CALIBRATION
-========================= */
+   ========================================================= */
 
-function rawCalibration(history,probs){
+function calibrate(
+  history,
+  probs,
+  windowSize
+){
 
-  if(history.length<60){
+  if(
+    history.length<60
+  ){
+
     return probs.slice();
   }
 
-  const window=history.slice(
-    -Math.min(history.length,400)
-  );
+  const rows=
+    history.slice(
+      -Math.min(
+        history.length,
+        windowSize
+      )
+    );
 
   const out=[];
 
-  for(let c=0;c<3;c++){
+  for(
+    let c=0;
+    c<3;
+    c++
+  ){
 
-    const rows=window.filter(
-      x=>x.probs[c]!==undefined
-    );
+    const subset=
+      rows.filter(
+        x=>
+          Number.isFinite(
+            x.probs[c]
+          )
+      );
 
-    if(rows.length<30){
+    if(
+      subset.length<30
+    ){
 
-      out[c]=probs[c];
+      out[c]=
+        probs[c];
 
       continue;
     }
 
-    /*
-      Empirical calibration.
-
-      Vi jämför modellens genomsnittliga
-      sannolikhet med faktisk frekvens.
-    */
-
     const meanP=
-      avg(rows.map(x=>x.probs[c]));
+      avg(
+        subset.map(
+          x=>x.probs[c]
+        )
+      );
 
     const actual=
-      rows.filter(x=>x.result===c).length/
-      rows.length;
-
-    /*
-      endast en försiktig korrigering.
-    */
+      subset.filter(
+        x=>x.result===c
+      ).length/
+      subset.length;
 
     const correction=
       clamp(
-        actual-meanP,
+        actual-
+        meanP,
         -0.08,
         0.08
       );
 
-    out[c]=clamp(
-      probs[c]+correction*0.45,
-      0.02,
-      0.96
-    );
+    out[c]=
+      clamp(
+        probs[c]+
+        correction*
+        0.45,
+        0.02,
+        0.96
+      );
   }
 
-  const s=out[0]+out[1]+out[2];
+  const sum=
+    out[0]+
+    out[1]+
+    out[2];
 
-  return out.map(x=>x/s);
+  return out.map(
+    x=>x/sum
+  );
 }
 
-function recordPrediction(history,probs,result){
+
+function recordPrediction(
+  history,
+  probs,
+  result
+){
 
   history.push({
-    probs:probs.slice(),
-    result:resultIndex(result)
+
+    probs:
+      probs.slice(),
+
+    result:
+      resultIndex(result)
   });
 
-  if(history.length>600){
+  if(
+    history.length>600
+  ){
+
     history.shift();
   }
 }
 
-/* =========================
+
+/* =========================================================
    BLEND
-========================= */
+   ========================================================= */
 
-function blendProb(ai,market,aiWeight){
+function blendProb(
+  ai,
+  market,
+  aiWeight
+){
 
-  const w=aiWeight/100;
-
-  /*
-    Logit/geometric blend.
-    Detta är mer stabilt än vanlig addition
-    när sannolikheterna är extrema.
-  */
+  const w=
+    aiWeight/100;
 
   const out=[];
 
-  for(let i=0;i<3;i++){
+  for(
+    let i=0;
+    i<3;
+    i++
+  ){
 
-    const p=clamp(ai[i],0.001,0.999);
-    const q=clamp(market[i],0.001,0.999);
+    const p=
+      clamp(
+        ai[i],
+        0.001,
+        0.999
+      );
+
+    const q=
+      clamp(
+        market[i],
+        0.001,
+        0.999
+      );
 
     out[i]=
       Math.pow(p,w)*
       Math.pow(q,1-w);
   }
 
-  const s=out[0]+out[1]+out[2];
+  const sum=
+    out[0]+
+    out[1]+
+    out[2];
 
-  return out.map(x=>x/s);
+  return out.map(
+    x=>x/sum
+  );
 }
 
-/* =========================
+
+/* =========================================================
    VALUE PICKER
-========================= */
+   ========================================================= */
 
-function valuePick(ai,market,odds,aiWeight){
+function valuePick(
+  ai,
+  market,
+  odds,
+  aiWeight
+){
 
-  const blend=blendProb(
-    ai,
-    market,
-    aiWeight
-  );
+  const blend=
+    blendProb(
+      ai,
+      market,
+      aiWeight
+    );
 
   const ev=[
-    blend[0]*odds[0]-1,
-    blend[1]*odds[1]-1,
-    blend[2]*odds[2]-1
-  ];
 
-  /*
-    VIKTIGT:
-    högsta EV, inte högsta sannolikhet.
-  */
+    blend[0]*
+    odds[0]-1,
+
+    blend[1]*
+    odds[1]-1,
+
+    blend[2]*
+    odds[2]-1
+
+  ];
 
   let pick=0;
 
-  if(ev[1]>ev[pick])pick=1;
-  if(ev[2]>ev[pick])pick=2;
+  if(
+    ev[1]>
+    ev[pick]
+  ){
+
+    pick=1;
+  }
+
+  if(
+    ev[2]>
+    ev[pick]
+  ){
+
+    pick=2;
+  }
 
   return {
+
     ai,
     market,
     blend,
+
     ev,
+
     pick,
-    pickEV:ev[pick],
-    edge:ai[pick]-market[pick],
-    odds:odds[pick]
+
+    pickEV:
+      ev[pick],
+
+    edge:
+      ai[pick]-
+      market[pick],
+
+    odds:
+      odds[pick]
   };
 }
 
-/* =========================
-   RESULTATSAMLING
-========================= */
+
+/* =========================================================
+   STATS
+   ========================================================= */
 
 function emptyStats(){
 
   return {
+
     bets:0,
     wins:0,
     profit:0,
@@ -1076,67 +1681,160 @@ function emptyStats(){
   };
 }
 
-function addBet(stats,won,odds){
+
+function addBet(
+  stats,
+  won,
+  odds
+){
 
   stats.bets++;
 
   if(won){
+
     stats.wins++;
-    stats.profit+=odds-1;
-  }else{
+
+    stats.profit+=
+      odds-1;
+
+  }
+  else{
+
     stats.profit-=1;
   }
 
-  stats.peak=Math.max(
-    stats.peak,
-    stats.profit
-  );
+  stats.peak=
+    Math.max(
+      stats.peak,
+      stats.profit
+    );
 
-  stats.dd=Math.max(
-    stats.dd,
-    stats.peak-stats.profit
-  );
+  stats.dd=
+    Math.max(
+      stats.dd,
+      stats.peak-
+      stats.profit
+    );
 }
+
+
+function statsTable(obj){
+
+  let html=`
+
+  <table>
+
+  <tr>
+  <th>Grupp</th>
+  <th>Bets</th>
+  <th>Wins</th>
+  <th>Hit</th>
+  <th>Profit</th>
+  <th>ROI</th>
+  </tr>
+  `;
+
+  for(
+    const [
+      name,
+      s
+    ] of Object.entries(obj)
+  ){
+
+    html+=`
+
+    <tr>
+
+    <td>${name}</td>
+
+    <td>${s.bets}</td>
+
+    <td>${s.wins}</td>
+
+    <td>
+    ${
+      s.bets
+      ?pct(s.wins/s.bets)
+      :"0.00%"
+    }
+    </td>
+
+    <td>
+    ${money(s.profit)} kr
+    </td>
+
+    <td>
+    ${
+      s.bets
+      ?pct(s.profit/s.bets)
+      :"0.00%"
+    }
+    </td>
+
+    </tr>
+    `;
+  }
+
+  html+=`
+  </table>
+  `;
+
+  return html;
+}
+
 
 function statsHtml(s){
 
   if(!s.bets){
 
     return `
-    <div class="small">0 spel</div>
+    <div class="small">
+    0 spel
+    </div>
     `;
   }
 
-  const hit=s.wins/s.bets;
-  const roi=s.profit/s.bets;
-
   return `
+
   <table>
+
   <tr>
-  <th>Spel</th>
-  <th>Vinster</th>
+  <th>Bets</th>
+  <th>Wins</th>
   <th>Hit</th>
   <th>Profit</th>
   <th>ROI</th>
   <th>Max DD</th>
   </tr>
+
   <tr>
+
   <td>${s.bets}</td>
+
   <td>${s.wins}</td>
-  <td>${pct(hit)}</td>
+
+  <td>${pct(s.wins/s.bets)}</td>
+
   <td>${money(s.profit)} kr</td>
-  <td>${pct(roi)}</td>
+
+  <td>${pct(s.profit/s.bets)}</td>
+
   <td>${money(s.dd)} kr</td>
+
   </tr>
+
   </table>
   `;
 }
 
-/* =========================
-   METRICS
-========================= */
 
-function calculateMetrics(preds){
+/* =========================================================
+   METRICS
+   ========================================================= */
+
+function calculateMetrics(
+  preds
+){
 
   if(!preds.length){
 
@@ -1151,67 +1849,126 @@ function calculateMetrics(preds){
   let brier=0;
   let ll=0;
 
-  for(const p of preds){
+  for(
+    const p of preds
+  ){
 
-    const r=resultIndex(p.result);
+    const r=
+      resultIndex(
+        p.result
+      );
 
-    if(p.probs.indexOf(
-      Math.max(...p.probs)
-    )===r){
+    const max=
+      Math.max(
+        ...p.probs
+      );
+
+    const pick=
+      p.probs.indexOf(
+        max
+      );
+
+    if(
+      pick===r
+    ){
+
       correct++;
     }
 
-    for(let i=0;i<3;i++){
+    for(
+      let i=0;
+      i<3;
+      i++
+    ){
 
-      const y=i===r?1:0;
+      const y=
+        i===r
+        ?1
+        :0;
 
       brier+=
-        Math.pow(p.probs[i]-y,2);
+        Math.pow(
+          p.probs[i]-y,
+          2
+        );
     }
 
-    ll-=safeLog(p.probs[r]);
+    ll-=
+      safeLog(
+        p.probs[r]
+      );
   }
 
-  /*
-    Multiclass Brier normaliserad med 3.
-  */
+  brier/=
+    preds.length*3;
 
-  brier/=preds.length*3;
-
-  ll/=preds.length;
+  ll/=
+    preds.length;
 
   return {
-    accuracy:correct/preds.length,
+
+    accuracy:
+      correct/preds.length,
+
     brier,
+
     ll
   };
 }
 
-/* =========================
+
+/* =========================================================
    SPLIT
-========================= */
+   ========================================================= */
 
-function getSplit(season){
+function getSplit(
+  season
+){
 
-  if(TRAIN_SEASONS.includes(season))
+  if(
+    TRAIN_SEASONS
+      .includes(season)
+  ){
+
     return "Train";
+  }
 
-  if(VALIDATION_SEASONS.includes(season))
+  if(
+    VALIDATION_SEASONS
+      .includes(season)
+  ){
+
     return "Validation";
+  }
 
-  if(OOS_SEASONS.includes(season))
+  if(
+    OOS_SEASONS
+      .includes(season)
+  ){
+
     return "OOS";
+  }
 
   return "Other";
 }
 
-/* =========================
+
+/* =========================================================
    BACKTEST
-========================= */
+   ========================================================= */
 
-function runBacktest(allMatches){
+function runBacktest(
+  allMatches
+){
 
-  const state=freshState();
+  /*
+    VIKTIG FIX:
+    alla körningar börjar från
+    helt rent state.
+  */
+
+  const state=
+    freshState();
 
   const calibrationHistory=[];
 
@@ -1221,52 +1978,79 @@ function runBacktest(allMatches){
 
   const main=[];
 
+  const mainStats=
+    emptyStats();
+
   const splitStats={
-    Train:emptyStats(),
-    Validation:emptyStats(),
-    OOS:emptyStats()
+
+    Train:
+      emptyStats(),
+
+    Validation:
+      emptyStats(),
+
+    OOS:
+      emptyStats()
   };
 
   const pickStats={
-    H:emptyStats(),
-    D:emptyStats(),
-    A:emptyStats()
+
+    H:
+      emptyStats(),
+
+    D:
+      emptyStats(),
+
+    A:
+      emptyStats()
   };
 
   const evZones={
-    ">=0":emptyStats(),
-    ">=3":emptyStats(),
-    ">=5":emptyStats(),
-    ">=7":emptyStats(),
-    ">=10":emptyStats(),
-    ">=15":emptyStats()
+
+    ">=0":
+      emptyStats(),
+
+    ">=3":
+      emptyStats(),
+
+    ">=5":
+      emptyStats(),
+
+    ">=7":
+      emptyStats(),
+
+    ">=10":
+      emptyStats(),
+
+    ">=15":
+      emptyStats()
   };
 
   const edgeZones={
-    "0–5":emptyStats(),
-    "5–10":emptyStats(),
-    "10–15":emptyStats(),
-    "15–20":emptyStats(),
-    "20–25":emptyStats(),
-    "25+":emptyStats()
+
+    "0–5":
+      emptyStats(),
+
+    "5–10":
+      emptyStats(),
+
+    "10–15":
+      emptyStats(),
+
+    "15–20":
+      emptyStats(),
+
+    "20–25":
+      emptyStats(),
+
+    "25+":
+      emptyStats()
   };
 
   let notReady=0;
 
-  const aiWeight=
-    num(document.getElementById("aiWeight").value)||25;
-
-  const minEV=
-    (num(document.getElementById("minEV").value)||5)/100;
-
-  const maxOdds=
-    num(document.getElementById("maxOdds").value)||6;
-
-  const minTrain=
-    num(document.getElementById("minTrain").value)||40;
-
-  const calWindow=
-    num(document.getElementById("calWindow").value)||400;
+  let notReadyHome=0;
+  let notReadyAway=0;
 
   let totalRows=0;
 
@@ -1276,20 +2060,11 @@ function runBacktest(allMatches){
 
   const signals=[];
 
-  /*
-    Blend-test rådata.
-    Vi sparar alla analyserade matcher och
-    räknar om Value Picker separat för varje
-    AI-vikt.
-  */
-
   const blendRaw=[];
 
-  /*
-    H/D/A kalibreringsdata.
-  */
-
   const calBuckets=[
+    [],
+    [],
     [],
     [],
     [],
@@ -1309,176 +2084,353 @@ function runBacktest(allMatches){
   let blendDraw=0;
   let blendAway=0;
 
-  for(const m of allMatches){
+  const aiWeight=
+    num(
+      document.getElementById(
+        "aiWeight"
+      ).value
+    )??25;
+
+  const minEV=
+    (
+      num(
+        document.getElementById(
+          "minEV"
+        ).value
+      )??5
+    )/100;
+
+  const maxOdds=
+    num(
+      document.getElementById(
+        "maxOdds"
+      ).value
+    )??6;
+
+  const minTrain=
+    num(
+      document.getElementById(
+        "minTrain"
+      ).value
+    )??15;
+
+  const calWindow=
+    num(
+      document.getElementById(
+        "calWindow"
+      ).value
+    )??400;
+
+
+  for(
+    const m of allMatches
+  ){
 
     totalRows++;
 
     /*
-      Ny säsong:
-      vi behåller en del rating,
-      men lagens målstatistik/form nollställs.
+      NY SÄSONG.
+
+      Målstatistik, form och matchhistorik
+      återställs.
+
+      Rating behålls till 70%.
     */
 
-    if(currentSeason!==m.season){
+    if(
+      currentSeason!==m.season
+    ){
 
-      if(currentSeason!==null){
+      if(
+        currentSeason!==null
+      ){
 
-        for(const name of Object.keys(state)){
+        for(
+          const name of
+          Object.keys(state)
+        ){
 
-          state[name].gf=0;
-          state[name].ga=0;
-          state[name].n=0;
+          const oldRating=
+            state[name].rating;
 
-          state[name].homeGF=0;
-          state[name].homeGA=0;
-          state[name].homeN=0;
+          state[name]=
+            freshTeam();
 
-          state[name].awayGF=0;
-          state[name].awayGA=0;
-          state[name].awayN=0;
-
-          state[name].form=[];
-          state[name].matches=[];
-
-          state[name].rating*=0.70;
+          state[name].rating=
+            oldRating*0.70;
         }
       }
 
-      currentSeason=m.season;
+      currentSeason=
+        m.season;
     }
 
-    if(!ready(state,m,minTrain)){
+
+    /*
+      Minst 15 tidigare matcher
+      krävs för båda lagen.
+
+      Detta är nu möjligt inom en
+      38-matcherssäsong.
+    */
+
+    if(
+      !ready(
+        state,
+        m,
+        minTrain
+      )
+    ){
 
       notReady++;
 
-      updateState(state,m);
+      const h=
+        getTeam(
+          state,
+          m.home
+        );
+
+      const a=
+        getTeam(
+          state,
+          m.away
+        );
+
+      if(
+        h.n<minTrain
+      ){
+        notReadyHome++;
+      }
+
+      if(
+        a.n<minTrain
+      ){
+        notReadyAway++;
+      }
+
+      /*
+        Matchen uppdaterar state efteråt.
+      */
+
+      updateState(
+        state,
+        m
+      );
 
       continue;
     }
+
 
     /*
       PREDICTION FÖRE RESULTAT.
     */
 
-    const model=modelProbability(
-      state,
-      m
-    );
+    const model=
+      modelProbability(
+        state,
+        m
+      );
 
-    const aiRaw=model.probs;
+    const ai=
+      calibrate(
+        calibrationHistory,
+        model.probs,
+        calWindow
+      );
 
-    const ai=rawCalibration(
-      calibrationHistory,
-      aiRaw
-    );
+    const market=
+      marketProb(
+        m.odds
+      );
 
-    const market=marketProb(m.odds);
+    const value=
+      valuePick(
+        ai,
+        market,
+        m.odds,
+        aiWeight
+      );
 
-    const value=valuePick(
-      ai,
-      market,
-      m.odds,
-      aiWeight
-    );
+    const r=
+      resultIndex(
+        m.result
+      );
 
-    const r=resultIndex(m.result);
 
     /*
-      Calibration data innan resultatet
-      uppdateras.
+      Kalibrering.
     */
 
-    for(let c=0;c<3;c++){
+    for(
+      let c=0;
+      c<3;
+      c++
+    ){
 
       const p=ai[c];
 
       let bucket=0;
 
-      if(p<0.40)bucket=0;
-      else if(p<0.50)bucket=1;
-      else if(p<0.60)bucket=2;
-      else if(p<0.70)bucket=3;
-      else bucket=4;
+      if(p<0.40){
+        bucket=0;
+      }
+      else if(p<0.50){
+        bucket=1;
+      }
+      else if(p<0.60){
+        bucket=2;
+      }
+      else if(p<0.70){
+        bucket=3;
+      }
+      else if(p<0.80){
+        bucket=4;
+      }
+      else if(p<0.90){
+        bucket=5;
+      }
+      else{
+        bucket=6;
+      }
 
       calBuckets[bucket].push({
+
         p,
-        actual:r===c?1:0,
+
+        actual:
+          r===c
+          ?1
+          :0,
+
         c
       });
     }
 
+
     const pred={
+
       season:m.season,
+
       date:m.date,
+
       home:m.home,
+
       away:m.away,
-      probs:ai.slice(),
-      rawAI:aiRaw.slice(),
-      market:market.slice(),
-      blend:value.blend.slice(),
-      result:m.result,
-      pick:value.pick,
-      odds:value.odds,
-      ev:value.pickEV,
-      edge:value.edge,
-      lambdaH:model.lambdaH,
-      lambdaA:model.lambdaA
+
+      probs:
+        ai.slice(),
+
+      rawAI:
+        model.probs.slice(),
+
+      market:
+        market.slice(),
+
+      blend:
+        value.blend.slice(),
+
+      result:
+        m.result,
+
+      pick:
+        value.pick,
+
+      odds:
+        value.odds,
+
+      ev:
+        value.pickEV,
+
+      edge:
+        value.edge,
+
+      lambdaH:
+        model.lambdaH,
+
+      lambdaA:
+        model.lambdaA
     };
 
+
     predictions.push(pred);
+
     analyzed.push(pred);
 
+
     blendRaw.push({
-      ai:ai.slice(),
-      market:market.slice(),
-      odds:m.odds.slice(),
-      result:m.result,
-      season:m.season
+
+      ai:
+        ai.slice(),
+
+      market:
+        market.slice(),
+
+      odds:
+        m.odds.slice(),
+
+      result:
+        m.result,
+
+      season:
+        m.season
     });
+
 
     lambdas.push({
-      h:model.lambdaH,
-      a:model.lambdaA
+
+      h:
+        model.lambdaH,
+
+      a:
+        model.lambdaA
     });
 
+
     /*
-      Pick frequency.
+      AI pick.
+    */
+
+    const aiPick=
+      ai.indexOf(
+        Math.max(...ai)
+      );
+
+    if(aiPick===0)aiHome++;
+    if(aiPick===1)aiDraw++;
+    if(aiPick===2)aiAway++;
+
+
+    /*
+      Market pick.
+    */
+
+    const marketPick=
+      market.indexOf(
+        Math.max(...market)
+      );
+
+    if(marketPick===0)marketHome++;
+    if(marketPick===1)marketDraw++;
+    if(marketPick===2)marketAway++;
+
+
+    /*
+      Value pick.
     */
 
     if(value.pick===0)blendHome++;
     if(value.pick===1)blendDraw++;
     if(value.pick===2)blendAway++;
 
-    const aipick=
-      ai.indexOf(Math.max(...ai));
-
-    const mpick=
-      market.indexOf(Math.max(...market));
-
-    if(aipick===0)aiHome++;
-    if(aipick===1)aiDraw++;
-    if(aipick===2)aiAway++;
-
-    if(mpick===0)marketHome++;
-    if(mpick===1)marketDraw++;
-    if(mpick===2)marketAway++;
-
-    /*
-      H/D/A main.
-    */
 
     const won=
       value.pick===r;
 
-    addBet(
-      pickStats[outcomeLabel(value.pick)],
-      won,
-      value.odds
-    );
 
     /*
-      Value Picker:
-      endast positiv EV över vald min EV.
+      Main strategy:
+      positiv EV över vald gräns
+      och max odds.
     */
 
     if(
@@ -1492,9 +2444,15 @@ function runBacktest(allMatches){
         value.odds
       );
 
-      const split=getSplit(m.season);
 
-      if(splitStats[split]){
+      const split=
+        getSplit(
+          m.season
+        );
+
+      if(
+        splitStats[split]
+      ){
 
         addBet(
           splitStats[split],
@@ -1503,67 +2461,173 @@ function runBacktest(allMatches){
         );
       }
 
+
       /*
         EV-zoner.
       */
 
-      const ev=value.pickEV;
+      if(
+        value.pickEV>=0
+      ){
 
-      if(ev>=0)
-        addBet(evZones[">=0"],won,value.odds);
+        addBet(
+          evZones[">=0"],
+          won,
+          value.odds
+        );
+      }
 
-      if(ev>=0.03)
-        addBet(evZones[">=3"],won,value.odds);
+      if(
+        value.pickEV>=0.03
+      ){
 
-      if(ev>=0.05)
-        addBet(evZones[">=5"],won,value.odds);
+        addBet(
+          evZones[">=3"],
+          won,
+          value.odds
+        );
+      }
 
-      if(ev>=0.07)
-        addBet(evZones[">=7"],won,value.odds);
+      if(
+        value.pickEV>=0.05
+      ){
 
-      if(ev>=0.10)
-        addBet(evZones[">=10"],won,value.odds);
+        addBet(
+          evZones[">=5"],
+          won,
+          value.odds
+        );
+      }
 
-      if(ev>=0.15)
-        addBet(evZones[">=15"],won,value.odds);
+      if(
+        value.pickEV>=0.07
+      ){
+
+        addBet(
+          evZones[">=7"],
+          won,
+          value.odds
+        );
+      }
+
+      if(
+        value.pickEV>=0.10
+      ){
+
+        addBet(
+          evZones[">=10"],
+          won,
+          value.odds
+        );
+      }
+
+      if(
+        value.pickEV>=0.15
+      ){
+
+        addBet(
+          evZones[">=15"],
+          won,
+          value.odds
+        );
+      }
+
 
       /*
         Edge-zoner.
       */
 
-      const e=value.edge;
+      const e=
+        value.edge;
 
-      if(e>=0 && e<0.05)
-        addBet(edgeZones["0–5"],won,value.odds);
+      if(
+        e>=0 &&
+        e<0.05
+      ){
 
-      if(e>=0.05 && e<0.10)
-        addBet(edgeZones["5–10"],won,value.odds);
+        addBet(
+          edgeZones["0–5"],
+          won,
+          value.odds
+        );
+      }
 
-      if(e>=0.10 && e<0.15)
-        addBet(edgeZones["10–15"],won,value.odds);
+      if(
+        e>=0.05 &&
+        e<0.10
+      ){
 
-      if(e>=0.15 && e<0.20)
-        addBet(edgeZones["15–20"],won,value.odds);
+        addBet(
+          edgeZones["5–10"],
+          won,
+          value.odds
+        );
+      }
 
-      if(e>=0.20 && e<0.25)
-        addBet(edgeZones["20–25"],won,value.odds);
+      if(
+        e>=0.10 &&
+        e<0.15
+      ){
 
-      if(e>=0.25)
-        addBet(edgeZones["25+"],won,value.odds);
+        addBet(
+          edgeZones["10–15"],
+          won,
+          value.odds
+        );
+      }
+
+      if(
+        e>=0.15 &&
+        e<0.20
+      ){
+
+        addBet(
+          edgeZones["15–20"],
+          won,
+          value.odds
+        );
+      }
+
+      if(
+        e>=0.20 &&
+        e<0.25
+      ){
+
+        addBet(
+          edgeZones["20–25"],
+          won,
+          value.odds
+        );
+      }
+
+      if(
+        e>=0.25
+      ){
+
+        addBet(
+          edgeZones["25+"],
+          won,
+          value.odds
+        );
+      }
+
 
       main.push(pred);
+
 
       if(
         value.pickEV>=0.15 &&
         signals.length<30
       ){
+
         signals.push(pred);
       }
     }
 
+
     /*
-      Kalibreringshistorik uppdateras EFTER
-      resultatet.
+      FÖRST EFTER prediction:
+      kalibrering och modelluppdatering.
     */
 
     recordPrediction(
@@ -1572,90 +2636,128 @@ function runBacktest(allMatches){
       m.result
     );
 
-    /*
-      Modelluppdatering EFTER prediction.
-    */
-
-    updateState(state,m);
+    updateState(
+      state,
+      m
+    );
   }
 
-  const metrics=calculateMetrics(predictions);
 
   return {
+
     predictions,
+
     analyzed,
+
     main,
+
     mainStats,
+
     splitStats,
+
     pickStats,
+
     evZones,
+
     edgeZones,
+
     blendRaw,
-    metrics,
-    totalRows,
-    notReady,
+
     lambdas,
+
     signals,
+
     calBuckets,
+
+    notReady,
+
+    notReadyHome,
+
+    notReadyAway,
+
+    metrics:
+      calculateMetrics(
+        predictions
+      ),
+
     aiHome,
     aiDraw,
     aiAway,
+
     marketHome,
     marketDraw,
     marketAway,
+
     blendHome,
     blendDraw,
     blendAway
   };
 }
 
-const mainStats=emptyStats();
 
-/* =========================
+/* =========================================================
    BLEND TEST
-========================= */
+   ========================================================= */
 
-function runBlendTest(raw){
+function runBlendTest(
+  raw
+){
 
-  const weights=[0,25,50,75,100];
+  const weights=[
+    0,
+    25,
+    50,
+    75,
+    100
+  ];
 
   const out=[];
 
-  for(const w of weights){
+  for(
+    const w of weights
+  ){
 
-    const s=emptyStats();
+    const s=
+      emptyStats();
 
-    /*
-      0/100 kan ge positiv EV beroende på odds,
-      så även marknaden testas.
-    */
+    for(
+      const x of raw
+    ){
 
-    for(const x of raw){
-
-      const v=valuePick(
-        x.ai,
-        x.market,
-        x.odds,
-        w
-      );
+      const v=
+        valuePick(
+          x.ai,
+          x.market,
+          x.odds,
+          w
+        );
 
       /*
-        Samma huvudregel:
-        positiv EV.
+        Blendtest använder samma
+        Value Picker-logik.
+
+        Endast positivt EV.
       */
 
-      if(v.pickEV>=0){
+      if(
+        v.pickEV>=0
+      ){
 
         addBet(
           s,
-          v.pick===resultIndex(x.result),
+          v.pick===
+            resultIndex(
+              x.result
+            ),
           v.odds
         );
       }
     }
 
     out.push({
+
       weight:w,
+
       stats:s
     });
   }
@@ -1663,24 +2765,29 @@ function runBlendTest(raw){
   return out;
 }
 
-/* =========================
-   CALIBRATION TABLE
-========================= */
 
-function makeCalibration(data){
+/* =========================================================
+   CALIBRATION TABLE
+   ========================================================= */
+
+function makeCalibration(
+  buckets
+){
 
   const ranges=[
-    [0.30,0.40],
-    [0.40,0.50],
-    [0.50,0.60],
-    [0.60,0.70],
-    [0.70,0.80],
-    [0.80,0.90],
-    [0.90,1.01]
+    "30–40%",
+    "40–50%",
+    "50–60%",
+    "60–70%",
+    "70–80%",
+    "80–90%",
+    "90–101%"
   ];
 
   let html=`
+
   <table>
+
   <tr>
   <th>Förutspådd sannolikhet</th>
   <th>Antal</th>
@@ -1690,197 +2797,257 @@ function makeCalibration(data){
   </tr>
   `;
 
-  for(const range of ranges){
+  for(
+    let i=0;
+    i<ranges.length;
+    i++
+  ){
 
-    const rows=[];
+    const rows=
+      buckets[i];
 
-    for(const p of data){
-
-      if(
-        p.p>=range[0] &&
-        p.p<range[1]
-      ){
-        rows.push(p);
-      }
-    }
-
-    if(!rows.length){
+    if(
+      !rows.length
+    ){
 
       html+=`
+
       <tr>
-      <td>${Math.round(range[0]*100)}–${Math.round(range[1]*100)}%</td>
+
+      <td>${ranges[i]}</td>
+
       <td>0</td>
+
       <td>-</td>
+
       <td>-</td>
+
       <td>-</td>
+
       </tr>
       `;
 
       continue;
     }
 
-    const pred=avg(
-      rows.map(x=>x.p)
-    );
+    const pred=
+      avg(
+        rows.map(
+          x=>x.p
+        )
+      );
 
-    const actual=avg(
-      rows.map(x=>x.actual)
-    );
+    const actual=
+      avg(
+        rows.map(
+          x=>x.actual
+        )
+      );
 
     html+=`
+
     <tr>
-    <td>${Math.round(range[0]*100)}–${Math.round(range[1]*100)}%</td>
+
+    <td>${ranges[i]}</td>
+
     <td>${rows.length}</td>
+
     <td>${pct(pred)}</td>
+
     <td>${pct(actual)}</td>
+
     <td>${pct(actual-pred)}</td>
+
     </tr>
     `;
   }
 
-  html+="</table>";
-
-  return html;
-}
-
-/* =========================
-   TABLE HELPERS
-========================= */
-
-function statsTable(obj){
-
-  let html=`
-  <table>
-  <tr>
-  <th>Grupp</th>
-  <th>Bets</th>
-  <th>Wins</th>
-  <th>Hit</th>
-  <th>Profit</th>
-  <th>ROI</th>
-  </tr>
+  html+=`
+  </table>
   `;
 
-  for(const [name,s] of Object.entries(obj)){
-
-    const roi=s.bets?
-      s.profit/s.bets:0;
-
-    html+=`
-    <tr>
-    <td>${name}</td>
-    <td>${s.bets}</td>
-    <td>${s.wins}</td>
-    <td>${s.bets?pct(s.wins/s.bets):"0.00%"}</td>
-    <td>${money(s.profit)} kr</td>
-    <td>${s.bets?pct(roi):"0.00%"}</td>
-    </tr>
-    `;
-  }
-
-  html+="</table>";
-
   return html;
 }
 
-/* =========================
+
+/* =========================================================
    RUN
-========================= */
+   ========================================================= */
 
 async function runAnalysis(){
 
-  document.getElementById("technical").innerHTML=
+  document.getElementById(
+    "technical"
+  ).innerHTML=
     "⏳ Laddar och analyserar...";
 
   try{
 
+    /*
+      Ladda alla säsonger.
+    */
+
     const seasonData=[];
 
-    for(const season of SEASONS){
+    for(
+      const season of SEASONS
+    ){
 
-      const x=await loadSeason(season);
+      const x=
+        await loadSeason(
+          season
+        );
 
       seasonData.push(x);
     }
 
+
     let totalRows=0;
     let totalValid=0;
 
-    for(const x of seasonData){
+    for(
+      const x of seasonData
+    ){
 
-      totalRows+=x.rows;
-      totalValid+=x.valid;
+      totalRows+=
+        x.rows;
+
+      totalValid+=
+        x.valid;
     }
 
+
     /*
-      Sortering är extremt viktig för walk-forward.
+      Samtliga matcher i datumordning.
     */
 
     const matches=[];
 
-    for(const x of seasonData){
+    for(
+      const x of seasonData
+    ){
 
-      for(const m of x.matches){
+      for(
+        const m of x.matches
+      ){
+
         matches.push(m);
       }
     }
 
     matches.sort(
-      (a,b)=>a.date-b.date
+      (a,b)=>
+        a.date-b.date
     );
 
-    const result=runBacktest(matches);
 
-    document.getElementById("csvRows").textContent=
+    /*
+      NY backtest.
+      mainStats skapas inne i funktionen.
+    */
+
+    const result=
+      runBacktest(
+        matches
+      );
+
+
+    /*
+      Grunddata.
+    */
+
+    document.getElementById(
+      "csvRows"
+    ).textContent=
       totalRows;
 
-    document.getElementById("validRows").textContent=
+    document.getElementById(
+      "validRows"
+    ).textContent=
       totalValid;
 
-    document.getElementById("analyzed").textContent=
+    document.getElementById(
+      "analyzed"
+    ).textContent=
       result.analyzed.length;
 
-    document.getElementById("notReady").textContent=
+    document.getElementById(
+      "notReady"
+    ).textContent=
       result.notReady;
 
-    document.getElementById("accuracy").textContent=
-      pct(result.metrics.accuracy);
+    document.getElementById(
+      "accuracy"
+    ).textContent=
+      pct(
+        result.metrics.accuracy
+      );
 
-    document.getElementById("brier").textContent=
+    document.getElementById(
+      "brier"
+    ).textContent=
       result.metrics.brier.toFixed(4);
 
-    document.getElementById("logloss").textContent=
+    document.getElementById(
+      "logloss"
+    ).textContent=
       result.metrics.ll.toFixed(4);
+
 
     /*
       Huvudstrategi.
     */
 
-    document.getElementById("mainStrategy").innerHTML=`
+    const aiW=
+      num(
+        document.getElementById(
+          "aiWeight"
+        ).value
+      )??25;
 
-      <p>
-      <b>AI vikt:</b>
-      ${document.getElementById("aiWeight").value}%
-      /
-      <b>Market:</b>
-      ${100-num(document.getElementById("aiWeight").value)}%
-      </p>
+    const minE=
+      num(
+        document.getElementById(
+          "minEV"
+        ).value
+      )??5;
 
-      <p>
-      Value Picker väljer det utfall H/D/A som har högst EV.
-      Min EV:
-      ${document.getElementById("minEV").value}%
-      </p>
+    document.getElementById(
+      "mainStrategy"
+    ).innerHTML=`
 
-      ${statsHtml(result.mainStats)}
+    <p>
+    <b>AI:</b>
+    ${aiW}%
+    /
+    <b>Market:</b>
+    ${100-aiW}%
+    </p>
+
+    <p>
+    Value Picker väljer det utfall
+    H/D/A som har högst EV.
+    </p>
+
+    <p>
+    Min EV:
+    ${minE}%
+    </p>
+
+    ${statsHtml(
+      result.mainStats
+    )}
     `;
+
 
     /*
       Train / Validation / OOS.
     */
 
     let splitHTML=`
+
     <table>
+
     <tr>
     <th>Period</th>
     <th>Bets</th>
@@ -1891,411 +3058,906 @@ async function runAnalysis(){
     </tr>
     `;
 
-    for(const name of ["Train","Validation","OOS"]){
+    for(
+      const name of
+      [
+        "Train",
+        "Validation",
+        "OOS"
+      ]
+    ){
 
-      const s=result.splitStats[name];
+      const s=
+        result.splitStats[name];
 
       splitHTML+=`
+
       <tr>
+
       <td>${name}</td>
+
       <td>${s.bets}</td>
+
       <td>${s.wins}</td>
-      <td>${s.bets?pct(s.wins/s.bets):"0.00%"}</td>
-      <td>${s.bets?pct(s.profit/s.bets):"0.00%"}</td>
-      <td>${money(s.profit)} kr</td>
+
+      <td>
+      ${
+        s.bets
+        ?pct(s.wins/s.bets)
+        :"0.00%"
+      }
+      </td>
+
+      <td>
+      ${
+        s.bets
+        ?pct(s.profit/s.bets)
+        :"0.00%"
+      }
+      </td>
+
+      <td>
+      ${money(s.profit)} kr
+      </td>
+
       </tr>
       `;
     }
 
-    splitHTML+="</table>";
+    splitHTML+=`
+    </table>
+    `;
 
-    document.getElementById("splitTable").innerHTML=
+    document.getElementById(
+      "splitTable"
+    ).innerHTML=
       splitHTML;
+
 
     /*
       Blend.
     */
 
-    const blends=runBlendTest(
-      result.blendRaw
-    );
+    const blends=
+      runBlendTest(
+        result.blendRaw
+      );
 
     let blendHTML=`
+
     <table>
+
     <tr>
+
     <th>AI / Market</th>
+
     <th>Bets</th>
+
     <th>Wins</th>
+
     <th>Hit</th>
+
     <th>ROI</th>
+
     <th>Profit</th>
+
     </tr>
     `;
 
-    for(const b of blends){
+    for(
+      const b of blends
+    ){
 
       const s=b.stats;
 
       blendHTML+=`
+
       <tr>
-      <td>${b.weight} / ${100-b.weight}</td>
+
+      <td>
+      ${b.weight} / ${100-b.weight}
+      </td>
+
       <td>${s.bets}</td>
+
       <td>${s.wins}</td>
-      <td>${s.bets?pct(s.wins/s.bets):"0.00%"}</td>
-      <td>${s.bets?pct(s.profit/s.bets):"0.00%"}</td>
-      <td>${money(s.profit)} kr</td>
+
+      <td>
+      ${
+        s.bets
+        ?pct(s.wins/s.bets)
+        :"0.00%"
+      }
+      </td>
+
+      <td>
+      ${
+        s.bets
+        ?pct(s.profit/s.bets)
+        :"0.00%"
+      }
+      </td>
+
+      <td>
+      ${money(s.profit)} kr
+      </td>
+
       </tr>
       `;
     }
 
-    blendHTML+="</table>";
+    blendHTML+=`
+    </table>
+    `;
 
-    document.getElementById("blendTable").innerHTML=
+    document.getElementById(
+      "blendTable"
+    ).innerHTML=
       blendHTML;
+
 
     /*
       EV.
     */
 
-    document.getElementById("evTable").innerHTML=
-      statsTable(result.evZones);
+    document.getElementById(
+      "evTable"
+    ).innerHTML=
+      statsTable(
+        result.evZones
+      );
+
 
     /*
       Edge.
     */
 
-    document.getElementById("edgeTable").innerHTML=
-      statsTable(result.edgeZones);
+    document.getElementById(
+      "edgeTable"
+    ).innerHTML=
+      statsTable(
+        result.edgeZones
+      );
+
 
     /*
-      Pick-resultat.
+      Pick.
     */
 
-    document.getElementById("pickResult").innerHTML=
-      statsTable(result.pickStats);
+    document.getElementById(
+      "pickResult"
+    ).innerHTML=
+      statsTable(
+        result.pickStats
+      );
+
 
     /*
-      Modellens H/D/A-sannolikheter.
+      H/D/A probability.
     */
 
-    const n=result.analyzed.length;
+    const n=
+      result.analyzed.length;
 
-    document.getElementById("probByOutcome").innerHTML=`
+    if(n){
 
-    <table>
-    <tr>
-    <th>Mätning</th>
-    <th>Home</th>
-    <th>Draw</th>
-    <th>Away</th>
-    </tr>
+      document.getElementById(
+        "probByOutcome"
+      ).innerHTML=`
 
-    <tr>
-    <td>AI probability</td>
-    <td>${pct(result.analyzed.reduce((s,x)=>s+x.probs[0],0)/n)}</td>
-    <td>${pct(result.analyzed.reduce((s,x)=>s+x.probs[1],0)/n)}</td>
-    <td>${pct(result.analyzed.reduce((s,x)=>s+x.probs[2],0)/n)}</td>
-    </tr>
+      <table>
 
-    <tr>
-    <td>Market probability</td>
-    <td>${pct(result.analyzed.reduce((s,x)=>s+x.market[0],0)/n)}</td>
-    <td>${pct(result.analyzed.reduce((s,x)=>s+x.market[1],0)/n)}</td>
-    <td>${pct(result.analyzed.reduce((s,x)=>s+x.market[2],0)/n)}</td>
-    </tr>
+      <tr>
 
-    <tr>
-    <td>Blend probability</td>
-    <td>${pct(result.analyzed.reduce((s,x)=>s+x.blend[0],0)/n)}</td>
-    <td>${pct(result.analyzed.reduce((s,x)=>s+x.blend[1],0)/n)}</td>
-    <td>${pct(result.analyzed.reduce((s,x)=>s+x.blend[2],0)/n)}</td>
-    </tr>
+      <th>Mätning</th>
+      <th>Home</th>
+      <th>Draw</th>
+      <th>Away</th>
 
-    </table>
-    `;
+      </tr>
 
-    /*
-      Kalibrering.
-      Alla tre utfall sammanslaget.
-    */
+      <tr>
 
-    const allCal=[];
+      <td>AI probability</td>
 
-    for(const x of result.calBuckets){
+      <td>
+      ${pct(
+        result.analyzed.reduce(
+          (s,x)=>
+            s+x.probs[0],
+          0
+        )/n
+      )}
+      </td>
 
-      for(const y of x){
-        allCal.push(y);
-      }
+      <td>
+      ${pct(
+        result.analyzed.reduce(
+          (s,x)=>
+            s+x.probs[1],
+          0
+        )/n
+      )}
+      </td>
+
+      <td>
+      ${pct(
+        result.analyzed.reduce(
+          (s,x)=>
+            s+x.probs[2],
+          0
+        )/n
+      )}
+      </td>
+
+      </tr>
+
+
+      <tr>
+
+      <td>Market probability</td>
+
+      <td>
+      ${pct(
+        result.analyzed.reduce(
+          (s,x)=>
+            s+x.market[0],
+          0
+        )/n
+      )}
+      </td>
+
+      <td>
+      ${pct(
+        result.analyzed.reduce(
+          (s,x)=>
+            s+x.market[1],
+          0
+        )/n
+      )}
+      </td>
+
+      <td>
+      ${pct(
+        result.analyzed.reduce(
+          (s,x)=>
+            s+x.market[2],
+          0
+        )/n
+      )}
+      </td>
+
+      </tr>
+
+
+      <tr>
+
+      <td>Blend probability</td>
+
+      <td>
+      ${pct(
+        result.analyzed.reduce(
+          (s,x)=>
+            s+x.blend[0],
+          0
+        )/n
+      )}
+      </td>
+
+      <td>
+      ${pct(
+        result.analyzed.reduce(
+          (s,x)=>
+            s+x.blend[1],
+          0
+        )/n
+      )}
+      </td>
+
+      <td>
+      ${pct(
+        result.analyzed.reduce(
+          (s,x)=>
+            s+x.blend[2],
+          0
+        )/n
+      )}
+      </td>
+
+      </tr>
+
+      </table>
+      `;
+    }
+    else{
+
+      document.getElementById(
+        "probByOutcome"
+      ).innerHTML=
+        "Inga analyserade matcher.";
     }
 
-    document.getElementById("calibration").innerHTML=
-      makeCalibration(allCal);
+
+    /*
+      Calibration.
+    */
+
+    document.getElementById(
+      "calibration"
+    ).innerHTML=
+      makeCalibration(
+        result.calBuckets
+      );
+
 
     /*
       Bias.
     */
 
-    document.getElementById("bias").innerHTML=`
+    if(n){
 
-    <table>
-    <tr>
-    <th>Mätning</th>
-    <th>Home</th>
-    <th>Draw</th>
-    <th>Away</th>
-    </tr>
+      document.getElementById(
+        "bias"
+      ).innerHTML=`
 
-    <tr>
-    <td>AI probability</td>
-    <td>${pct(result.analyzed.reduce((s,x)=>s+x.probs[0],0)/n)}</td>
-    <td>${pct(result.analyzed.reduce((s,x)=>s+x.probs[1],0)/n)}</td>
-    <td>${pct(result.analyzed.reduce((s,x)=>s+x.probs[2],0)/n)}</td>
-    </tr>
+      <table>
 
-    <tr>
-    <td>Market probability</td>
-    <td>${pct(result.analyzed.reduce((s,x)=>s+x.market[0],0)/n)}</td>
-    <td>${pct(result.analyzed.reduce((s,x)=>s+x.market[1],0)/n)}</td>
-    <td>${pct(result.analyzed.reduce((s,x)=>s+x.market[2],0)/n)}</td>
-    </tr>
+      <tr>
+      <th>Mätning</th>
+      <th>Home</th>
+      <th>Draw</th>
+      <th>Away</th>
+      </tr>
 
-    <tr>
-    <td>AI - Market</td>
-    <td>${pct(
-      result.analyzed.reduce((s,x)=>s+(x.probs[0]-x.market[0]),0)/n
-    )}</td>
-    <td>${pct(
-      result.analyzed.reduce((s,x)=>s+(x.probs[1]-x.market[1]),0)/n
-    )}</td>
-    <td>${pct(
-      result.analyzed.reduce((s,x)=>s+(x.probs[2]-x.market[2]),0)/n
-    )}</td>
-    </tr>
 
-    </table>
+      <tr>
 
-    <br>
+      <td>AI probability</td>
 
-    <table>
-    <tr>
-    <th>Pick</th>
-    <th>Antal</th>
-    <th>Andel</th>
-    </tr>
+      <td>
+      ${pct(
+        result.analyzed.reduce(
+          (s,x)=>s+x.probs[0],
+          0
+        )/n
+      )}
+      </td>
 
-    <tr>
-    <td>AI H</td>
-    <td>${result.aiHome}</td>
-    <td>${pct(result.aiHome/n)}</td>
-    </tr>
+      <td>
+      ${pct(
+        result.analyzed.reduce(
+          (s,x)=>s+x.probs[1],
+          0
+        )/n
+      )}
+      </td>
 
-    <tr>
-    <td>AI D</td>
-    <td>${result.aiDraw}</td>
-    <td>${pct(result.aiDraw/n)}</td>
-    </tr>
+      <td>
+      ${pct(
+        result.analyzed.reduce(
+          (s,x)=>s+x.probs[2],
+          0
+        )/n
+      )}
+      </td>
 
-    <tr>
-    <td>AI A</td>
-    <td>${result.aiAway}</td>
-    <td>${pct(result.aiAway/n)}</td>
-    </tr>
+      </tr>
 
-    <tr>
-    <td>Market H</td>
-    <td>${result.marketHome}</td>
-    <td>${pct(result.marketHome/n)}</td>
-    </tr>
 
-    <tr>
-    <td>Market D</td>
-    <td>${result.marketDraw}</td>
-    <td>${pct(result.marketDraw/n)}</td>
-    </tr>
+      <tr>
 
-    <tr>
-    <td>Market A</td>
-    <td>${result.marketAway}</td>
-    <td>${pct(result.marketAway/n)}</td>
-    </tr>
+      <td>Market probability</td>
 
-    <tr>
-    <td>Value Pick H</td>
-    <td>${result.blendHome}</td>
-    <td>${pct(result.blendHome/n)}</td>
-    </tr>
+      <td>
+      ${pct(
+        result.analyzed.reduce(
+          (s,x)=>s+x.market[0],
+          0
+        )/n
+      )}
+      </td>
 
-    <tr>
-    <td>Value Pick D</td>
-    <td>${result.blendDraw}</td>
-    <td>${pct(result.blendDraw/n)}</td>
-    </tr>
+      <td>
+      ${pct(
+        result.analyzed.reduce(
+          (s,x)=>s+x.market[1],
+          0
+        )/n
+      )}
+      </td>
 
-    <tr>
-    <td>Value Pick A</td>
-    <td>${result.blendAway}</td>
-    <td>${pct(result.blendAway/n)}</td>
-    </tr>
+      <td>
+      ${pct(
+        result.analyzed.reduce(
+          (s,x)=>s+x.market[2],
+          0
+        )/n
+      )}
+      </td>
 
-    </table>
-    `;
+      </tr>
+
+
+      <tr>
+
+      <td>AI - Market</td>
+
+      <td>
+      ${pct(
+        result.analyzed.reduce(
+          (s,x)=>
+            s+
+            (
+              x.probs[0]-
+              x.market[0]
+            ),
+          0
+        )/n
+      )}
+      </td>
+
+      <td>
+      ${pct(
+        result.analyzed.reduce(
+          (s,x)=>
+            s+
+            (
+              x.probs[1]-
+              x.market[1]
+            ),
+          0
+        )/n
+      )}
+      </td>
+
+      <td>
+      ${pct(
+        result.analyzed.reduce(
+          (s,x)=>
+            s+
+            (
+              x.probs[2]-
+              x.market[2]
+            ),
+          0
+        )/n
+      )}
+      </td>
+
+      </tr>
+
+      </table>
+
+
+      <br>
+
+
+      <table>
+
+      <tr>
+      <th>Pick</th>
+      <th>Antal</th>
+      <th>Andel</th>
+      </tr>
+
+
+      <tr>
+      <td>AI H</td>
+      <td>${result.aiHome}</td>
+      <td>${pct(result.aiHome/n)}</td>
+      </tr>
+
+
+      <tr>
+      <td>AI D</td>
+      <td>${result.aiDraw}</td>
+      <td>${pct(result.aiDraw/n)}</td>
+      </tr>
+
+
+      <tr>
+      <td>AI A</td>
+      <td>${result.aiAway}</td>
+      <td>${pct(result.aiAway/n)}</td>
+      </tr>
+
+
+      <tr>
+      <td>Market H</td>
+      <td>${result.marketHome}</td>
+      <td>${pct(result.marketHome/n)}</td>
+      </tr>
+
+
+      <tr>
+      <td>Market D</td>
+      <td>${result.marketDraw}</td>
+      <td>${pct(result.marketDraw/n)}</td>
+      </tr>
+
+
+      <tr>
+      <td>Market A</td>
+      <td>${result.marketAway}</td>
+      <td>${pct(result.marketAway/n)}</td>
+      </tr>
+
+
+      <tr>
+      <td>Value Pick H</td>
+      <td>${result.blendHome}</td>
+      <td>${pct(result.blendHome/n)}</td>
+      </tr>
+
+
+      <tr>
+      <td>Value Pick D</td>
+      <td>${result.blendDraw}</td>
+      <td>${pct(result.blendDraw/n)}</td>
+      </tr>
+
+
+      <tr>
+      <td>Value Pick A</td>
+      <td>${result.blendAway}</td>
+      <td>${pct(result.blendAway/n)}</td>
+      </tr>
+
+      </table>
+      `;
+    }
+    else{
+
+      document.getElementById(
+        "bias"
+      ).innerHTML=
+        "Inga analyserade matcher.";
+    }
+
 
     /*
       Poisson.
     */
 
-    const meanH=
-      avg(result.lambdas.map(x=>x.h));
+    if(
+      result.lambdas.length
+    ){
 
-    const meanA=
-      avg(result.lambdas.map(x=>x.a));
+      const meanH=
+        avg(
+          result.lambdas.map(
+            x=>x.h
+          )
+        );
 
-    const minH=
-      Math.min(...result.lambdas.map(x=>x.h));
+      const meanA=
+        avg(
+          result.lambdas.map(
+            x=>x.a
+          )
+        );
 
-    const maxH=
-      Math.max(...result.lambdas.map(x=>x.h));
+      const minH=
+        Math.min(
+          ...result.lambdas.map(
+            x=>x.h
+          )
+        );
 
-    const minA=
-      Math.min(...result.lambdas.map(x=>x.a));
+      const maxH=
+        Math.max(
+          ...result.lambdas.map(
+            x=>x.h
+          )
+        );
 
-    const maxA=
-      Math.max(...result.lambdas.map(x=>x.a));
+      const minA=
+        Math.min(
+          ...result.lambdas.map(
+            x=>x.a
+          )
+        );
 
-    document.getElementById("poissonStats").innerHTML=`
+      const maxA=
+        Math.max(
+          ...result.lambdas.map(
+            x=>x.a
+          )
+        );
 
-    <table>
-    <tr>
-    <th>Mätning</th>
-    <th>Home</th>
-    <th>Away</th>
-    </tr>
+      document.getElementById(
+        "poissonStats"
+      ).innerHTML=`
 
-    <tr>
-    <td>Genomsnitt λ</td>
-    <td>${meanH.toFixed(2)}</td>
-    <td>${meanA.toFixed(2)}</td>
-    </tr>
+      <table>
 
-    <tr>
-    <td>Min λ</td>
-    <td>${minH.toFixed(2)}</td>
-    <td>${minA.toFixed(2)}</td>
-    </tr>
+      <tr>
+      <th>Mätning</th>
+      <th>Home</th>
+      <th>Away</th>
+      </tr>
 
-    <tr>
-    <td>Max λ</td>
-    <td>${maxH.toFixed(2)}</td>
-    <td>${maxA.toFixed(2)}</td>
-    </tr>
+      <tr>
 
-    </table>
-    `;
+      <td>Genomsnitt λ</td>
+
+      <td>${meanH.toFixed(2)}</td>
+
+      <td>${meanA.toFixed(2)}</td>
+
+      </tr>
+
+      <tr>
+
+      <td>Min λ</td>
+
+      <td>${minH.toFixed(2)}</td>
+
+      <td>${minA.toFixed(2)}</td>
+
+      </tr>
+
+      <tr>
+
+      <td>Max λ</td>
+
+      <td>${maxH.toFixed(2)}</td>
+
+      <td>${maxA.toFixed(2)}</td>
+
+      </tr>
+
+      </table>
+      `;
+    }
+    else{
+
+      document.getElementById(
+        "poissonStats"
+      ).innerHTML=
+        "Inga Poisson-prognoser.";
+    }
+
 
     /*
       Toppsignaler.
     */
 
-    const top=result.signals
-      .sort((a,b)=>b.ev-a.ev)
-      .slice(0,15);
+    const top=
+      result.signals
+        .sort(
+          (a,b)=>
+            b.ev-a.ev
+        )
+        .slice(
+          0,
+          15
+        );
 
-    let signalHTML=`
-    <table>
-    <tr>
-    <th>Match</th>
-    <th>Pick</th>
-    <th>Odds</th>
-    <th>AI</th>
-    <th>Market</th>
-    <th>Blend</th>
-    <th>Edge</th>
-    <th>EV</th>
-    <th>Resultat</th>
-    </tr>
-    `;
+    if(top.length){
 
-    for(const x of top){
+      let signalHTML=`
 
-      signalHTML+=`
+      <table>
+
       <tr>
-      <td>${x.home} – ${x.away}</td>
-      <td>${outcomeLabel(x.pick)}</td>
-      <td>${x.odds.toFixed(2)}</td>
-      <td>${pct(x.probs[x.pick])}</td>
-      <td>${pct(x.market[x.pick])}</td>
-      <td>${pct(x.blend[x.pick])}</td>
-      <td>${pct(x.edge)}</td>
-      <td>${pct(x.ev)}</td>
-      <td>${x.result===outcomeLabel(x.pick)?"VINST":"FÖRLUST"}</td>
+
+      <th>Match</th>
+      <th>Pick</th>
+      <th>Odds</th>
+      <th>AI</th>
+      <th>Market</th>
+      <th>Blend</th>
+      <th>Edge</th>
+      <th>EV</th>
+      <th>Resultat</th>
+
       </tr>
       `;
+
+      for(
+        const x of top
+      ){
+
+        signalHTML+=`
+
+        <tr>
+
+        <td>
+        ${x.home} – ${x.away}
+        </td>
+
+        <td>
+        ${outcomeLabel(x.pick)}
+        </td>
+
+        <td>
+        ${x.odds.toFixed(2)}
+        </td>
+
+        <td>
+        ${pct(x.probs[x.pick])}
+        </td>
+
+        <td>
+        ${pct(x.market[x.pick])}
+        </td>
+
+        <td>
+        ${pct(x.blend[x.pick])}
+        </td>
+
+        <td>
+        ${pct(x.edge)}
+        </td>
+
+        <td>
+        ${pct(x.ev)}
+        </td>
+
+        <td>
+        ${
+          x.result===
+          outcomeLabel(x.pick)
+          ?"VINST"
+          :"FÖRLUST"
+        }
+        </td>
+
+        </tr>
+        `;
+      }
+
+      signalHTML+=`
+      </table>
+      `;
+
+      document.getElementById(
+        "signals"
+      ).innerHTML=
+        signalHTML;
+
+    }
+    else{
+
+      document.getElementById(
+        "signals"
+      ).innerHTML=
+        "Inga värdesignaler över vald nivå.";
     }
 
-    signalHTML+="</table>";
-
-    document.getElementById("signals").innerHTML=
-      signalHTML;
 
     /*
-      Teknisk kontroll.
+      Technical.
     */
 
-    const nanCount=result.analyzed.filter(x=>
-      !x.probs.every(Number.isFinite) ||
-      !x.market.every(Number.isFinite) ||
-      !x.blend.every(Number.isFinite) ||
-      !Number.isFinite(x.ev) ||
-      !Number.isFinite(x.edge)
-    ).length;
+    const nanCount=
+      result.analyzed.filter(
+        x=>
+          !x.probs.every(
+            Number.isFinite
+          ) ||
 
-    const awayExtreme=result.analyzed.filter(x=>
-      x.probs[2]>0.50
-    ).length;
+          !x.market.every(
+            Number.isFinite
+          ) ||
 
-    document.getElementById("technical").innerHTML=`
+          !x.blend.every(
+            Number.isFinite
+          ) ||
 
-    <p>✓ ${totalRows.toLocaleString("sv-SE")} CSV-rader kan laddas</p>
+          !Number.isFinite(
+            x.ev
+          ) ||
 
-    <p>✓ ${totalValid.toLocaleString("sv-SE")} giltiga matcher</p>
+          !Number.isFinite(
+            x.edge
+          )
+      ).length;
 
-    <p>✓ Prediction före resultat/update</p>
 
-    <p>✓ FTHG / FTAG används</p>
+    const awayExtreme=
+      result.analyzed.filter(
+        x=>
+          x.probs[2]>0.50
+      ).length;
 
-    <p>✓ Separat attack / försvar</p>
 
-    <p>✓ Form används</p>
-
-    <p>✓ Rating används försiktigt</p>
-
-    <p>✓ Shrinkage mot ligamedel</p>
-
-    <p>✓ Säsongsövergång hanteras</p>
-
-    <p>✓ Kalibrering använder endast tidigare matcher</p>
-
-    <p>✓ Edge och EV använder samma pick</p>
-
-    <p>✓ Value Picker testar H/D/A individuellt</p>
-
-    <p>✓ Blend-test räknar om pick och EV</p>
-
-    <p>✓ Train / Validation / OOS</p>
-
-    <p>✓ Poisson skyddad mot NaN</p>
-
-    <p>✓ ${nanCount} NaN/ogiltiga predictioner</p>
+    document.getElementById(
+      "technical"
+    ).innerHTML=`
 
     <p>
-    ✓ Extrema AI-bortasannolikheter över 50%:
+    ✓ ${totalRows.toLocaleString("sv-SE")}
+    CSV-rader kan laddas
+    </p>
+
+    <p>
+    ✓ ${totalValid.toLocaleString("sv-SE")}
+    giltiga matcher
+    </p>
+
+    <p>
+    ✓ Prediction före resultat/update
+    </p>
+
+    <p>
+    ✓ FTHG / FTAG används
+    </p>
+
+    <p>
+    ✓ Separat attack / försvar
+    </p>
+
+    <p>
+    ✓ Form används
+    </p>
+
+    <p>
+    ✓ Rating används försiktigt
+    </p>
+
+    <p>
+    ✓ Shrinkage mot ligamedel
+    </p>
+
+    <p>
+    ✓ Säsongsövergång hanteras
+    </p>
+
+    <p>
+    ✓ Rating behålls till 70% mellan säsonger
+    </p>
+
+    <p>
+    ✓ Kalibrering använder endast tidigare matcher
+    </p>
+
+    <p>
+    ✓ Edge och EV använder samma pick
+    </p>
+
+    <p>
+    ✓ Value Picker testar H/D/A individuellt
+    </p>
+
+    <p>
+    ✓ Blend-test räknar om pick och EV
+    </p>
+
+    <p>
+    ✓ Train / Validation / OOS
+    </p>
+
+    <p>
+    ✓ Poisson skyddad mot NaN
+    </p>
+
+    <p>
+    ✓ ${nanCount}
+    NaN/ogiltiga predictioner
+    </p>
+
+    <p>
+    ✓ AI-bortasannolikhet över 50%:
     <b>${awayExtreme}</b>
     </p>
 
     <p>
-    ✓ Ej redo på grund av träningskrav:
+    ✓ Ej redo – för få tidigare matcher:
     <b>${result.notReady}</b>
     </p>
+
+    <p>
+    ↳ Hemmalag under träningskrav:
+    <b>${result.notReadyHome}</b>
+    </p>
+
+    <p>
+    ↳ Bortalag under träningskrav:
+    <b>${result.notReadyAway}</b>
+    </p>
+
     `;
 
   }
@@ -2303,9 +3965,18 @@ async function runAnalysis(){
 
     console.error(err);
 
-    document.getElementById("technical").innerHTML=`
+    document.getElementById(
+      "technical"
+    ).innerHTML=`
+
     <b>❌ FEL</b>
-    <pre>${String(err.stack||err)}</pre>
+
+    <pre>
+    ${String(
+      err.stack||
+      err
+    )}
+    </pre>
     `;
   }
 }
