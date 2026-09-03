@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width,initial-scale=1.0">
-<title>Fotbolls AI V13.1</title>
+<title>Fotbolls AI V13.2</title>
 
 <style>
 body{
@@ -14,7 +14,7 @@ body{
   padding:20px;
 }
 .container{
-  max-width:1550px;
+  max-width:1600px;
   margin:auto;
 }
 h1{margin-bottom:4px}
@@ -82,11 +82,11 @@ th{
   font-size:12px;
   color:#aaa;
 }
-.good{
-  font-weight:bold;
-}
-.bad{
-  font-weight:bold;
+.note{
+  background:#191919;
+  border-left:3px solid #aaa;
+  padding:12px;
+  margin-top:12px;
 }
 .progress{
   height:8px;
@@ -108,11 +108,8 @@ input{
   padding:6px;
   border-radius:5px;
 }
-.note{
-  background:#191919;
-  border-left:3px solid #aaa;
-  padding:12px;
-  margin-top:12px;
+.highlight{
+  font-weight:bold;
 }
 </style>
 </head>
@@ -121,10 +118,10 @@ input{
 
 <div class="container">
 
-<h1>⚽ Fotbolls AI V13.1</h1>
+<h1>⚽ Fotbolls AI V13.2</h1>
 
 <div class="small">
-Walk-forward • Online learning • Calibration • Blend backtest • Edge reliability
+25% AI / 75% Market • Calibration • EV threshold analysis • Walk-forward
 </div>
 
 
@@ -137,6 +134,11 @@ Walk-forward • Online learning • Calibration • Blend backtest • Edge rel
 <h2>Inställningar</h2>
 
 <div class="grid">
+
+<div>
+<div class="small">Huvud AI-vikt</div>
+<input id="mainWeight" type="number" value="25" step="5">
+</div>
 
 <div>
 <div class="small">Min EV %</div>
@@ -159,11 +161,6 @@ Walk-forward • Online learning • Calibration • Blend backtest • Edge rel
 </div>
 
 <div>
-<div class="small">Formmatcher</div>
-<input id="formN" type="number" value="10">
-</div>
-
-<div>
 <div class="small">Kalibreringsstyrka</div>
 <input id="calStrength" type="number" value="25" step="5">
 </div>
@@ -172,7 +169,7 @@ Walk-forward • Online learning • Calibration • Blend backtest • Edge rel
 
 <br>
 
-<button onclick="runModel()">▶ Kör V13.1</button>
+<button onclick="runModel()">▶ Kör V13.2</button>
 
 <div class="status" id="status">
 Väntar på start...
@@ -191,7 +188,11 @@ Väntar på start...
 
 <div class="card">
 
-<h2>Resultat</h2>
+<h2>🎯 Huvudstrategi</h2>
+
+<div class="small">
+Standard: 25 % AI + 75 % marknad. EV-gränsen styrs av inställningen.
+</div>
 
 <div class="grid">
 
@@ -256,32 +257,36 @@ Väntar på start...
 
 
 <!-- ======================================================
-     BLEND JÄMFÖRELSE
+     EV-ANALYS
 ====================================================== -->
 
 <div class="card">
 
-<h2>🧠 Riktig blend-backtest</h2>
+<h2>💰 EV-tröskeltest</h2>
 
 <div class="small">
-Samma historiska matcher och samma EV-regler testas separat för varje
-AI-vikt. Detta är den viktiga jämförelsen i V13.1.
+Samma walk-forward-prediktioner testas med olika EV-gränser.
 </div>
 
-<div id="blendResults"></div>
+<div id="evResults"></div>
 
 </div>
 
 
 <!-- ======================================================
-     TOP BETS
+     BLEND
 ====================================================== -->
 
 <div class="card">
 
-<h2>🎯 Bästa value bets – adaptiv strategi</h2>
+<h2>🧠 AI/Market-blend</h2>
 
-<div id="topBets"></div>
+<div class="small">
+Samma matcher, samma odds och samma EV-regler.
+Endast AI-vikten ändras.
+</div>
+
+<div id="blendResults"></div>
 
 </div>
 
@@ -295,12 +300,24 @@ AI-vikt. Detta är den viktiga jämförelsen i V13.1.
 <h2>📈 Edge reliability</h2>
 
 <div class="small">
-Alla positiva AI-edge-signaler registreras, även om de senare inte
-klarar EV-filtret. På så sätt ser vi om modellens edge faktiskt
-har samband med resultat.
+Finare intervall kring området 15–20 %, eftersom V13.1 visade
+det som ett potentiellt intressant område.
 </div>
 
-<div id="edgeTable"></div>
+<div id="edgeResults"></div>
+
+</div>
+
+
+<!-- ======================================================
+     TOP BETS
+====================================================== -->
+
+<div class="card">
+
+<h2>🔥 Bästa value bets</h2>
+
+<div id="topBets"></div>
 
 </div>
 
@@ -311,9 +328,9 @@ har samband med resultat.
 
 <div class="card">
 
-<h2>📊 Säsonger – adaptiv strategi</h2>
+<h2>📊 Säsonger</h2>
 
-<div id="seasons"></div>
+<div id="seasonResults"></div>
 
 </div>
 
@@ -327,8 +344,8 @@ har samband med resultat.
 <h2>📐 Kalibrering</h2>
 
 <div class="small">
-Visar hur ofta varje sannolikhetsintervall faktiskt inträffade.
-Endast tidigare information används för själva kalibreringen.
+Faktiskt utfall per sannolikhetsintervall.
+Kalibreringen uppdateras först efter respektive match.
 </div>
 
 <div id="calibration"></div>
@@ -337,54 +354,54 @@ Endast tidigare information används för själva kalibreringen.
 
 
 <!-- ======================================================
-     MODELLINFO
+     MODELL
 ====================================================== -->
 
 <div class="card">
 
-<h2>ℹ️ V13.1</h2>
-
-<div class="note">
-
-<b>Viktig skillnad mot V13:</b><br><br>
-
-V13.1 gör en riktig parallell backtest av:
-<br><br>
-
-• AI 25 % / Market 75 %<br>
-• AI 50 % / Market 50 %<br>
-• AI 75 % / Market 25 %<br>
-• AI 100 % / Market 0 %<br>
-• Adaptiv blend<br><br>
-
-Dessutom mäts AI-edge innan EV-filtret så att vi kan se om
-större påstådd edge faktiskt leder till bättre resultat.
-
-</div>
+<h2>ℹ️ Modell</h2>
 
 <pre>
-V13.1 pipeline:
+V13.2
 
 Historiska matcher
         ↓
 Features
         ↓
-Online AI
+Online softmax
         ↓
-Kalibrering
+Out-of-sample calibration
         ↓
-AI + Market
+25% AI + 75% Market
         ↓
-Blend
+AI-edge filter
         ↓
-EV
+EV filter
         ↓
 Value bet
 
+Features:
+
+• form
+• PPG
+• attack
+• försvar
+• trend
+• vila
+• H2H
+• hemma/borta
+
+Odds:
+
+1. AvgH / AvgD / AvgA
+2. B365
+3. BW
+4. WH
+
 Ingen framtida information används.
 
-Skador, avstängningar och xG används inte
-utan historisk timestampad data.
+Skador, avstängningar och xG används inte eftersom
+timestampad historisk data saknas.
 </pre>
 
 </div>
@@ -395,7 +412,7 @@ utan historisk timestampad data.
 <script>
 
 /* =========================================================
-   SÄSONGER
+   KONSTANTER
 ========================================================= */
 
 const SEASONS=[
@@ -427,9 +444,18 @@ const WEIGHTS=[
   1.00
 ];
 
+const EV_LEVELS=[
+  0.02,
+  0.03,
+  0.05,
+  0.07,
+  0.10,
+  0.15
+];
+
 
 /* =========================================================
-   HJÄLP
+   HJÄLPFUNKTIONER
 ========================================================= */
 
 function clamp(x,a,b){
@@ -437,27 +463,95 @@ function clamp(x,a,b){
 }
 
 function safeNum(x){
+
   const n=parseFloat(x);
-  return Number.isFinite(n)?n:null;
+
+  return Number.isFinite(n)
+    ?n
+    :null;
+
 }
+
+function pct(x){
+
+  return (
+    x*100
+  ).toFixed(2)+"%";
+
+}
+
+function pct100(x){
+
+  return (
+    x
+  ).toFixed(2)+"%";
+
+}
+
+function money(x){
+
+  return (
+    x
+  ).toFixed(2)+" kr";
+
+}
+
+function cls(x){
+
+  return x>=0
+    ?"positive"
+    :"negative";
+
+}
+
+
+/* =========================================================
+   SOFTMAX
+========================================================= */
 
 function softmax(arr){
 
-  const m=Math.max(...arr);
+  const m=
+    Math.max(...arr);
 
-  const e=arr.map(x=>
-    Math.exp(clamp(x-m,-30,30))
+  const e=
+    arr.map(x=>
+      Math.exp(
+        clamp(
+          x-m,
+          -30,
+          30
+        )
+      )
+    );
+
+  const s=
+    e.reduce(
+      (a,b)=>a+b,
+      0
+    );
+
+  return e.map(
+    x=>x/s
   );
 
-  const s=e.reduce((a,b)=>a+b,0);
-
-  return e.map(x=>x/s);
 }
 
+
+/* =========================================================
+   METRICS
+========================================================= */
+
 function logLoss(p,y){
+
   return -Math.log(
-    clamp(p[y],0.0001,0.9999)
+    clamp(
+      p[y],
+      0.0001,
+      0.9999
+    )
   );
+
 }
 
 function brier(p,y){
@@ -466,29 +560,21 @@ function brier(p,y){
 
   for(let i=0;i<3;i++){
 
-    const t=i===y?1:0;
+    const t=
+      i===y
+      ?1
+      :0;
 
-    s+=(p[i]-t)*(p[i]-t);
+    s+=
+      Math.pow(
+        p[i]-t,
+        2
+      );
 
   }
 
   return s;
-}
 
-function pct(x){
-  return (x*100).toFixed(2)+"%";
-}
-
-function pct100(x){
-  return x.toFixed(2)+"%";
-}
-
-function money(x){
-  return x.toFixed(2)+" kr";
-}
-
-function cls(x){
-  return x>=0?"positive":"negative";
 }
 
 
@@ -499,47 +585,76 @@ function cls(x){
 function parseCSV(text){
 
   const rows=[];
+
   let row=[];
   let field="";
   let quoted=false;
 
-  for(let i=0;i<text.length;i++){
+  for(
+    let i=0;
+    i<text.length;
+    i++
+  ){
 
     const c=text[i];
 
     if(c==='"'){
 
-      if(quoted && text[i+1]==='"'){
+      if(
+        quoted &&
+        text[i+1]==='"'
+      ){
+
         field+='"';
         i++;
+
       }else{
+
         quoted=!quoted;
+
       }
 
-    }else if(c===',' && !quoted){
+    }
+    else if(
+      c===',' &&
+      !quoted
+    ){
 
       row.push(field);
       field="";
 
-    }else if(
+    }
+    else if(
       (c==='\n'||c==='\r') &&
       !quoted
     ){
 
-      if(c==='\r' && text[i+1]==='\n'){
+      if(
+        c==='\r' &&
+        text[i+1]==='\n'
+      ){
+
         i++;
+
       }
 
       row.push(field);
       field="";
 
-      if(row.some(x=>x!=="")){
+      if(
+        row.some(
+          x=>x!==""
+        )
+      ){
+
         rows.push(row);
+
       }
 
       row=[];
 
-    }else{
+    }
+    else{
 
       field+=c;
 
@@ -547,32 +662,50 @@ function parseCSV(text){
 
   }
 
-  if(field!==""||row.length){
+  if(
+    field!=="" ||
+    row.length
+  ){
 
     row.push(field);
 
-    if(row.some(x=>x!=="")){
+    if(
+      row.some(
+        x=>x!==""
+      )
+    ){
+
       rows.push(row);
+
     }
 
   }
 
-  if(!rows.length) return [];
+  if(!rows.length){
+    return [];
+  }
 
   const headers=
-    rows[0].map(x=>x.trim());
+    rows[0].map(
+      x=>x.trim()
+    );
 
-  return rows.slice(1).map(r=>{
+  return rows
+    .slice(1)
+    .map(r=>{
 
-    const o={};
+      const o={};
 
-    headers.forEach((h,i)=>{
-      o[h]=(r[i]||"").trim();
+      headers.forEach(
+        (h,i)=>{
+          o[h]=
+            (r[i]||"").trim();
+        }
+      );
+
+      return o;
+
     });
-
-    return o;
-
-  });
 
 }
 
@@ -584,7 +717,9 @@ function parseCSV(text){
 async function loadSeason(season){
 
   const response=
-    await fetch(`data/${season}.csv`);
+    await fetch(
+      `data/${season}.csv`
+    );
 
   if(!response.ok){
 
@@ -600,46 +735,78 @@ async function loadSeason(season){
   const rows=
     parseCSV(text);
 
-  return rows.map(r=>{
+  return rows
+    .map(r=>{
 
-    let date=null;
+      let date=null;
 
-    if(r.Date){
+      if(r.Date){
 
-      date=new Date(r.Date);
+        date=
+          new Date(
+            r.Date
+          );
 
-      if(Number.isNaN(date.getTime())){
+        if(
+          Number.isNaN(
+            date.getTime()
+          )
+        ){
 
-        const p=
-          r.Date.split(/[\/\-]/);
+          const p=
+            r.Date.split(
+              /[\/\-]/
+            );
 
-        if(p.length===3){
+          if(
+            p.length===3
+          ){
 
-          let d=parseInt(p[0]);
-          let m=parseInt(p[1])-1;
-          let y=parseInt(p[2]);
+            let d=
+              parseInt(
+                p[0]
+              );
 
-          if(y<100)y+=2000;
+            let m=
+              parseInt(
+                p[1]
+              )-1;
 
-          date=new Date(y,m,d);
+            let y=
+              parseInt(
+                p[2]
+              );
+
+            if(y<100){
+              y+=2000;
+            }
+
+            date=
+              new Date(
+                y,
+                m,
+                d
+              );
+
+          }
 
         }
 
       }
 
-    }
+      return {
+        ...r,
+        _season:season,
+        _date:date
+      };
 
-    return {
-      ...r,
-      _season:season,
-      _date:date
-    };
-
-  }).filter(r=>
-    r.HomeTeam &&
-    r.AwayTeam &&
-    r.FTR
-  );
+    })
+    .filter(
+      r=>
+        r.HomeTeam &&
+        r.AwayTeam &&
+        r.FTR
+    );
 
 }
 
@@ -675,30 +842,41 @@ function newTeam(){
 
 }
 
-function getTeam(map,name){
+function getTeam(
+  teams,
+  name
+){
 
-  if(!map[name]){
-    map[name]=newTeam();
+  if(!teams[name]){
+
+    teams[name]=
+      newTeam();
+
   }
 
-  return map[name];
+  return teams[name];
 
 }
 
 
 /* =========================================================
-   STATS
+   TEAM STATS
 ========================================================= */
 
 function teamStats(t){
 
-  if(!t||!t.games){
+  if(
+    !t ||
+    !t.games
+  ){
 
     return {
+
       ppg:1,
       attack:1,
       defense:1,
       trend:0
+
     };
 
   }
@@ -706,20 +884,35 @@ function teamStats(t){
   return {
 
     ppg:
-      (t.wins*3+t.draws)/t.games,
+      (
+        t.wins*3+
+        t.draws
+      )/
+      t.games,
 
     attack:
-      t.gf/t.games,
+      t.gf/
+      t.games,
 
     defense:
-      t.ga/t.games,
+      t.ga/
+      t.games,
 
     trend:
       t.recent.length
-      ?t.recent.slice(-5)
-        .reduce((a,b)=>a+b,0)/
-       Math.min(5,t.recent.length)
-      :0
+      ?
+      t.recent
+        .slice(-5)
+        .reduce(
+          (a,b)=>a+b,
+          0
+        )/
+        Math.min(
+          5,
+          t.recent.length
+        )
+      :
+      0
 
   };
 
@@ -730,21 +923,31 @@ function teamStats(t){
    REST
 ========================================================= */
 
-function restDays(team,date){
+function restDays(
+  team,
+  date
+){
 
   if(
-    !team||
-    !team.dates.length||
+    !team ||
+    !team.dates.length ||
     !date
   ){
+
     return 7;
+
   }
 
   const last=
-    team.dates[team.dates.length-1];
+    team.dates[
+      team.dates.length-1
+    ];
 
   return clamp(
-    (date-last)/86400000,
+    (
+      date-last
+    )/
+    86400000,
     0,
     30
   );
@@ -756,30 +959,46 @@ function restDays(team,date){
    H2H
 ========================================================= */
 
-function h2hFeature(h,a,h2h){
+function h2hFeature(
+  home,
+  away,
+  h2h
+){
 
   const direct=
-    h2h[h+"|"+a]||[];
+    h2h[
+      home+"|"+away
+    ]||[];
 
   const reverse=
-    h2h[a+"|"+h]||[];
+    h2h[
+      away+"|"+home
+    ]||[];
 
   const values=[];
 
-  for(const x of direct){
+  for(
+    const x of direct
+  ){
 
-    values.push(x.result);
+    values.push(
+      x.result
+    );
 
   }
 
-  for(const x of reverse){
+  for(
+    const x of reverse
+  ){
 
     values.push(
+
       x.result===0
       ?2
       :x.result===2
       ?0
       :1
+
     );
 
   }
@@ -793,15 +1012,18 @@ function h2hFeature(h,a,h2h){
 
   let score=0;
 
-  for(const x of recent){
+  for(
+    const x of recent
+  ){
 
     if(x===0)score++;
-    else if(x===2)score--;
+    if(x===2)score--;
 
   }
 
   return clamp(
-    score/recent.length,
+    score/
+    recent.length,
     -1,
     1
   );
@@ -822,10 +1044,12 @@ function features(
 ){
 
   const ht=
-    teams[home]||newTeam();
+    teams[home]||
+    newTeam();
 
   const at=
-    teams[away]||newTeam();
+    teams[away]||
+    newTeam();
 
   const hs=
     teamStats(ht);
@@ -841,10 +1065,16 @@ function features(
     );
 
   const rh=
-    restDays(ht,date);
+    restDays(
+      ht,
+      date
+    );
 
   const ra=
-    restDays(at,date);
+    restDays(
+      at,
+      date
+    );
 
   return [
 
@@ -858,25 +1088,43 @@ function features(
 
     hs.trend-as.trend,
 
-    clamp((rh-ra)/10,-1,1),
+    clamp(
+      (rh-ra)/10,
+      -1,
+      1
+    ),
 
     h2,
 
     (
       ht.homeWins/
-      Math.max(1,ht.homeGames)
+      Math.max(
+        1,
+        ht.homeGames
+      )
     )
     -
     (
       at.awayWins/
-      Math.max(1,at.awayGames)
+      Math.max(
+        1,
+        at.awayGames
+      )
     ),
 
-    (hs.attack+1)/
-    (as.defense+1),
+    (
+      hs.attack+1
+    )/
+    (
+      as.defense+1
+    ),
 
-    (as.attack+1)/
-    (hs.defense+1)
+    (
+      as.attack+1
+    )/
+    (
+      hs.defense+1
+    )
 
   ];
 
@@ -892,34 +1140,51 @@ class OnlineModel{
   constructor(){
 
     this.w=[
+
       Array(10).fill(0),
+
       Array(10).fill(0),
+
       Array(10).fill(0)
+
     ];
 
-    this.lr=0.018;
-    this.l2=0.00015;
+    this.lr=
+      0.018;
+
+    this.l2=
+      0.00015;
 
   }
 
   predict(x){
 
     const scores=
-      this.w.map(row=>{
+      this.w.map(
+        row=>{
 
-        let s=0;
+          let s=0;
 
-        for(let i=0;i<x.length;i++){
+          for(
+            let i=0;
+            i<x.length;
+            i++
+          ){
 
-          s+=row[i]*x[i];
+            s+=
+              row[i]*
+              x[i];
+
+          }
+
+          return s;
 
         }
+      );
 
-        return s;
-
-      });
-
-    return softmax(scores);
+    return softmax(
+      scores
+    );
 
   }
 
@@ -928,20 +1193,36 @@ class OnlineModel{
     const p=
       this.predict(x);
 
-    for(let k=0;k<3;k++){
+    for(
+      let k=0;
+      k<3;
+      k++
+    ){
 
       const target=
-        k===y?1:0;
+        k===y
+        ?1
+        :0;
 
-      for(let i=0;i<x.length;i++){
+      for(
+        let i=0;
+        i<x.length;
+        i++
+      ){
 
         const grad=
-          (p[k]-target)*x[i]
+          (
+            p[k]-target
+          )*
+          x[i]
           +
-          this.l2*this.w[k][i];
+          this.l2*
+          this.w[k][i];
 
         this.w[k][i]
-          -=this.lr*grad;
+          -=
+          this.lr*
+          grad;
 
       }
 
@@ -958,18 +1239,28 @@ class OnlineModel{
 
 class Calibrator{
 
-  constructor(strength){
+  constructor(
+    strength
+  ){
 
     this.strength=
       strength;
 
     this.bins=[];
 
-    for(let k=0;k<3;k++){
+    for(
+      let k=0;
+      k<3;
+      k++
+    ){
 
       this.bins[k]=[];
 
-      for(let b=0;b<10;b++){
+      for(
+        let b=0;
+        b<10;
+        b++
+      ){
 
         this.bins[k][b]={
           n:0,
@@ -982,20 +1273,25 @@ class Calibrator{
 
   }
 
-  bin(p){
+  getBin(p){
 
     return clamp(
-      Math.floor(p*10),
+      Math.floor(
+        p*10
+      ),
       0,
       9
     );
 
   }
 
-  calibrate(p,k){
+  calibrate(
+    p,
+    k
+  ){
 
     const b=
-      this.bin(p);
+      this.getBin(p);
 
     const d=
       this.bins[k][b];
@@ -1005,6 +1301,7 @@ class Calibrator{
     }
 
     return clamp(
+
       (
         d.wins+
         this.strength*p
@@ -1013,8 +1310,10 @@ class Calibrator{
         d.n+
         this.strength
       ),
+
       0.015,
       0.90
+
     );
 
   }
@@ -1023,38 +1322,69 @@ class Calibrator{
 
     let out=[];
 
-    for(let k=0;k<3;k++){
+    for(
+      let k=0;
+      k<3;
+      k++
+    ){
 
       out.push(
-        this.calibrate(p[k],k)
+        this.calibrate(
+          p[k],
+          k
+        )
       );
 
     }
 
     let s=
-      out.reduce((a,b)=>a+b,0);
+      out.reduce(
+        (a,b)=>a+b,
+        0
+      );
 
     out=
-      out.map(x=>x/s);
+      out.map(
+        x=>x/s
+      );
 
     out=
-      out.map(x=>
-        clamp(x,0.02,0.88)
+      out.map(
+        x=>
+          clamp(
+            x,
+            0.02,
+            0.88
+          )
       );
 
     s=
-      out.reduce((a,b)=>a+b,0);
+      out.reduce(
+        (a,b)=>a+b,
+        0
+      );
 
-    return out.map(x=>x/s);
+    return out.map(
+      x=>x/s
+    );
 
   }
 
-  update(raw,y){
+  update(
+    raw,
+    y
+  ){
 
-    for(let k=0;k<3;k++){
+    for(
+      let k=0;
+      k<3;
+      k++
+    ){
 
       const b=
-        this.bin(raw[k]);
+        this.getBin(
+          raw[k]
+        );
 
       this.bins[k][b].n++;
 
@@ -1079,26 +1409,50 @@ function getOdds(r){
 
   const groups=[
 
-    ["AvgH","AvgD","AvgA"],
+    [
+      "AvgH",
+      "AvgD",
+      "AvgA"
+    ],
 
-    ["B365H","B365D","B365A"],
+    [
+      "B365H",
+      "B365D",
+      "B365A"
+    ],
 
-    ["BWH","BWD","BWA"],
+    [
+      "BWH",
+      "BWD",
+      "BWA"
+    ],
 
-    ["WHH","WHD","WHA"]
+    [
+      "WHH",
+      "WHD",
+      "WHA"
+    ]
 
   ];
 
-  for(const g of groups){
+  for(
+    const g of groups
+  ){
 
     const h=
-      safeNum(r[g[0]]);
+      safeNum(
+        r[g[0]]
+      );
 
     const d=
-      safeNum(r[g[1]]);
+      safeNum(
+        r[g[1]]
+      );
 
     const a=
-      safeNum(r[g[2]]);
+      safeNum(
+        r[g[2]]
+      );
 
     if(
       h>1 &&
@@ -1106,7 +1460,9 @@ function getOdds(r){
       a>1
     ){
 
-      return [h,d,a];
+      return [
+        h,d,a
+      ];
 
     }
 
@@ -1118,41 +1474,66 @@ function getOdds(r){
 
 
 /* =========================================================
-   MARKET
+   MARKET PROB
 ========================================================= */
 
-function marketProb(odds){
+function marketProb(
+  odds
+){
 
   const inv=
-    odds.map(o=>1/o);
+    odds.map(
+      o=>1/o
+    );
 
   const s=
-    inv.reduce((a,b)=>a+b,0);
+    inv.reduce(
+      (a,b)=>a+b,
+      0
+    );
 
-  return inv.map(x=>x/s);
+  return inv.map(
+    x=>x/s
+  );
 
 }
 
 
 /* =========================================================
-   BLEND
+   GEOMETRIC BLEND
 ========================================================= */
 
-function blend(ai,market,w){
+function blend(
+  ai,
+  market,
+  w
+){
 
   const out=[];
 
-  for(let i=0;i<3;i++){
+  for(
+    let i=0;
+    i<3;
+    i++
+  ){
 
     out.push(
 
       Math.pow(
-        clamp(ai[i],0.001,0.999),
+        clamp(
+          ai[i],
+          0.001,
+          0.999
+        ),
         w
       )
       *
       Math.pow(
-        clamp(market[i],0.001,0.999),
+        clamp(
+          market[i],
+          0.001,
+          0.999
+        ),
         1-w
       )
 
@@ -1161,9 +1542,14 @@ function blend(ai,market,w){
   }
 
   const s=
-    out.reduce((a,b)=>a+b,0);
+    out.reduce(
+      (a,b)=>a+b,
+      0
+    );
 
-  return out.map(x=>x/s);
+  return out.map(
+    x=>x/s
+  );
 
 }
 
@@ -1172,56 +1558,67 @@ function blend(ai,market,w){
    STATS
 ========================================================= */
 
-function emptyStats(){
+function newStats(){
 
   return {
+
     bets:0,
     wins:0,
     profit:0,
     stake:0,
     peak:0,
     maxDD:0
+
   };
 
 }
 
-function addResult(s,win,odds){
+function addBet(
+  stats,
+  win,
+  odds
+){
 
-  s.bets++;
-  s.stake++;
+  stats.bets++;
+  stats.stake++;
 
   if(win){
 
-    s.wins++;
+    stats.wins++;
 
-    s.profit+=
+    stats.profit+=
       odds-1;
 
   }else{
 
-    s.profit-=1;
+    stats.profit-=1;
 
   }
 
-  s.peak=
+  stats.peak=
     Math.max(
-      s.peak,
-      s.profit
+      stats.peak,
+      stats.profit
     );
 
-  s.maxDD=
+  stats.maxDD=
     Math.max(
-      s.maxDD,
-      s.peak-s.profit
+      stats.maxDD,
+      stats.peak-
+      stats.profit
     );
 
 }
 
-function ROI(s){
+function roi(stats){
 
-  return s.stake
-    ?s.profit/s.stake*100
-    :0;
+  return stats.stake
+    ?
+    stats.profit/
+    stats.stake*
+    100
+    :
+    0;
 
 }
 
@@ -1232,13 +1629,133 @@ function ROI(s){
 
 function edgeBucket(e){
 
-  if(e<0.02)return "0–2%";
-  if(e<0.05)return "2–5%";
-  if(e<0.10)return "5–10%";
-  if(e<0.15)return "10–15%";
-  if(e<0.20)return "15–20%";
+  if(e<0.02)
+    return "0–2%";
 
-  return "20%+";
+  if(e<0.05)
+    return "2–5%";
+
+  if(e<0.10)
+    return "5–10%";
+
+  if(e<0.15)
+    return "10–15%";
+
+  if(e<0.175)
+    return "15–17.5%";
+
+  if(e<0.20)
+    return "17.5–20%";
+
+  if(e<0.25)
+    return "20–25%";
+
+  if(e<0.30)
+    return "25–30%";
+
+  return "30%+";
+
+}
+
+
+/* =========================================================
+   BEST BET
+========================================================= */
+
+function findBestBet(
+  ai,
+  market,
+  odds,
+  weight,
+  minEdge,
+  minEV,
+  maxOdds,
+  y
+){
+
+  const p=
+    blend(
+      ai,
+      market,
+      weight
+    );
+
+  let best=null;
+
+  for(
+    let k=0;
+    k<3;
+    k++
+  ){
+
+    if(
+      odds[k]>
+      maxOdds
+    ){
+      continue;
+    }
+
+    const edge=
+      ai[k]-
+      market[k];
+
+    if(
+      edge<
+      minEdge
+    ){
+      continue;
+    }
+
+    const ev=
+      p[k]*
+      odds[k]-
+      1;
+
+    if(
+      ev<
+      minEV
+    ){
+      continue;
+    }
+
+    if(
+      !best||
+      ev>
+      best.ev
+    ){
+
+      best={
+
+        k,
+
+        odds:
+          odds[k],
+
+        ai:
+          ai[k],
+
+        market:
+          market[k],
+
+        final:
+          p[k],
+
+        edge,
+
+        ev,
+
+        win:
+          k===y,
+
+        weight
+
+      };
+
+    }
+
+  }
+
+  return best;
 
 }
 
@@ -1251,60 +1768,95 @@ async function runModel(){
 
   try{
 
+    const mainWeight=
+      clamp(
+        parseFloat(
+          document.getElementById(
+            "mainWeight"
+          ).value
+        )/100,
+        0.25,
+        1
+      );
+
     const minEV=
       parseFloat(
-        document.getElementById("minEV").value
+        document.getElementById(
+          "minEV"
+        ).value
       )/100;
 
     const maxOdds=
       parseFloat(
-        document.getElementById("maxOdds").value
+        document.getElementById(
+          "maxOdds"
+        ).value
       );
 
     const minEdge=
       parseFloat(
-        document.getElementById("minEdge").value
+        document.getElementById(
+          "minEdge"
+        ).value
       )/100;
 
     const minTrain=
       parseInt(
-        document.getElementById("minTrain").value
+        document.getElementById(
+          "minTrain"
+        ).value
       );
 
     const calStrength=
       parseFloat(
-        document.getElementById("calStrength").value
+        document.getElementById(
+          "calStrength"
+        ).value
       );
 
 
-    document.getElementById("status").textContent=
-      "Laddar data...";
+    document.getElementById(
+      "status"
+    ).textContent=
+      "Laddar historiska matcher...";
 
 
-    document.getElementById("bar").style.width=
+    document.getElementById(
+      "bar"
+    ).style.width=
       "2%";
 
 
     /* =====================================================
-       LADDA DATA
+       LOAD
     ===================================================== */
 
     let matches=[];
 
-    for(let i=0;i<SEASONS.length;i++){
+    for(
+      let i=0;
+      i<SEASONS.length;
+      i++
+    ){
 
       const season=
         SEASONS[i];
 
-      document.getElementById("status").textContent=
+      document.getElementById(
+        "status"
+      ).textContent=
         `Laddar ${SEASON_LABELS[season]}...`;
 
       try{
 
         const rows=
-          await loadSeason(season);
+          await loadSeason(
+            season
+          );
 
-        matches.push(...rows);
+        matches.push(
+          ...rows
+        );
 
       }catch(e){
 
@@ -1312,33 +1864,41 @@ async function runModel(){
 
       }
 
-      document.getElementById("bar").style.width=
+      document.getElementById(
+        "bar"
+      ).style.width=
         (
           5+
-          i/SEASONS.length*15
+          i/
+          SEASONS.length*
+          15
         )+"%";
 
     }
 
 
-    matches.sort((a,b)=>{
+    matches.sort(
+      (a,b)=>{
 
-      const da=
-        a._date
-        ?a._date.getTime()
-        :0;
+        const da=
+          a._date
+          ?a._date.getTime()
+          :0;
 
-      const db=
-        b._date
-        ?b._date.getTime()
-        :0;
+        const db=
+          b._date
+          ?b._date.getTime()
+          :0;
 
-      return da-db;
+        return da-db;
 
-    });
+      }
+    );
 
 
-    document.getElementById("matches").textContent=
+    document.getElementById(
+      "matches"
+    ).textContent=
       matches.length;
 
 
@@ -1358,36 +1918,48 @@ async function runModel(){
       );
 
 
-    /*
-      Här sparas varje analyserad match.
+    let trainCount=0;
+    let analyzed=0;
 
-      DETTA ÄR GRUNDEN FÖR DEN RIKTIGA
-      PARALLELLA BLEND-BACKTESTEN.
-    */
+    let correct=0;
+    let totalBrier=0;
+    let totalLL=0;
 
-    const predictions=[];
 
-    const adaptiveBets=[];
+    const mainStats=
+      newStats();
 
     const topBets=[];
 
 
     /* =====================================================
-       BLEND RESULTS
+       BLEND STATS
     ===================================================== */
 
     const blendStats={};
 
-    for(const w of WEIGHTS){
+    for(
+      const w of WEIGHTS
+    ){
 
-      blendStats[w]={
-        bets:0,
-        wins:0,
-        profit:0,
-        stake:0,
-        peak:0,
-        maxDD:0
-      };
+      blendStats[w]=
+        newStats();
+
+    }
+
+
+    /* =====================================================
+       EV STATS
+    ===================================================== */
+
+    const evStats={};
+
+    for(
+      const ev of EV_LEVELS
+    ){
+
+      evStats[ev]=
+        newStats();
 
     }
 
@@ -1396,72 +1968,79 @@ async function runModel(){
        EDGE
     ===================================================== */
 
-    const edgeStats={};
-
-    [
+    const edgeBuckets=[
       "0–2%",
       "2–5%",
       "5–10%",
       "10–15%",
-      "15–20%",
-      "20%+"
-    ].forEach(k=>{
+      "15–17.5%",
+      "17.5–20%",
+      "20–25%",
+      "25–30%",
+      "30%+"
+    ];
 
-      edgeStats[k]={
+    const edgeStats={};
+
+    for(
+      const b of edgeBuckets
+    ){
+
+      edgeStats[b]={
+
         signals:0,
+
         bets:0,
+
         wins:0,
+
         profit:0,
+
         stake:0
-      };
 
-    });
-
-
-    /* =====================================================
-       SÄSONG
-    ===================================================== */
-
-    const seasonStats={};
-
-    for(const s of SEASONS){
-
-      seasonStats[s]={
-        matches:0,
-        analyzed:0,
-        bets:0,
-        wins:0,
-        profit:0,
-        stake:0
       };
 
     }
 
 
     /* =====================================================
-       PREDICTION METRICS
+       SEASONS
     ===================================================== */
 
-    let analyzed=0;
-    let correct=0;
-    let totalBrier=0;
-    let totalLL=0;
+    const seasonStats={};
 
-    let trainCount=0;
+    for(
+      const s of SEASONS
+    ){
 
+      seasonStats[s]={
 
-    /* =====================================================
-       ADAPTIV HISTORY
-    ===================================================== */
+        matches:0,
 
-    const adaptiveHistory=[];
+        analyzed:0,
+
+        bets:0,
+
+        wins:0,
+
+        profit:0,
+
+        stake:0
+
+      };
+
+    }
 
 
     /* =====================================================
        WALK FORWARD
     ===================================================== */
 
-    for(let i=0;i<matches.length;i++){
+    for(
+      let i=0;
+      i<matches.length;
+      i++
+    ){
 
       const r=
         matches[i];
@@ -1472,25 +2051,30 @@ async function runModel(){
       const away=
         r.AwayTeam;
 
-      const ftr=
-        r.FTR;
-
       let y=null;
 
-      if(ftr==="H")y=0;
-      if(ftr==="D")y=1;
-      if(ftr==="A")y=2;
+      if(r.FTR==="H")
+        y=0;
 
-      if(y===null)continue;
+      if(r.FTR==="D")
+        y=1;
+
+      if(r.FTR==="A")
+        y=2;
+
+      if(y===null)
+        continue;
 
 
       const season=
         r._season;
 
-      seasonStats[season].matches++;
+      seasonStats[
+        season
+      ].matches++;
 
 
-      /* ================================================
+      /* =================================================
          FEATURES
       ================================================= */
 
@@ -1504,23 +2088,25 @@ async function runModel(){
         );
 
 
-      /* ================================================
-         AI RAW
+      /* =================================================
+         RAW AI
       ================================================= */
 
       const rawAI=
         model.predict(x);
 
 
-      /* ================================================
+      /* =================================================
          CALIBRATED AI
       ================================================= */
 
       const ai=
-        calibrator.transform(rawAI);
+        calibrator.transform(
+          rawAI
+        );
 
 
-      /* ================================================
+      /* =================================================
          MARKET
       ================================================= */
 
@@ -1532,10 +2118,16 @@ async function runModel(){
       if(odds){
 
         market=
-          marketProb(odds);
+          marketProb(
+            odds
+          );
 
       }
 
+
+      /* =================================================
+         ANALYSIS
+      ================================================= */
 
       if(
         trainCount>=minTrain &&
@@ -1544,194 +2136,255 @@ async function runModel(){
 
         analyzed++;
 
-        seasonStats[season].analyzed++;
+        seasonStats[
+          season
+        ].analyzed++;
 
 
-        /* ==============================================
-           ADAPTIV VIKT
+        /* ===============================================
+           MAIN STRATEGY
+        =============================================== */
 
-           Vikt väljs ENDAST från tidigare matcher.
-        ============================================== */
+        const mainProb=
+          blend(
+            ai,
+            market,
+            mainWeight
+          );
 
-        let adaptiveWeight=
-          0.50;
+
+        const predicted=
+          mainProb.indexOf(
+            Math.max(
+              ...mainProb
+            )
+          );
 
 
-        if(adaptiveHistory.length>=100){
+        if(
+          predicted===y
+        ){
+          correct++;
+        }
 
-          const recent=
-            adaptiveHistory.slice(-400);
 
-          let bestScore=
-            Infinity;
+        totalBrier+=
+          brier(
+            mainProb,
+            y
+          );
 
-          for(const w of WEIGHTS){
+        totalLL+=
+          logLoss(
+            mainProb,
+            y
+          );
 
-            let ll=0;
-            let br=0;
 
-            for(const p of recent){
+        /* ===============================================
+           MAIN BET
+        =============================================== */
 
-              const bp=
-                blend(
-                  p.ai,
-                  p.market,
-                  w
-                );
+        const mainBet=
+          findBestBet(
+            ai,
+            market,
+            odds,
+            mainWeight,
+            minEdge,
+            minEV,
+            maxOdds,
+            y
+          );
 
-              ll+=
-                logLoss(
-                  bp,
-                  p.y
-                );
 
-              br+=
-                brier(
-                  bp,
-                  p.y
-                );
+        if(mainBet){
 
-            }
+          addBet(
+            mainStats,
+            mainBet.win,
+            mainBet.odds
+          );
 
-            const n=
-              recent.length;
 
-            const score=
-              ll/n+
-              0.35*(br/n);
+          seasonStats[
+            season
+          ].bets++;
 
-            /*
-              Mild shrinkage mot 50%.
-              Detta hindrar att små skillnader
-              orsakar hopp mellan vikter.
-            */
+          seasonStats[
+            season
+          ].stake++;
 
-            const distance=
-              Math.abs(w-0.50);
 
-            const adjusted=
-              score+
-              0.003*distance;
+          if(
+            mainBet.win
+          ){
 
-            if(adjusted<bestScore){
+            seasonStats[
+              season
+            ].wins++;
 
-              bestScore=
-                adjusted;
+            seasonStats[
+              season
+            ].profit+=
+              mainBet.odds-1;
 
-              adaptiveWeight=
-                w;
+          }else{
 
-            }
+            seasonStats[
+              season
+            ].profit-=1;
+
+          }
+
+
+          topBets.push({
+
+            ...mainBet,
+
+            home,
+            away,
+            season,
+
+            outcome:
+              mainBet.k===0
+              ?"H"
+              :mainBet.k===1
+              ?"D"
+              :"A"
+
+          });
+
+        }
+
+
+        /* ===============================================
+           BLEND TEST
+        =============================================== */
+
+        for(
+          const w of WEIGHTS
+        ){
+
+          const bet=
+            findBestBet(
+              ai,
+              market,
+              odds,
+              w,
+              minEdge,
+              minEV,
+              maxOdds,
+              y
+            );
+
+          if(bet){
+
+            addBet(
+              blendStats[w],
+              bet.win,
+              bet.odds
+            );
 
           }
 
         }
 
 
-        /* ==============================================
-           PREDICTIONS
-        ============================================== */
+        /* ===============================================
+           EV TEST
+        =============================================== */
 
-        predictions.push({
+        for(
+          const evLevel of EV_LEVELS
+        ){
 
-          season,
-          home,
-          away,
-          odds:[...odds],
-          ai:[...ai],
-          market:[...market],
-          y
+          const bet=
+            findBestBet(
+              ai,
+              market,
+              odds,
+              mainWeight,
+              minEdge,
+              evLevel,
+              maxOdds,
+              y
+            );
 
-        });
+          if(bet){
 
+            addBet(
+              evStats[evLevel],
+              bet.win,
+              bet.odds
+            );
 
-        adaptiveHistory.push({
+          }
 
-          ai:[...ai],
-          market:[...market],
-          y
-
-        });
-
-
-        /* ==============================================
-           ADAPTIV PREDICTION METRICS
-        ============================================== */
-
-        const adaptiveProb=
-          blend(
-            ai,
-            market,
-            adaptiveWeight
-          );
-
-        const predClass=
-          adaptiveProb.indexOf(
-            Math.max(...adaptiveProb)
-          );
-
-        if(predClass===y){
-          correct++;
         }
 
-        totalBrier+=
-          brier(
-            adaptiveProb,
-            y
-          );
 
-        totalLL+=
-          logLoss(
-            adaptiveProb,
-            y
-          );
-
-
-        /* ==============================================
+        /* ===============================================
            EDGE RELIABILITY
+        =============================================== */
 
-           VIKTIGT:
-           Alla positiva edge-signaler räknas.
-           Inte bara de som blir bets.
-        ============================================== */
-
-        for(let k=0;k<3;k++){
+        for(
+          let k=0;
+          k<3;
+          k++
+        ){
 
           const edge=
-            ai[k]-market[k];
+            ai[k]-
+            market[k];
 
-          if(edge<=0)continue;
+          if(edge<=0)
+            continue;
 
           const bucket=
-            edgeBucket(edge);
+            edgeBucket(
+              edge
+            );
 
-          edgeStats[bucket].signals++;
+          edgeStats[
+            bucket
+          ].signals++;
 
 
           if(
             odds[k]<=maxOdds
           ){
 
+            const p=
+              mainProb[k];
+
             const ev=
-              adaptiveProb[k]*
-              odds[k]-1;
+              p*
+              odds[k]-
+              1;
 
-            if(ev>=minEV){
+            if(
+              ev>=minEV
+            ){
 
-              edgeStats[bucket].bets++;
+              const es=
+                edgeStats[
+                  bucket
+                ];
 
-              edgeStats[bucket].stake++;
+              es.bets++;
+              es.stake++;
 
               if(k===y){
 
-                edgeStats[bucket].wins++;
+                es.wins++;
 
-                edgeStats[bucket].profit+=
+                es.profit+=
                   odds[k]-1;
 
               }else{
 
-                edgeStats[bucket].profit-=1;
+                es.profit-=1;
 
               }
 
@@ -1741,179 +2394,41 @@ async function runModel(){
 
         }
 
-
-        /* ==============================================
-           RIKTIG PARALLELL BLEND BACKTEST
-        ============================================== */
-
-        for(const w of WEIGHTS){
-
-          const p=
-            blend(
-              ai,
-              market,
-              w
-            );
-
-          let best=null;
-
-          for(let k=0;k<3;k++){
-
-            if(odds[k]>maxOdds)continue;
-
-            const edge=
-              ai[k]-market[k];
-
-            if(edge<minEdge)continue;
-
-            const ev=
-              p[k]*odds[k]-1;
-
-            if(ev<minEV)continue;
-
-            if(
-              !best||
-              ev>best.ev
-            ){
-
-              best={
-                k,
-                ev,
-                odds:odds[k]
-              };
-
-            }
-
-          }
-
-          if(best){
-
-            addResult(
-              blendStats[w],
-              best.k===y,
-              best.odds
-            );
-
-          }
-
-        }
-
-
-        /* ==============================================
-           ADAPTIV VALUE BET
-        ============================================== */
-
-        const ap=
-          adaptiveProb;
-
-        let best=null;
-
-        for(let k=0;k<3;k++){
-
-          const o=
-            odds[k];
-
-          if(o>maxOdds)continue;
-
-          const edge=
-            ai[k]-market[k];
-
-          if(edge<minEdge)continue;
-
-          const ev=
-            ap[k]*o-1;
-
-          if(ev<minEV)continue;
-
-          if(
-            !best||
-            ev>best.ev
-          ){
-
-            best={
-
-              home,
-              away,
-              season,
-
-              outcome:
-                k===0
-                ?"H"
-                :k===1
-                ?"D"
-                :"A",
-
-              odds:o,
-
-              ai:ai[k],
-
-              market:market[k],
-
-              final:ap[k],
-
-              edge,
-
-              ev,
-
-              weight:
-                adaptiveWeight,
-
-              win:k===y
-
-            };
-
-          }
-
-        }
-
-
-        if(best){
-
-          adaptiveBets.push(best);
-
-          topBets.push(best);
-
-          seasonStats[season].bets++;
-          seasonStats[season].stake++;
-
-          if(best.win){
-
-            seasonStats[season].wins++;
-
-            seasonStats[season].profit+=
-              best.odds-1;
-
-          }else{
-
-            seasonStats[season].profit-=1;
-
-          }
-
-        }
-
       }
 
 
-      /* ==================================================
-         UPDATE EFTER MATCHEN
-      ================================================== */
+      /* =================================================
+         UPDATE MODELLER EFTER MATCH
+      ================================================= */
 
-      model.update(x,y);
+      model.update(
+        x,
+        y
+      );
 
-      calibrator.update(rawAI,y);
+      calibrator.update(
+        rawAI,
+        y
+      );
 
       trainCount++;
 
 
-      /* ==================================================
+      /* =================================================
          TEAM UPDATE
-      ================================================== */
+      ================================================= */
 
       const ht=
-        getTeam(teams,home);
+        getTeam(
+          teams,
+          home
+        );
 
       const at=
-        getTeam(teams,away);
+        getTeam(
+          teams,
+          away
+        );
 
 
       ht.games++;
@@ -1941,10 +2456,14 @@ async function runModel(){
 
 
       const hg=
-        safeNum(r.FTHG);
+        safeNum(
+          r.FTHG
+        );
 
       const ag=
-        safeNum(r.FTAG);
+        safeNum(
+          r.FTAG
+        );
 
 
       if(
@@ -1963,16 +2482,14 @@ async function runModel(){
 
       ht.homeGames++;
 
-      if(y===0){
+      if(y===0)
         ht.homeWins++;
-      }
 
 
       at.awayGames++;
 
-      if(y===2){
+      if(y===2)
         at.awayWins++;
-      }
 
 
       ht.recent.push(
@@ -1992,50 +2509,72 @@ async function runModel(){
       );
 
 
-      if(ht.recent.length>10)
+      if(
+        ht.recent.length>10
+      )
         ht.recent.shift();
 
-      if(at.recent.length>10)
+      if(
+        at.recent.length>10
+      )
         at.recent.shift();
 
 
       if(r._date){
 
-        ht.dates.push(r._date);
-        at.dates.push(r._date);
+        ht.dates.push(
+          r._date
+        );
+
+        at.dates.push(
+          r._date
+        );
 
       }
 
 
-      const hkey=
-        home+"|"+away;
+      const key=
+        home+
+        "|"+
+        away;
 
-      if(!h2h[hkey]){
-        h2h[hkey]=[];
-      }
+      if(!h2h[key])
+        h2h[key]=[];
 
-      h2h[hkey].push({
+      h2h[key].push({
         result:y
       });
 
 
-      /* ==================================================
+      /* =================================================
          PROGRESS
-      ================================================== */
+      ================================================= */
 
-      if(i%50===0){
+      if(
+        i%50===0
+      ){
 
-        document.getElementById("status").textContent=
+        document.getElementById(
+          "status"
+        ).textContent=
           `Analyserar ${i+1} / ${matches.length}`;
 
-        document.getElementById("bar").style.width=
+        document.getElementById(
+          "bar"
+        ).style.width=
           (
             20+
-            i/matches.length*75
+            i/
+            matches.length*
+            75
           )+"%";
 
         await new Promise(
-          resolve=>setTimeout(resolve,0)
+          resolve=>
+            setTimeout(
+              resolve,
+              0
+            )
         );
 
       }
@@ -2044,80 +2583,212 @@ async function runModel(){
 
 
     /* =====================================================
-       ADAPTIV TOTAL STATS
-    ===================================================== */
-
-    const total=
-      emptyStats();
-
-    for(const b of adaptiveBets){
-
-      addResult(
-        total,
-        b.win,
-        b.odds
-      );
-
-    }
-
-
-    /* =====================================================
        RESULTAT
     ===================================================== */
 
-    document.getElementById("analyzed").textContent=
+    document.getElementById(
+      "analyzed"
+    ).textContent=
       analyzed;
 
-    document.getElementById("bets").textContent=
-      total.bets;
+    document.getElementById(
+      "bets"
+    ).textContent=
+      mainStats.bets;
 
-    document.getElementById("wins").textContent=
-      total.wins;
+    document.getElementById(
+      "wins"
+    ).textContent=
+      mainStats.wins;
 
-    document.getElementById("hit").textContent=
-      total.bets
-      ?pct100(
-        total.wins/
-        total.bets*
+    document.getElementById(
+      "hit"
+    ).textContent=
+      mainStats.bets
+      ?
+      pct100(
+        mainStats.wins/
+        mainStats.bets*
         100
       )
-      :"0%";
+      :
+      "0%";
 
-    document.getElementById("roi").textContent=
+    document.getElementById(
+      "roi"
+    ).textContent=
       pct100(
-        ROI(total)
+        roi(
+          mainStats
+        )
       );
 
-    document.getElementById("profit").textContent=
-      money(total.profit);
+    document.getElementById(
+      "profit"
+    ).textContent=
+      money(
+        mainStats.profit
+      );
 
-    document.getElementById("dd").textContent=
-      money(total.maxDD);
+    document.getElementById(
+      "dd"
+    ).textContent=
+      money(
+        mainStats.maxDD
+      );
 
-    document.getElementById("accuracy").textContent=
+    document.getElementById(
+      "accuracy"
+    ).textContent=
       analyzed
-      ?pct100(
+      ?
+      pct100(
         correct/
         analyzed*
         100
       )
-      :"0%";
+      :
+      "0%";
 
-    document.getElementById("brier").textContent=
+    document.getElementById(
+      "brier"
+    ).textContent=
       analyzed
-      ?(
+      ?
+      (
         totalBrier/
         analyzed
       ).toFixed(4)
-      :"0";
+      :
+      "0";
 
-    document.getElementById("logloss").textContent=
+    document.getElementById(
+      "logloss"
+    ).textContent=
       analyzed
-      ?(
+      ?
+      (
         totalLL/
         analyzed
       ).toFixed(4)
-      :"0";
+      :
+      "0";
+
+
+    /* =====================================================
+       EV TABLE
+    ===================================================== */
+
+    let eh="<table>";
+
+    eh+=`
+    <tr>
+      <th>Min EV</th>
+      <th>Bets</th>
+      <th>Wins</th>
+      <th>Hit</th>
+      <th>Profit</th>
+      <th>ROI</th>
+      <th>Max DD</th>
+    </tr>
+    `;
+
+
+    let bestEV=null;
+
+    for(
+      const ev of EV_LEVELS
+    ){
+
+      const s=
+        evStats[ev];
+
+      const hit=
+        s.bets
+        ?
+        s.wins/
+        s.bets*
+        100
+        :
+        0;
+
+      const r=
+        roi(s);
+
+
+      if(
+        s.bets>100 &&
+        (
+          !bestEV ||
+          r>bestEV.roi
+        )
+      ){
+
+        bestEV={
+          ev,
+          roi:r
+        };
+
+      }
+
+
+      eh+=`
+      <tr>
+
+        <td>
+          <b>${ev*100}%</b>
+        </td>
+
+        <td>
+          ${s.bets}
+        </td>
+
+        <td>
+          ${s.wins}
+        </td>
+
+        <td>
+          ${hit.toFixed(2)}%
+        </td>
+
+        <td class="${cls(s.profit)}">
+          ${s.profit.toFixed(2)} kr
+        </td>
+
+        <td class="${cls(r)}">
+          ${r.toFixed(2)}%
+        </td>
+
+        <td>
+          ${s.maxDD.toFixed(2)} kr
+        </td>
+
+      </tr>
+      `;
+
+    }
+
+    eh+="</table>";
+
+
+    if(bestEV){
+
+      eh+=`
+      <div class="note">
+        <b>Bästa testade EV-gräns:</b>
+        ${bestEV.ev*100}%
+        →
+        ${bestEV.roi.toFixed(2)}% ROI
+      </div>
+      `;
+
+    }
+
+
+    document.getElementById(
+      "evResults"
+    ).innerHTML=
+      eh;
 
 
     /* =====================================================
@@ -2131,38 +2802,83 @@ async function runModel(){
       <th>AI-vikt</th>
       <th>Bets</th>
       <th>Wins</th>
-      <th>Hit rate</th>
+      <th>Hit</th>
       <th>Profit</th>
       <th>ROI</th>
       <th>Max DD</th>
     </tr>
     `;
 
-    for(const w of WEIGHTS){
+
+    let bestBlend=null;
+
+    for(
+      const w of WEIGHTS
+    ){
 
       const s=
         blendStats[w];
 
       const hit=
         s.bets
-        ?s.wins/s.bets*100
-        :0;
+        ?
+        s.wins/
+        s.bets*
+        100
+        :
+        0;
+
+      const r=
+        roi(s);
+
+
+      if(
+        s.bets>100 &&
+        (
+          !bestBlend ||
+          r>bestBlend.roi
+        )
+      ){
+
+        bestBlend={
+          w,
+          roi:r
+        };
+
+      }
+
 
       bh+=`
       <tr>
-        <td><b>${w*100}% AI</b></td>
-        <td>${s.bets}</td>
-        <td>${s.wins}</td>
-        <td>${hit.toFixed(2)}%</td>
+
+        <td>
+          <b>${w*100}% AI</b>
+        </td>
+
+        <td>
+          ${s.bets}
+        </td>
+
+        <td>
+          ${s.wins}
+        </td>
+
+        <td>
+          ${hit.toFixed(2)}%
+        </td>
+
         <td class="${cls(s.profit)}">
           ${s.profit.toFixed(2)} kr
         </td>
-        <td class="${cls(ROI(s))}">
-          ${ROI(s).toFixed(2)}%
+
+        <td class="${cls(r)}">
+          ${r.toFixed(2)}%
         </td>
+
         <td>
           ${s.maxDD.toFixed(2)} kr
         </td>
+
       </tr>
       `;
 
@@ -2170,8 +2886,114 @@ async function runModel(){
 
     bh+="</table>";
 
-    document.getElementById("blendResults").innerHTML=
+
+    if(bestBlend){
+
+      bh+=`
+      <div class="note">
+        <b>Bästa testade blend:</b>
+        ${bestBlend.w*100}% AI
+        →
+        ${bestBlend.roi.toFixed(2)}% ROI
+      </div>
+      `;
+
+    }
+
+
+    document.getElementById(
+      "blendResults"
+    ).innerHTML=
       bh;
+
+
+    /* =====================================================
+       EDGE TABLE
+    ===================================================== */
+
+    let xh="<table>";
+
+    xh+=`
+    <tr>
+      <th>AI-edge</th>
+      <th>Signaler</th>
+      <th>Value bets</th>
+      <th>Wins</th>
+      <th>Hit</th>
+      <th>ROI</th>
+      <th>Profit</th>
+    </tr>
+    `;
+
+
+    for(
+      const bucket of edgeBuckets
+    ){
+
+      const s=
+        edgeStats[bucket];
+
+      const hit=
+        s.bets
+        ?
+        s.wins/
+        s.bets*
+        100
+        :
+        0;
+
+      const r=
+        s.stake
+        ?
+        s.profit/
+        s.stake*
+        100
+        :
+        0;
+
+
+      xh+=`
+      <tr>
+
+        <td>
+          <b>${bucket}</b>
+        </td>
+
+        <td>
+          ${s.signals}
+        </td>
+
+        <td>
+          ${s.bets}
+        </td>
+
+        <td>
+          ${s.wins}
+        </td>
+
+        <td>
+          ${hit.toFixed(2)}%
+        </td>
+
+        <td class="${cls(r)}">
+          ${r.toFixed(2)}%
+        </td>
+
+        <td class="${cls(s.profit)}">
+          ${s.profit.toFixed(2)} kr
+        </td>
+
+      </tr>
+      `;
+
+    }
+
+    xh+="</table>";
+
+    document.getElementById(
+      "edgeResults"
+    ).innerHTML=
+      xh;
 
 
     /* =====================================================
@@ -2179,11 +3001,10 @@ async function runModel(){
     ===================================================== */
 
     topBets.sort(
-      (a,b)=>b.ev-a.ev
+      (a,b)=>
+        b.ev-a.ev
     );
 
-    const top=
-      topBets.slice(0,30);
 
     let th="<table>";
 
@@ -2195,52 +3016,53 @@ async function runModel(){
       <th>AI</th>
       <th>Marknad</th>
       <th>Edge</th>
-      <th>Blend</th>
       <th>EV</th>
       <th>Resultat</th>
     </tr>
     `;
 
-    for(const b of top){
+
+    for(
+      const b of
+      topBets.slice(0,30)
+    ){
 
       th+=`
       <tr>
 
-      <td>
-        ${b.home} – ${b.away}
-      </td>
+        <td>
+          ${b.home}
+          –
+          ${b.away}
+        </td>
 
-      <td>
-        ${b.outcome}
-      </td>
+        <td>
+          ${b.outcome}
+        </td>
 
-      <td>
-        ${b.odds.toFixed(2)}
-      </td>
+        <td>
+          ${b.odds.toFixed(2)}
+        </td>
 
-      <td>
-        ${pct(b.ai)}
-      </td>
+        <td>
+          ${pct(b.ai)}
+        </td>
 
-      <td>
-        ${pct(b.market)}
-      </td>
+        <td>
+          ${pct(b.market)}
+        </td>
 
-      <td>
-        ${pct(b.edge)}
-      </td>
+        <td>
+          ${pct(b.edge)}
+        </td>
 
-      <td>
-        ${pct(b.weight)}
-      </td>
+        <td class="${cls(b.ev)}">
+          ${pct(b.ev)}
+        </td>
 
-      <td class="${cls(b.ev)}">
-        ${pct(b.ev)}
-      </td>
-
-      <td>
-        ${b.win?"WIN":"LOSS"}
-      </td>
+        <td>
+          ${b.win?"WIN":"LOSS"}
+        </td>
 
       </tr>
       `;
@@ -2249,96 +3071,15 @@ async function runModel(){
 
     th+="</table>";
 
-    document.getElementById("topBets").innerHTML=
+
+    document.getElementById(
+      "topBets"
+    ).innerHTML=
       th;
 
 
     /* =====================================================
-       EDGE TABLE
-    ===================================================== */
-
-    let eh="<table>";
-
-    eh+=`
-    <tr>
-      <th>Påstådd AI-edge</th>
-      <th>Signaler</th>
-      <th>Value bets</th>
-      <th>Wins</th>
-      <th>Hit</th>
-      <th>ROI</th>
-      <th>Profit</th>
-    </tr>
-    `;
-
-    const edgeOrder=[
-      "0–2%",
-      "2–5%",
-      "5–10%",
-      "10–15%",
-      "15–20%",
-      "20%+"
-    ];
-
-    for(const k of edgeOrder){
-
-      const s=
-        edgeStats[k];
-
-      const hit=
-        s.bets
-        ?s.wins/s.bets*100
-        :0;
-
-      const r=
-        s.stake
-        ?s.profit/s.stake*100
-        :0;
-
-      eh+=`
-      <tr>
-
-      <td>
-        <b>${k}</b>
-      </td>
-
-      <td>
-        ${s.signals}
-      </td>
-
-      <td>
-        ${s.bets}
-      </td>
-
-      <td>
-        ${s.wins}
-      </td>
-
-      <td>
-        ${hit.toFixed(2)}%
-      </td>
-
-      <td class="${cls(r)}">
-        ${r.toFixed(2)}%
-      </td>
-
-      <td class="${cls(s.profit)}">
-        ${s.profit.toFixed(2)} kr
-      </td>
-
-      </tr>
-      `;
-
-    }
-
-    eh+="</table>";
-
-    document.getElementById("edgeTable").innerHTML=
-      eh;
-
-
-    /* =====================================================
-       SEASON TABLE
+       SÄSONGER
     ===================================================== */
 
     let sh="<table>";
@@ -2356,55 +3097,69 @@ async function runModel(){
     </tr>
     `;
 
-    for(const s of SEASONS){
+
+    for(
+      const s of SEASONS
+    ){
 
       const x=
         seasonStats[s];
 
       const hit=
         x.bets
-        ?x.wins/x.bets*100
-        :0;
+        ?
+        x.wins/
+        x.bets*
+        100
+        :
+        0;
 
       const r=
         x.stake
-        ?x.profit/x.stake*100
-        :0;
+        ?
+        x.profit/
+        x.stake*
+        100
+        :
+        0;
+
 
       sh+=`
       <tr>
 
-      <td>
-        <b>${SEASON_LABELS[s]}</b>
-      </td>
+        <td>
+          <b>
+            ${SEASON_LABELS[s]}
+          </b>
+        </td>
 
-      <td>
-        ${x.matches}
-      </td>
+        <td>
+          ${x.matches}
+        </td>
 
-      <td>
-        ${x.analyzed}
-      </td>
+        <td>
+          ${x.analyzed}
+        </td>
 
-      <td>
-        ${x.bets}
-      </td>
+        <td>
+          ${x.bets}
+        </td>
 
-      <td>
-        ${x.wins}
-      </td>
+        <td>
+          ${x.wins}
+        </td>
 
-      <td>
-        ${hit.toFixed(2)}%
-      </td>
+        <td>
+          ${hit.toFixed(2)}%
+        </td>
 
-      <td class="${cls(x.profit)}">
-        ${x.profit.toFixed(2)} kr
-      </td>
+        <td class="${cls(x.profit)}">
+          ${x.profit.toFixed(2)} kr
+        </td>
 
-      <td class="${cls(r)}">
-        ${r.toFixed(2)}%
-      </td>
+        <td class="${cls(r)}">
+          ${r.toFixed(2)}%
+        </td>
 
       </tr>
       `;
@@ -2413,12 +3168,15 @@ async function runModel(){
 
     sh+="</table>";
 
-    document.getElementById("seasons").innerHTML=
+
+    document.getElementById(
+      "seasonResults"
+    ).innerHTML=
       sh;
 
 
     /* =====================================================
-       CALIBRATION TABLE
+       CALIBRATION
     ===================================================== */
 
     let ch="<table>";
@@ -2440,43 +3198,61 @@ async function runModel(){
     `;
 
 
-    for(let k=0;k<3;k++){
+    for(
+      let k=0;
+      k<3;
+      k++
+    ){
 
       ch+=`
       <tr>
-      <td>
-        <b>
-        ${k===0?"H":k===1?"D":"A"}
-        </b>
-      </td>
+
+        <td>
+          <b>
+          ${
+            k===0
+            ?"H"
+            :k===1
+            ?"D"
+            :"A"
+          }
+          </b>
+        </td>
       `;
 
-      for(let b=0;b<10;b++){
+
+      for(
+        let b=0;
+        b<10;
+        b++
+      ){
 
         const d=
           calibrator.bins[k][b];
 
-        const rate=
-          d.n
-          ?d.wins/d.n*100
-          :null;
+        if(!d.n){
 
-        ch+=`
-        <td>
-          ${
-            rate===null
-            ?"-"
-            :rate.toFixed(1)+"%"
-          }
-          <span class="small">
-            ${
-              d.n
-              ?" ("+d.n+")"
-              :""
-            }
-          </span>
-        </td>
-        `;
+          ch+=`
+          <td>-</td>
+          `;
+
+        }else{
+
+          const rate=
+            d.wins/
+            d.n*
+            100;
+
+          ch+=`
+          <td>
+            ${rate.toFixed(1)}%
+            <span class="small">
+              (${d.n})
+            </span>
+          </td>
+          `;
+
+        }
 
       }
 
@@ -2486,23 +3262,37 @@ async function runModel(){
 
     ch+="</table>";
 
-    document.getElementById("calibration").innerHTML=
+
+    document.getElementById(
+      "calibration"
+    ).innerHTML=
       ch;
 
 
-    document.getElementById("bar").style.width=
+    /* =====================================================
+       DONE
+    ===================================================== */
+
+    document.getElementById(
+      "bar"
+    ).style.width=
       "100%";
 
-    document.getElementById("status").textContent=
-      "✅ V13.1 klar";
+    document.getElementById(
+      "status"
+    ).textContent=
+      "✅ V13.2 klar";
 
-  }
-  catch(err){
+
+  }catch(err){
 
     console.error(err);
 
-    document.getElementById("status").textContent=
-      "❌ Fel: "+err.message;
+    document.getElementById(
+      "status"
+    ).textContent=
+      "❌ Fel: "+
+      err.message;
 
   }
 
