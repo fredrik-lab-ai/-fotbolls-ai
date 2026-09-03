@@ -3,127 +3,209 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
 <title>Fotbolls-AI V13.3</title>
+
 <style>
-*{box-sizing:border-box}
+*{
+  box-sizing:border-box;
+}
+
 body{
   margin:0;
   font-family:Arial,Helvetica,sans-serif;
   background:#f4f6f8;
-  color:#18202a
+  color:#18202a;
 }
+
 header{
   background:#111827;
   color:white;
-  padding:24px 20px
+  padding:24px 20px;
 }
-header h1{margin:0 0 8px;font-size:28px}
-header p{margin:0;color:#cbd5e1}
-.container{max-width:1500px;margin:auto;padding:20px}
+
+header h1{
+  margin:0 0 8px;
+  font-size:28px;
+}
+
+header p{
+  margin:0;
+  color:#cbd5e1;
+}
+
+.container{
+  max-width:1500px;
+  margin:auto;
+  padding:20px;
+}
+
 .card{
   background:white;
   border-radius:12px;
   padding:18px;
   margin-bottom:18px;
-  box-shadow:0 2px 8px rgba(0,0,0,.07)
+  box-shadow:0 2px 8px rgba(0,0,0,.07);
 }
+
 .controls{
   display:grid;
   grid-template-columns:repeat(auto-fit,minmax(170px,1fr));
-  gap:12px
+  gap:12px;
 }
+
 label{
   font-size:13px;
   font-weight:bold;
   display:block;
-  margin-bottom:5px
+  margin-bottom:5px;
 }
-input,select,button{
+
+input,
+select,
+button{
   width:100%;
   padding:10px;
   border:1px solid #cbd5e1;
   border-radius:7px;
-  font-size:14px
+  font-size:14px;
 }
+
 button{
   background:#111827;
   color:white;
   border:0;
   cursor:pointer;
-  font-weight:bold
+  font-weight:bold;
 }
-button:hover{background:#263244}
+
+button:hover{
+  background:#263244;
+}
+
 .status{
   padding:12px;
   background:#eef2ff;
   border-radius:8px;
   margin-top:12px;
-  white-space:pre-wrap
+  white-space:pre-wrap;
 }
+
 .grid{
   display:grid;
-  grid-template-columns:repeat(auto-fit,minmax(230px,1fr));
-  gap:12px
+  grid-template-columns:repeat(auto-fit,minmax(220px,1fr));
+  gap:12px;
 }
+
 .metric{
   border:1px solid #e2e8f0;
   border-radius:9px;
-  padding:14px
+  padding:14px;
 }
+
 .metric .value{
   font-size:25px;
   font-weight:bold;
-  margin-top:5px
+  margin-top:5px;
 }
-.small{font-size:12px;color:#64748b}
-.good{color:#087f5b;font-weight:bold}
-.bad{color:#c92a2a;font-weight:bold}
-.warn{color:#a15c00;font-weight:bold}
+
+.small{
+  font-size:12px;
+  color:#64748b;
+}
+
+.good{
+  color:#087f5b;
+  font-weight:bold;
+}
+
+.bad{
+  color:#c92a2a;
+  font-weight:bold;
+}
+
+.warn{
+  color:#a15c00;
+  font-weight:bold;
+}
+
 .table-wrap{
   overflow:auto;
-  max-height:650px
+  max-height:650px;
 }
+
 table{
   border-collapse:collapse;
   width:100%;
-  font-size:13px
+  font-size:13px;
 }
-th,td{
+
+th,
+td{
   border-bottom:1px solid #e2e8f0;
   padding:8px;
   text-align:right;
-  white-space:nowrap
+  white-space:nowrap;
 }
+
 th{
   background:#f8fafc;
   position:sticky;
   top:0;
-  z-index:1
+  z-index:1;
 }
-th:first-child,td:first-child{text-align:left}
-h2{margin-top:0}
+
+th:first-child,
+td:first-child{
+  text-align:left;
+}
+
+h2{
+  margin-top:0;
+}
+
 .note{
   background:#fff7ed;
   border-left:4px solid #f97316;
   padding:12px;
-  margin-top:10px
+  margin-top:10px;
 }
-.hidden{display:none}
+
+.hidden{
+  display:none;
+}
+
 .progress{
   height:8px;
   background:#e5e7eb;
   border-radius:5px;
   overflow:hidden;
-  margin-top:10px
+  margin-top:10px;
 }
+
 .progressbar{
   height:100%;
   width:0%;
-  background:#111827
+  background:#111827;
 }
+
+.file-info{
+  margin-top:10px;
+  padding:10px;
+  background:#f8fafc;
+  border-radius:7px;
+  font-size:13px;
+}
+
 @media(max-width:700px){
-  header h1{font-size:22px}
-  .container{padding:10px}
+
+  header h1{
+    font-size:22px;
+  }
+
+  .container{
+    padding:10px;
+  }
 }
 </style>
 </head>
@@ -132,67 +214,129 @@ h2{margin-top:0}
 
 <header>
   <h1>⚽ Fotbolls-AI V13.3</h1>
-  <p>Walk-forward · Online Learning · Kalibrering · Marknadsankare · Signaltest</p>
+  <p>
+    Walk-forward · Online Learning · Kalibrering · Marknadsankare · Signaltest
+  </p>
 </header>
 
 <div class="container">
 
+<!-- INSTÄLLNINGAR -->
+
 <div class="card">
+
 <h2>Inställningar</h2>
 
 <div class="controls">
 
 <div>
 <label>AI-vikt</label>
-<input id="aiWeight" type="number" min="0" max="1" step="0.05" value="0.25">
+<input
+  id="aiWeight"
+  type="number"
+  min="0"
+  max="1"
+  step="0.05"
+  value="0.25">
 </div>
 
 <div>
 <label>Marknadsvikt</label>
-<input id="marketWeight" type="number" min="0" max="1" step="0.05" value="0.75">
+<input
+  id="marketWeight"
+  type="number"
+  min="0"
+  max="1"
+  step="0.05"
+  value="0.75">
 </div>
 
 <div>
 <label>Min EV %</label>
-<input id="minEV" type="number" step="1" value="5">
+<input
+  id="minEV"
+  type="number"
+  step="1"
+  value="5">
 </div>
 
 <div>
 <label>Max odds</label>
-<input id="maxOdds" type="number" step="0.1" value="6">
+<input
+  id="maxOdds"
+  type="number"
+  step="0.1"
+  value="6">
 </div>
 
 <div>
 <label>Min träning</label>
-<input id="minTrain" type="number" step="10" value="150">
+<input
+  id="minTrain"
+  type="number"
+  step="10"
+  value="150">
 </div>
 
 <div>
 <label>Formfönster</label>
-<input id="formN" type="number" step="1" value="10">
+<input
+  id="formN"
+  type="number"
+  step="1"
+  value="10">
 </div>
 
 <div>
 <label>Kalibreringsfönster</label>
-<input id="calN" type="number" step="10" value="250">
+<input
+  id="calN"
+  type="number"
+  step="10"
+  value="250">
 </div>
 
 </div>
 
 <br>
-<button onclick="runModel()">▶ Kör V13.3</button>
+
+<button onclick="runModel()">
+▶ Kör V13.3
+</button>
 
 <div class="progress">
-<div class="progressbar" id="progressbar"></div>
+  <div
+    class="progressbar"
+    id="progressbar">
+  </div>
 </div>
 
-<div class="status" id="status">Redo.</div>
+<div
+  class="status"
+  id="status">
+Redo.
+</div>
+
+<div
+  class="file-info"
+  id="fileInfo">
+Datafiler: väntar på inläsning...
+</div>
+
 </div>
 
 
-<div id="results" class="hidden">
+<!-- RESULTAT -->
+
+<div
+  id="results"
+  class="hidden">
+
+
+<!-- HUVUDRESULTAT -->
 
 <div class="card">
+
 <h2>Huvudresultat</h2>
 
 <div class="grid">
@@ -250,90 +394,173 @@ h2{margin-top:0}
 </div>
 
 <div class="note">
-<b>V13.3:</b> Huvudstrategin använder 25 % AI + 75 % marknad,
-men modellen testar även flera edge-zoner och EV-nivåer parallellt.
-Den bästa historiska kombinationen är endast en kandidat — inte ett bevis
-på framtida lönsamhet.
-</div>
+
+<b>V13.3:</b>
+
+Huvudstrategin använder AI + marknad som blend.
+Som standard är det
+
+<b>25 % AI / 75 % marknad</b>.
+
+Modellen testar dessutom edge-zoner och EV-trösklar
+oberoende av huvudstrategin.
+
+<br><br>
+
+<span class="warn">
+En historiskt bästa kombination är inte automatiskt
+en framtida vinnande strategi. Resultaten måste valideras
+på flera säsonger och helst på data som inte används
+för att välja strategin.
+</span>
+
 </div>
 
+</div>
+
+
+<!-- SÄSONGER -->
 
 <div class="card">
+
 <h2>1. Säsongsresultat – huvudstrategi</h2>
+
 <div class="table-wrap">
+
 <table id="seasonTable"></table>
-</div>
+
 </div>
 
+</div>
+
+
+<!-- EV -->
 
 <div class="card">
+
 <h2>2. EV-trösklar</h2>
+
 <div class="table-wrap">
+
 <table id="evTable"></table>
-</div>
+
 </div>
 
+</div>
+
+
+<!-- EDGE -->
 
 <div class="card">
+
 <h2>3. Edge-zoner – oberoende av EV-filter</h2>
+
 <p class="small">
-Visar hur väl AI-marknads-edge fungerar innan ett specifikt EV-krav används.
+Edge = AI-probabilitet minus marknadens normaliserade
+implicit-probabilitet för den bästa AI-signalen.
 </p>
+
 <div class="table-wrap">
+
 <table id="edgeTable"></table>
-</div>
+
 </div>
 
+</div>
+
+
+<!-- MATRIX -->
 
 <div class="card">
+
 <h2>4. Edge × EV – robusthetsmatris</h2>
+
 <p class="small">
-Varje cell testar samtidigt en edge-zon och en EV-tröskel.
-Minst 50 spel krävs för att markeras som en intressant kandidat.
+Varje cell testar både edge-zon och EV-tröskel.
+Minst 50 spel krävs för att räknas som en intressant
+historisk kandidat.
 </p>
+
 <div class="table-wrap">
+
 <table id="matrixTable"></table>
-</div>
+
 </div>
 
+</div>
+
+
+<!-- BÄSTA KOMBINATION -->
 
 <div class="card">
+
 <h2>5. Bästa kombination – säsong för säsong</h2>
+
 <div id="bestDescription"></div>
+
 <div class="table-wrap">
+
 <table id="bestSeasonTable"></table>
-</div>
+
 </div>
 
+</div>
+
+
+<!-- BLEND -->
 
 <div class="card">
+
 <h2>6. Blend-test</h2>
+
 <div class="table-wrap">
+
 <table id="blendTable"></table>
-</div>
+
 </div>
 
+</div>
+
+
+<!-- KALIBRERING -->
 
 <div class="card">
+
 <h2>7. Modellkalibrering</h2>
+
 <div class="table-wrap">
+
 <table id="calTable"></table>
-</div>
+
 </div>
 
+</div>
+
+
+<!-- TOPP -->
 
 <div class="card">
+
 <h2>8. Topp-signaler</h2>
+
 <div class="table-wrap">
+
 <table id="topTable"></table>
-</div>
+
 </div>
 
 </div>
+
+</div>
+
 </div>
 
 
 <script>
+
+/* =========================================================
+   V13.3
+   ========================================================= */
 
 const SEASONS = [
   "1819",
@@ -346,359 +573,981 @@ const SEASONS = [
   "2526"
 ];
 
-const LEAGUES = ["E0","E1","E2","E3"];
-
-const EDGE_ZONES = [
-  {name:"0–10%",min:0,max:10},
-  {name:"10–15%",min:10,max:15},
-  {name:"15–16%",min:15,max:16},
-  {name:"16–17%",min:16,max:17},
-  {name:"17–18%",min:17,max:18},
-  {name:"18–20%",min:18,max:20},
-  {name:"20–25%",min:20,max:25},
-  {name:"25–30%",min:25,max:30},
-  {name:"30%+",min:30,max:Infinity}
+const LEAGUES = [
+  "E0",
+  "E1",
+  "E2",
+  "E3"
 ];
 
-const EV_LEVELS = [3,5,7,10,15];
+
+/*
+  Edge-zoner
+*/
+
+const EDGE_ZONES = [
+
+  {
+    name:"0–10%",
+    min:0,
+    max:10
+  },
+
+  {
+    name:"10–15%",
+    min:10,
+    max:15
+  },
+
+  {
+    name:"15–16%",
+    min:15,
+    max:16
+  },
+
+  {
+    name:"16–17%",
+    min:16,
+    max:17
+  },
+
+  {
+    name:"17–18%",
+    min:17,
+    max:18
+  },
+
+  {
+    name:"18–20%",
+    min:18,
+    max:20
+  },
+
+  {
+    name:"20–25%",
+    min:20,
+    max:25
+  },
+
+  {
+    name:"25–30%",
+    min:25,
+    max:30
+  },
+
+  {
+    name:"30%+",
+    min:30,
+    max:Infinity
+  }
+];
+
+
+/*
+  EV-nivåer
+*/
+
+const EV_LEVELS = [
+  3,
+  5,
+  7,
+  10,
+  15
+];
+
 
 let allMatches = [];
 let predictions = [];
-let seasonStates = {};
+
+
+/* =========================================================
+   BASIC FUNCTIONS
+   ========================================================= */
 
 function num(v){
-  const x = parseFloat(v);
-  return Number.isFinite(x) ? x : null;
-}
 
-function clamp(x,a,b){
-  return Math.max(a,Math.min(b,x));
-}
-
-function sigmoid(x){
-  return 1/(1+Math.exp(-clamp(x,-30,30)));
-}
-
-function softmax(z){
-  const m=Math.max(...z);
-  const e=z.map(x=>Math.exp(clamp(x-m,-30,30)));
-  const s=e.reduce((a,b)=>a+b,0);
-  return e.map(x=>x/s);
-}
-
-function dot(a,b){
-  let s=0;
-  for(let i=0;i<a.length;i++) s+=a[i]*b[i];
-  return s;
-}
-
-function normalize3(a){
-  const s=a.reduce((x,y)=>x+y,0);
-  if(!s || !Number.isFinite(s)) return [1/3,1/3,1/3];
-  return a.map(x=>x/s);
-}
-
-function pct(x,d=2){
-  if(!Number.isFinite(x)) return "-";
-  return (x*100).toFixed(d)+"%";
-}
-
-function fixed(x,d=2){
-  if(!Number.isFinite(x)) return "-";
-  return x.toFixed(d);
-}
-
-function oddsValid(x){
-  return Number.isFinite(x) && x>=1.01 && x<=100;
-}
-
-function parseDate(v){
-  if(!v) return null;
+  if(v===null || v===undefined){
+    return null;
+  }
 
   let s=String(v).trim();
 
-  if(/^\d{2}\/\d{2}\/\d{4}$/.test(s)){
-    const [d,m,y]=s.split("/");
-    return new Date(`${y}-${m}-${d}T12:00:00`);
+  if(!s){
+    return null;
   }
 
-  const d=new Date(s);
-  return Number.isNaN(d.getTime()) ? null : d;
+  /*
+    Hantera både punkt och komma
+  */
+
+  s=s.replace(",", ".");
+
+  const x=parseFloat(s);
+
+  return Number.isFinite(x) ? x : null;
 }
+
+
+function clamp(x,a,b){
+
+  return Math.max(
+    a,
+    Math.min(b,x)
+  );
+}
+
+
+function softmax(z){
+
+  const m=Math.max(...z);
+
+  const e=z.map(
+    x=>Math.exp(
+      clamp(x-m,-30,30)
+    )
+  );
+
+  const s=e.reduce(
+    (a,b)=>a+b,
+    0
+  );
+
+  return e.map(
+    x=>x/s
+  );
+}
+
+
+function dot(a,b){
+
+  let s=0;
+
+  for(let i=0;i<a.length;i++){
+    s+=a[i]*b[i];
+  }
+
+  return s;
+}
+
+
+function normalize3(a){
+
+  const s=a.reduce(
+    (x,y)=>x+y,
+    0
+  );
+
+  if(
+    !s ||
+    !Number.isFinite(s)
+  ){
+    return [
+      1/3,
+      1/3,
+      1/3
+    ];
+  }
+
+  return a.map(
+    x=>x/s
+  );
+}
+
+
+function pct(x,d=2){
+
+  if(!Number.isFinite(x)){
+    return "-";
+  }
+
+  return (
+    x*100
+  ).toFixed(d)+"%";
+}
+
+
+function fixed(x,d=2){
+
+  if(!Number.isFinite(x)){
+    return "-";
+  }
+
+  return x.toFixed(d);
+}
+
+
+function oddsValid(x){
+
+  return (
+    Number.isFinite(x) &&
+    x>=1.01 &&
+    x<=100
+  );
+}
+
+
+/* =========================================================
+   DATE
+   ========================================================= */
+
+/*
+  football-data använder ofta:
+
+  dd/mm/yy
+  dd/mm/yyyy
+*/
+
+function parseDate(v){
+
+  if(!v){
+    return null;
+  }
+
+  let s=String(v).trim();
+
+  if(!s){
+    return null;
+  }
+
+  /*
+    dd/mm/yyyy
+  */
+
+  let m=s.match(
+    /^(\d{1,2})\/(\d{1,2})\/(\d{4})$/
+  );
+
+  if(m){
+
+    const d=parseInt(m[1],10);
+    const mo=parseInt(m[2],10)-1;
+    const y=parseInt(m[3],10);
+
+    const date=new Date(
+      y,
+      mo,
+      d,
+      12,
+      0,
+      0
+    );
+
+    if(
+      date.getFullYear()===y &&
+      date.getMonth()===mo &&
+      date.getDate()===d
+    ){
+      return date;
+    }
+
+    return null;
+  }
+
+
+  /*
+    dd/mm/yy
+  */
+
+  m=s.match(
+    /^(\d{1,2})\/(\d{1,2})\/(\d{2})$/
+  );
+
+  if(m){
+
+    const d=parseInt(m[1],10);
+    const mo=parseInt(m[2],10)-1;
+
+    let y=parseInt(m[3],10);
+
+    /*
+      football-data:
+      18 => 2018
+      25 => 2025
+    */
+
+    y =
+      y>=80
+      ? 1900+y
+      : 2000+y;
+
+    const date=new Date(
+      y,
+      mo,
+      d,
+      12,
+      0,
+      0
+    );
+
+    if(
+      date.getFullYear()===y &&
+      date.getMonth()===mo &&
+      date.getDate()===d
+    ){
+      return date;
+    }
+
+    return null;
+  }
+
+
+  /*
+    ISO etc.
+  */
+
+  const date=new Date(s);
+
+  if(
+    Number.isNaN(
+      date.getTime()
+    )
+  ){
+    return null;
+  }
+
+  date.setHours(
+    12,0,0,0
+  );
+
+  return date;
+}
+
 
 function daysBetween(a,b){
-  if(!a || !b) return 0;
-  return Math.max(0,(b-a)/86400000);
+
+  if(!a || !b){
+    return 0;
+  }
+
+  return Math.max(
+    0,
+    (b-a)/86400000
+  );
 }
 
 
-/* ---------------------------------------------------------
-   CSV parser
---------------------------------------------------------- */
+/* =========================================================
+   CSV
+   ========================================================= */
 
 function parseCSV(text){
 
   const rows=[];
+
   let row=[];
   let field="";
   let quoted=false;
 
-  for(let i=0;i<text.length;i++){
+  for(
+    let i=0;
+    i<text.length;
+    i++
+  ){
 
     const c=text[i];
 
-    if(c === '"'){
+    if(c==='"'){
 
-      if(quoted && text[i+1] === '"'){
+      if(
+        quoted &&
+        text[i+1]==='"'
+      ){
         field+='"';
         i++;
       }else{
         quoted=!quoted;
       }
 
-    }else if(c === "," && !quoted){
+    }else if(
+      c==="," &&
+      !quoted
+    ){
 
       row.push(field);
       field="";
 
-    }else if((c === "\n" || c === "\r") && !quoted){
+    }else if(
+      (c==="\n" || c==="\r") &&
+      !quoted
+    ){
 
-      if(c === "\r" && text[i+1] === "\n") i++;
+      if(
+        c==="\r" &&
+        text[i+1]==="\n"
+      ){
+        i++;
+      }
 
       row.push(field);
 
-      if(row.some(x=>x.trim()!=="")) rows.push(row);
+      if(
+        row.some(
+          x=>x.trim()!==""
+        )
+      ){
+        rows.push(row);
+      }
 
       row=[];
       field="";
 
     }else{
+
       field+=c;
     }
   }
 
-  if(field!=="" || row.length){
+  if(
+    field!=="" ||
+    row.length
+  ){
+
     row.push(field);
-    rows.push(row);
+
+    if(
+      row.some(
+        x=>x.trim()!==""
+      )
+    ){
+      rows.push(row);
+    }
   }
 
-  if(!rows.length) return [];
+  if(!rows.length){
+    return [];
+  }
 
-  const headers=rows[0].map(x=>x.trim());
+  const headers=
+    rows[0].map(
+      x=>x.trim()
+    );
 
   return rows.slice(1).map(r=>{
+
     const o={};
-    headers.forEach((h,i)=>o[h]=(r[i]??"").trim());
+
+    headers.forEach(
+      (h,i)=>{
+        o[h]=(
+          r[i] ??
+          ""
+        ).trim();
+      }
+    );
+
     return o;
   });
 }
 
 
-/* ---------------------------------------------------------
-   Odds
---------------------------------------------------------- */
+/* =========================================================
+   RESULT
+   ========================================================= */
+
+function resultIndex(r){
+
+  const f=
+    String(
+      r.FTR || ""
+    )
+    .trim()
+    .toUpperCase();
+
+  if(f==="H"){
+    return 0;
+  }
+
+  if(f==="D"){
+    return 1;
+  }
+
+  if(f==="A"){
+    return 2;
+  }
+
+  return null;
+}
+
+
+/* =========================================================
+   ODDS
+   ========================================================= */
 
 function getOdds(r){
 
-  const homeKeys=["AvgH","B365H","BWH","WHH"];
-  const drawKeys=["AvgD","B365D","BWD","WHD"];
-  const awayKeys=["AvgA","B365A","BWA","WHA"];
+  const homeKeys=[
+    "AvgH",
+    "B365H",
+    "BWH",
+    "WHH"
+  ];
+
+  const drawKeys=[
+    "AvgD",
+    "B365D",
+    "BWD",
+    "WHD"
+  ];
+
+  const awayKeys=[
+    "AvgA",
+    "B365A",
+    "BWA",
+    "WHA"
+  ];
+
 
   function first(keys){
-    for(const k of keys){
+
+    for(
+      const k of keys
+    ){
+
       const x=num(r[k]);
-      if(oddsValid(x)) return x;
+
+      if(
+        oddsValid(x)
+      ){
+        return x;
+      }
     }
+
     return null;
   }
 
+
   return {
+
     h:first(homeKeys),
+
     d:first(drawKeys),
+
     a:first(awayKeys)
+
   };
 }
 
+
 function marketProb(odds){
 
-  if(!odds.h || !odds.d || !odds.a) return null;
+  if(
+    !odds.h ||
+    !odds.d ||
+    !odds.a
+  ){
+    return null;
+  }
 
   const inv=[
+
     1/odds.h,
+
     1/odds.d,
+
     1/odds.a
+
   ];
 
   return normalize3(inv);
 }
 
 
-/* ---------------------------------------------------------
-   Result
---------------------------------------------------------- */
-
-function resultIndex(r){
-
-  const f=String(r.FTR||"").trim().toUpperCase();
-
-  if(f==="H") return 0;
-  if(f==="D") return 1;
-  if(f==="A") return 2;
-
-  return null;
-}
-
-
-/* ---------------------------------------------------------
-   Team state
---------------------------------------------------------- */
+/* =========================================================
+   TEAM STATE
+   ========================================================= */
 
 function createTeam(){
 
   return {
+
     played:0,
+
     points:0,
+
     gf:0,
+
     ga:0,
 
+
     homePlayed:0,
+
     homePoints:0,
+
     homeGF:0,
+
     homeGA:0,
 
+
     awayPlayed:0,
+
     awayPoints:0,
+
     awayGF:0,
+
     awayGA:0,
 
+
     recent:[],
+
     lastDate:null
+
   };
 }
 
-function ensureTeam(map,name){
 
-  if(!map[name]) map[name]=createTeam();
+function ensureTeam(
+  teams,
+  name
+){
 
-  return map[name];
+  if(!teams[name]){
+
+    teams[name]=
+      createTeam();
+
+  }
+
+  return teams[name];
 }
+
 
 function teamPPG(t){
-  return t.played ? t.points/t.played : 1.25;
+
+  return t.played
+    ? t.points/t.played
+    : 1.25;
 }
+
 
 function attack(t){
-  if(!t.played) return 1;
-  return t.gf/t.played;
+
+  return t.played
+    ? t.gf/t.played
+    : 1;
 }
+
 
 function defence(t){
-  if(!t.played) return 1;
-  return t.ga/t.played;
+
+  return t.played
+    ? t.ga/t.played
+    : 1;
 }
+
 
 function homePPG(t){
-  return t.homePlayed ? t.homePoints/t.homePlayed : teamPPG(t);
+
+  return t.homePlayed
+    ? t.homePoints/t.homePlayed
+    : teamPPG(t);
 }
+
 
 function awayPPG(t){
-  return t.awayPlayed ? t.awayPoints/t.awayPlayed : teamPPG(t);
+
+  return t.awayPlayed
+    ? t.awayPoints/t.awayPlayed
+    : teamPPG(t);
 }
 
-function recentForm(t,n){
 
-  if(!t.recent.length) return 1;
+/* =========================================================
+   FORM
+   ========================================================= */
 
-  const arr=t.recent.slice(-n);
+function recentForm(
+  t,
+  n
+){
 
-  return arr.reduce((s,x)=>s+x,0)/arr.length;
+  if(
+    !t.recent.length
+  ){
+    return 1;
+  }
+
+  const arr=
+    t.recent.slice(
+      -n
+    );
+
+  return arr.reduce(
+    (s,x)=>s+x,
+    0
+  )/arr.length;
 }
 
-function recentTrend(t,n){
 
-  const arr=t.recent.slice(-n);
+function recentTrend(
+  t,
+  n
+){
 
-  if(arr.length<4) return 0;
+  const arr=
+    t.recent.slice(
+      -n
+    );
 
-  const half=Math.max(2,Math.floor(arr.length/2));
+  if(arr.length<4){
+    return 0;
+  }
 
-  const a=arr.slice(0,half);
-  const b=arr.slice(-half);
+  const half=
+    Math.max(
+      2,
+      Math.floor(
+        arr.length/2
+      )
+    );
 
-  const av1=a.reduce((s,x)=>s+x,0)/a.length;
-  const av2=b.reduce((s,x)=>s+x,0)/b.length;
+  const a=
+    arr.slice(
+      0,
+      half
+    );
+
+  const b=
+    arr.slice(
+      -half
+    );
+
+  const av1=
+    a.reduce(
+      (s,x)=>s+x,
+      0
+    )/a.length;
+
+  const av2=
+    b.reduce(
+      (s,x)=>s+x,
+      0
+    )/b.length;
 
   return av2-av1;
 }
 
-function restDays(t,date){
 
-  if(!t.lastDate || !date) return 7;
+/* =========================================================
+   REST
+   ========================================================= */
 
-  return daysBetween(t.lastDate,date);
+function restDays(
+  t,
+  date
+){
+
+  if(
+    !t.lastDate ||
+    !date
+  ){
+    return 7;
+  }
+
+  return daysBetween(
+    t.lastDate,
+    date
+  );
 }
 
-function normalizedH2H(h2h,home,away){
 
-  const key=home+"|"+away;
+/* =========================================================
+   H2H
+   ========================================================= */
 
-  const data=h2h[key];
+function normalizedH2H(
+  h2h,
+  home,
+  away
+){
 
-  if(!data || data.n===0) return 0;
+  const key=
+    home+"|"+away;
 
-  return clamp((data.homePoints-data.awayPoints)/(data.n*3),-1,1);
+  const data=
+    h2h[key];
+
+  if(
+    !data ||
+    data.n===0
+  ){
+    return 0;
+  }
+
+  return clamp(
+    (
+      data.homePoints -
+      data.awayPoints
+    ) /
+    (data.n*3),
+    -1,
+    1
+  );
 }
 
 
-/* ---------------------------------------------------------
-   Feature vector
---------------------------------------------------------- */
+/* =========================================================
+   FEATURES
+   ========================================================= */
 
-function features(home,away,date,teams,h2h,formN){
+function features(
+  home,
+  away,
+  date,
+  teams,
+  h2h,
+  formN
+){
 
-  const h=ensureTeam(teams,home);
-  const a=ensureTeam(teams,away);
+  const h=
+    ensureTeam(
+      teams,
+      home
+    );
 
-  const hForm=recentForm(h,formN);
-  const aForm=recentForm(a,formN);
+  const a=
+    ensureTeam(
+      teams,
+      away
+    );
 
-  const hTrend=recentTrend(h,formN);
-  const aTrend=recentTrend(a,formN);
 
-  const hAttack=attack(h);
-  const aAttack=attack(a);
+  const hForm=
+    recentForm(
+      h,
+      formN
+    );
 
-  const hDef=defence(h);
-  const aDef=defence(a);
+  const aForm=
+    recentForm(
+      a,
+      formN
+    );
 
-  const hPPG=teamPPG(h);
-  const aPPG=teamPPG(a);
 
-  const hHomePPG=homePPG(h);
-  const aAwayPPG=awayPPG(a);
+  const hTrend=
+    recentTrend(
+      h,
+      formN
+    );
 
-  const hRest=clamp(restDays(h,date)/14,0,1);
-  const aRest=clamp(restDays(a,date)/14,0,1);
+  const aTrend=
+    recentTrend(
+      a,
+      formN
+    );
 
-  const h2hVal=normalizedH2H(h2h,home,away);
+
+  const hAttack=
+    attack(h);
+
+  const aAttack=
+    attack(a);
+
+
+  const hDef=
+    defence(h);
+
+  const aDef=
+    defence(a);
+
+
+  const hPPG=
+    teamPPG(h);
+
+  const aPPG=
+    teamPPG(a);
+
+
+  const hHomePPG=
+    homePPG(h);
+
+  const aAwayPPG=
+    awayPPG(a);
+
+
+  const hRest=
+    clamp(
+      restDays(h,date)/14,
+      0,
+      1
+    );
+
+  const aRest=
+    clamp(
+      restDays(a,date)/14,
+      0,
+      1
+    );
+
+
+  const h2hVal=
+    normalizedH2H(
+      h2h,
+      home,
+      away
+    );
+
+
+  /*
+    10 features:
+
+    0 intercept
+    1 form
+    2 PPG
+    3 attack
+    4 defence
+    5 home/away PPG
+    6 trend
+    7 rest
+    8 H2H
+    9 home advantage
+  */
 
   return [
 
     1,
 
-    clamp((hForm-aForm)/3,-1,1),
+    clamp(
+      (hForm-aForm)/3,
+      -1,
+      1
+    ),
 
-    clamp((hPPG-aPPG)/3,-1,1),
+    clamp(
+      (hPPG-aPPG)/3,
+      -1,
+      1
+    ),
 
-    clamp((hAttack-aAttack)/3,-1,1),
+    clamp(
+      (hAttack-aAttack)/3,
+      -1,
+      1
+    ),
 
-    clamp((aDef-hDef)/3,-1,1),
+    clamp(
+      (aDef-hDef)/3,
+      -1,
+      1
+    ),
 
-    clamp((hHomePPG-aAwayPPG)/3,-1,1),
+    clamp(
+      (hHomePPG-aAwayPPG)/3,
+      -1,
+      1
+    ),
 
-    clamp((hTrend-aTrend)/3,-1,1),
+    clamp(
+      (hTrend-aTrend)/3,
+      -1,
+      1
+    ),
 
-    clamp(hRest-aRest,-1,1),
+    clamp(
+      hRest-aRest,
+      -1,
+      1
+    ),
 
     h2hVal,
 
@@ -708,47 +1557,82 @@ function features(home,away,date,teams,h2h,formN){
 }
 
 
-/* ---------------------------------------------------------
-   Online softmax model
---------------------------------------------------------- */
+/* =========================================================
+   ONLINE MODEL
+   ========================================================= */
 
 function createModel(){
 
   const n=10;
 
   return {
+
     W:[
+
       new Array(n).fill(0),
+
       new Array(n).fill(0),
+
       new Array(n).fill(0)
+
     ],
 
     lr:0.035,
+
     l2:0.0007
+
   };
 }
 
-function predictModel(model,x){
 
-  const z=model.W.map(w=>dot(w,x));
+function predictModel(
+  model,
+  x
+){
+
+  const z=
+    model.W.map(
+      w=>dot(w,x)
+    );
 
   return softmax(z);
 }
 
-function trainModel(model,x,y){
 
-  const p=predictModel(model,x);
+function trainModel(
+  model,
+  x,
+  y
+){
 
-  for(let k=0;k<3;k++){
+  const p=
+    predictModel(
+      model,
+      x
+    );
 
-    const err=p[k]-y[k];
 
-    for(let j=0;j<x.length;j++){
+  for(
+    let k=0;
+    k<3;
+    k++
+  ){
+
+    const err=
+      p[k]-y[k];
+
+    for(
+      let j=0;
+      j<x.length;
+      j++
+    ){
 
       model.W[k][j]-=
-        model.lr*(
+        model.lr*
+        (
           err*x[j] +
-          model.l2*model.W[k][j]
+          model.l2*
+          model.W[k][j]
         );
     }
   }
@@ -757,125 +1641,310 @@ function trainModel(model,x,y){
 }
 
 
-/* ---------------------------------------------------------
-   Calibration
-   Isotonic-style bins using only prior predictions
---------------------------------------------------------- */
+/* =========================================================
+   CALIBRATION
+   ========================================================= */
 
 function createCalibration(){
 
   return {
+
     samples:[
-      [[],[],[]],
-      [[],[],[]],
-      [[],[],[]]
+
+      [],
+
+      [],
+
+      []
+
     ]
+
   };
 }
 
-function calibratedProb(cal,p){
+
+/*
+  Enkel out-of-sample empirical calibration.
+
+  Viktigt:
+  endast gamla predictioner används.
+*/
+
+function calibratedProb(
+  cal,
+  p
+){
 
   const out=[];
 
-  for(let k=0;k<3;k++){
 
-    const arr=cal.samples[k];
+  for(
+    let k=0;
+    k<3;
+    k++
+  ){
 
-    if(arr.length<30){
-      out.push(p[k]);
+    const arr=
+      cal.samples[k];
+
+
+    if(
+      arr.length<30
+    ){
+
+      out.push(
+        p[k]
+      );
+
       continue;
     }
 
-    const sorted=arr.slice().sort((a,b)=>a.p-b.p);
 
-    let best=sorted[sorted.length-1].y;
+    /*
+      Lokalt intervall runt aktuell sannolikhet.
+    */
 
-    for(const s of sorted){
+    const sorted=
+      arr
+      .slice()
+      .sort(
+        (a,b)=>a.p-b.p
+      );
 
-      if(s.p>=p[k]){
-        best=s.y;
-        break;
-      }
-    }
 
-    out.push(best);
+    const radius=
+      Math.max(
+        15,
+        Math.floor(
+          sorted.length*0.10
+        )
+      );
+
+
+    let nearest=
+      sorted
+      .map(
+        s=>({
+          ...s,
+          distance:
+            Math.abs(
+              s.p-p[k]
+            )
+        })
+      )
+      .sort(
+        (a,b)=>
+          a.distance-b.distance
+      )
+      .slice(
+        0,
+        radius
+      );
+
+
+    let actual=
+      nearest.reduce(
+        (s,x)=>s+x.y,
+        0
+      ) /
+      nearest.length;
+
+
+    /*
+      Shrinkage mot modellens
+      ursprungliga sannolikhet.
+    */
+
+    actual=
+      0.70*actual+
+      0.30*p[k];
+
+
+    out.push(
+      clamp(
+        actual,
+        0.001,
+        0.999
+      )
+    );
   }
+
 
   return normalize3(out);
 }
 
-function updateCalibration(cal,p,y){
 
-  for(let k=0;k<3;k++){
+function updateCalibration(
+  cal,
+  p,
+  y
+){
+
+  for(
+    let k=0;
+    k<3;
+    k++
+  ){
 
     cal.samples[k].push({
+
       p:p[k],
+
       y:y[k]
+
     });
   }
 
-  const maxN=Number(document.getElementById("calN").value)||250;
 
-  for(let k=0;k<3;k++){
+  const maxN=
+    Number(
+      document.getElementById(
+        "calN"
+      ).value
+    ) || 250;
 
-    while(cal.samples[k].length>maxN){
+
+  for(
+    let k=0;
+    k<3;
+    k++
+  ){
+
+    while(
+      cal.samples[k].length>
+      maxN
+    ){
+
       cal.samples[k].shift();
+
     }
   }
 }
 
 
-/* ---------------------------------------------------------
-   Blend
---------------------------------------------------------- */
+/* =========================================================
+   BLEND
+   ========================================================= */
 
-function blendProb(ai,market,w){
+function blendProb(
+  ai,
+  market,
+  w
+){
 
   return normalize3([
-    w*ai[0]+(1-w)*market[0],
-    w*ai[1]+(1-w)*market[1],
-    w*ai[2]+(1-w)*market[2]
+
+    w*ai[0] +
+      (1-w)*market[0],
+
+    w*ai[1] +
+      (1-w)*market[1],
+
+    w*ai[2] +
+      (1-w)*market[2]
+
   ]);
 }
 
 
-/* ---------------------------------------------------------
-   Betting
---------------------------------------------------------- */
+/* =========================================================
+   BEST BET
+   ========================================================= */
 
-function bestBet(prob,odds){
+function bestBet(
+  prob,
+  odds
+){
 
-  if(!odds.h || !odds.d || !odds.a) return null;
+  if(
+    !odds.h ||
+    !odds.d ||
+    !odds.a
+  ){
+    return null;
+  }
 
-  const os=[odds.h,odds.d,odds.a];
+
+  const os=[
+
+    odds.h,
+
+    odds.d,
+
+    odds.a
+
+  ];
+
+
+  const maxOdds=
+    Number(
+      document.getElementById(
+        "maxOdds"
+      ).value
+    ) || 6;
+
 
   let best=null;
 
-  for(let k=0;k<3;k++){
 
-    if(os[k]>Number(document.getElementById("maxOdds").value)) continue;
+  for(
+    let k=0;
+    k<3;
+    k++
+  ){
 
-    const ev=prob[k]*os[k]-1;
+    if(
+      os[k]>maxOdds
+    ){
+      continue;
+    }
 
-    if(!best || ev>best.ev){
+
+    const ev=
+      prob[k]*os[k]-1;
+
+
+    if(
+      !best ||
+      ev>best.ev
+    ){
 
       best={
+
         outcome:k,
+
         odds:os[k],
+
         probability:prob[k],
-        ev
+
+        ev:ev
+
       };
     }
   }
 
+
   return best;
 }
 
-function edgeOf(ai,market){
+
+/* =========================================================
+   EDGE
+   ========================================================= */
+
+function edgeOf(
+  ai,
+  market
+){
 
   let best=0;
 
-  for(let k=0;k<3;k++){
+
+  for(
+    let k=0;
+    k<3;
+    k++
+  ){
 
     best=Math.max(
       best,
@@ -883,238 +1952,781 @@ function edgeOf(ai,market){
     );
   }
 
+
   return best;
 }
 
 
-/* ---------------------------------------------------------
-   Update team state
---------------------------------------------------------- */
+/* =========================================================
+   UPDATE TEAM
+   ========================================================= */
 
-function updateState(teams,h2h,r){
+function updateState(
+  teams,
+  h2h,
+  r
+){
 
-  const home=r.Home;
-  const away=r.Away;
+  const home=
+    r.Home;
 
-  const h=ensureTeam(teams,home);
-  const a=ensureTeam(teams,away);
+  const away=
+    r.Away;
 
-  const ri=resultIndex(r);
 
-  if(ri===null) return;
+  const h=
+    ensureTeam(
+      teams,
+      home
+    );
+
+  const a=
+    ensureTeam(
+      teams,
+      away
+    );
+
+
+  const ri=
+    resultIndex(r);
+
+
+  if(
+    ri===null
+  ){
+    return;
+  }
+
 
   let hp=0;
   let ap=0;
 
-  if(ri===0) hp=3;
-  if(ri===1){hp=1;ap=1}
-  if(ri===2) ap=3;
 
-  const hg=num(r.FTHG)??0;
-  const ag=num(r.FTAG)??0;
+  if(ri===0){
+    hp=3;
+  }
+
+  if(ri===1){
+    hp=1;
+    ap=1;
+  }
+
+  if(ri===2){
+    ap=3;
+  }
+
+
+  const hg=
+    num(r.FTHG) ?? 0;
+
+  const ag=
+    num(r.FTAG) ?? 0;
+
 
   h.played++;
   a.played++;
 
+
   h.points+=hp;
   a.points+=ap;
+
 
   h.gf+=hg;
   h.ga+=ag;
 
+
   a.gf+=ag;
   a.ga+=hg;
+
 
   h.homePlayed++;
   h.homePoints+=hp;
   h.homeGF+=hg;
   h.homeGA+=ag;
 
+
   a.awayPlayed++;
   a.awayPoints+=ap;
   a.awayGF+=ag;
   a.awayGA+=hg;
 
+
   h.recent.push(hp);
   a.recent.push(ap);
 
-  if(h.recent.length>30) h.recent.shift();
-  if(a.recent.length>30) a.recent.shift();
 
-  const d=parseDate(r.Date);
+  if(
+    h.recent.length>30
+  ){
+    h.recent.shift();
+  }
+
+  if(
+    a.recent.length>30
+  ){
+    a.recent.shift();
+  }
+
+
+  const d=
+    r.__date;
+
 
   if(d){
+
     h.lastDate=d;
     a.lastDate=d;
+
   }
 
-  const key=home+"|"+away;
 
-  if(!h2h[key]){
+  /*
+    H2H lagras separat för
+    exakt hemma/ borta-par.
+  */
+
+  const key=
+    home+"|"+away;
+
+
+  if(
+    !h2h[key]
+  ){
+
     h2h[key]={
+
       n:0,
+
       homePoints:0,
+
       awayPoints:0
+
     };
+
   }
+
 
   h2h[key].n++;
+
   h2h[key].homePoints+=hp;
+
   h2h[key].awayPoints+=ap;
 }
 
 
-/* ---------------------------------------------------------
-   Metrics
---------------------------------------------------------- */
+/* =========================================================
+   STATS
+   ========================================================= */
 
 function emptyStats(){
+
   return {
+
     bets:0,
+
     wins:0,
+
     profit:0,
+
     peak:0,
+
     dd:0
+
   };
 }
 
-function addBet(stats,bet,ri){
+
+function addBet(
+  stats,
+  bet,
+  ri
+){
 
   stats.bets++;
 
-  if(bet.outcome===ri){
+
+  if(
+    bet.outcome===ri
+  ){
 
     stats.wins++;
-    stats.profit+=bet.odds-1;
+
+    stats.profit+=
+      bet.odds-1;
 
   }else{
 
     stats.profit-=1;
+
   }
 
-  stats.peak=Math.max(stats.peak,stats.profit);
 
-  stats.dd=Math.max(
-    stats.dd,
-    stats.peak-stats.profit
-  );
+  stats.peak=
+    Math.max(
+      stats.peak,
+      stats.profit
+    );
+
+
+  stats.dd=
+    Math.max(
+      stats.dd,
+      stats.peak-
+      stats.profit
+    );
 }
+
 
 function roi(stats){
 
-  return stats.bets ? stats.profit/stats.bets : NaN;
+  return stats.bets
+    ? stats.profit/
+      stats.bets
+    : NaN;
 }
 
 
-/* ---------------------------------------------------------
-   Main run
---------------------------------------------------------- */
+/* =========================================================
+   LOAD DATA
+   ========================================================= */
 
 async function runModel(){
 
-  const status=document.getElementById("status");
-  const bar=document.getElementById("progressbar");
+  const status=
+    document.getElementById(
+      "status"
+    );
 
-  status.textContent="Laddar historiska data...";
+  const bar=
+    document.getElementById(
+      "progressbar"
+    );
+
+  const fileInfo=
+    document.getElementById(
+      "fileInfo"
+    );
+
+
+  status.textContent=
+    "Laddar historiska data...";
+
+
   bar.style.width="0%";
+
 
   allMatches=[];
   predictions=[];
-  seasonStates={};
+
+
+  let loadedFiles=0;
+  let missingFiles=0;
+
 
   try{
 
-    for(let si=0;si<SEASONS.length;si++){
+    /*
+      Ladda alla säsonger/ligor.
+    */
 
-      const season=SEASONS[si];
+    for(
+      let si=0;
+      si<SEASONS.length;
+      si++
+    ){
 
-      status.textContent=`Laddar ${season}...`;
+      const season=
+        SEASONS[si];
 
-      for(const league of LEAGUES){
 
-        const url=`data/${league}_${season}.csv`;
+      status.textContent=
+        `Laddar säsong ${season}...`;
+
+
+      for(
+        const league of LEAGUES
+      ){
+
+        /*
+          Förväntat filnamn:
+
+          E0_1819.csv
+          E1_1819.csv
+          osv.
+        */
+
+        const url=
+          `data/${league}_${season}.csv`;
+
 
         try{
 
-          const response=await fetch(url);
+          const response=
+            await fetch(
+              url,
+              {
+                cache:"no-store"
+              }
+            );
 
-          if(!response.ok) continue;
 
-          const text=await response.text();
+          if(
+            !response.ok
+          ){
 
-          const rows=parseCSV(text);
+            missingFiles++;
 
-          for(const r of rows){
-
-            const d=parseDate(r.Date);
-
-            if(!d || !r.Home || !r.Away) continue;
-
-            if(resultIndex(r)===null) continue;
-
-            r.__season=season;
-            r.__league=league;
-            r.__date=d;
-
-            allMatches.push(r);
+            continue;
           }
 
+
+          const text=
+            await response.text();
+
+
+          const rows=
+            parseCSV(text);
+
+
+          let added=0;
+
+
+          for(
+            const r of rows
+          ){
+
+            const d=
+              parseDate(
+                r.Date
+              );
+
+
+            /*
+              FIX:
+              football-data använder
+              HomeTeam och AwayTeam.
+            */
+
+            const homeTeam=
+              r.HomeTeam ||
+              r.Home ||
+              "";
+
+
+            const awayTeam=
+              r.AwayTeam ||
+              r.Away ||
+              "";
+
+
+            if(
+              !d ||
+              !homeTeam ||
+              !awayTeam
+            ){
+              continue;
+            }
+
+
+            if(
+              resultIndex(r)===null
+            ){
+              continue;
+            }
+
+
+            /*
+              Normalisera namnen internt.
+            */
+
+            r.Home=
+              homeTeam;
+
+            r.Away=
+              awayTeam;
+
+
+            r.__season=
+              season;
+
+            r.__league=
+              league;
+
+            r.__date=
+              d;
+
+
+            allMatches.push(r);
+
+            added++;
+          }
+
+
+          loadedFiles++;
+
+
+          console.log(
+            url,
+            "matcher:",
+            added
+          );
+
+
         }catch(e){
-          console.warn(url,e);
+
+          console.warn(
+            "Kunde inte läsa",
+            url,
+            e
+          );
+
+          missingFiles++;
         }
       }
 
-      bar.style.width=((si+1)/SEASONS.length*20)+"%";
+
+      bar.style.width=
+        (
+          (si+1)/
+          SEASONS.length*
+          20
+        )+"%";
+
+
+      await new Promise(
+        requestAnimationFrame
+      );
     }
 
-    allMatches.sort((a,b)=>a.__date-b.__date);
 
-    if(!allMatches.length){
+    /*
+      Sortera kronologiskt.
+    */
+
+    allMatches.sort(
+      (a,b)=>
+        a.__date-
+        b.__date
+    );
+
+
+    fileInfo.textContent=
+      `Laddade filer: ${loadedFiles} · `+
+      `Saknade/ej läsbara filer: ${missingFiles} · `+
+      `Matcher: ${allMatches.length}`;
+
+
+    if(
+      !allMatches.length
+    ){
 
       status.textContent=
-        "Hittade inga matcher.\nKontrollera att data-filerna ligger i /data och heter t.ex. E0_1819.csv.";
+        "Hittade inga matcher.\n\n"+
+        "Kontrollera att CSV-filerna ligger i /data.\n"+
+        "Förväntat format exempelvis:\n"+
+        "data/E0_1819.csv\n"+
+        "data/E0_1920.csv";
 
       return;
     }
 
+
     status.textContent=
-      `Laddade ${allMatches.length} matcher.\nKör walk-forward...`;
+      `Laddade ${allMatches.length} matcher.\n`+
+      "Startar walk-forward-modellen...";
 
-    const minTrain=Number(document.getElementById("minTrain").value)||150;
-    const formN=Number(document.getElementById("formN").value)||10;
 
-    const model=createModel();
-    const cal=createCalibration();
+    /*
+      Inställningar
+    */
+
+    const minTrain=
+      Number(
+        document.getElementById(
+          "minTrain"
+        ).value
+      ) || 150;
+
+
+    const formN=
+      Number(
+        document.getElementById(
+          "formN"
+        ).value
+      ) || 10;
+
+
+    /*
+      Modell
+    */
+
+    const model=
+      createModel();
+
+
+    const cal=
+      createCalibration();
+
+
+    /*
+      Historiskt lagrad information.
+    */
 
     const teams={};
+
     const h2h={};
 
-    const globalPredictions=[];
 
-    let seen=0;
+    /*
+      Räknare
+    */
+
+    let seenMatches=0;
+
+    let predictionCount=0;
+
+
+    /*
+      Modellmått
+    */
 
     let accuracyCorrect=0;
+
     let accuracyTotal=0;
 
     let brierSum=0;
+
     let logLossSum=0;
 
-    /*
-      Training history.
-      Only matches already played are allowed to train.
-    */
-    for(const r of allMatches){
 
-      const odds=getOdds(r);
-      const market=marketProb(odds);
+    /*
+      Walk-forward
+    */
+
+    for(
+      const r of allMatches
+    ){
 
       /*
-        Prediction happens BEFORE updateState.
-        Therefore current match cannot influence its own prediction.
+        MATCHEN PREDIKTERAS FÖRST.
       */
-      if(market){
 
-        const x=features(
+      const odds=
+        getOdds(r);
+
+
+      const market=
+        marketProb(odds);
+
+
+      if(
+        market &&
+        seenMatches>=minTrain
+      ){
+
+        /*
+          Features baseras endast
+          på tidigare matcher.
+        */
+
+        const x=
+          features(
+            r.Home,
+            r.Away,
+            r.__date,
+            teams,
+            h2h,
+            formN
+          );
+
+
+        /*
+          AI före aktuell match.
+        */
+
+        const rawAI=
+          predictModel(
+            model,
+            x
+          );
+
+
+        /*
+          Out-of-sample calibration.
+        */
+
+        const ai=
+          calibratedProb(
+            cal,
+            rawAI
+          );
+
+
+        /*
+          Standardblend.
+        */
+
+        const blend25=
+          blendProb(
+            ai,
+            market,
+            0.25
+          );
+
+
+        /*
+          Marknadsodds.
+        */
+
+        const bet=
+          bestBet(
+            blend25,
+            odds
+          );
+
+
+        const ri=
+          resultIndex(r);
+
+
+        /*
+          Modellprecision.
+        */
+
+        const predictedClass=
+          blend25.indexOf(
+            Math.max(
+              ...blend25
+            )
+          );
+
+
+        if(
+          predictedClass===ri
+        ){
+          accuracyCorrect++;
+        }
+
+
+        accuracyTotal++;
+
+
+        /*
+          Brier score.
+        */
+
+        let bs=0;
+
+
+        for(
+          let k=0;
+          k<3;
+          k++
+        ){
+
+          const y=
+            k===ri
+              ? 1
+              : 0;
+
+
+          bs+=
+            (
+              blend25[k]-y
+            )**2;
+        }
+
+
+        brierSum+=bs;
+
+
+        /*
+          Log loss.
+        */
+
+        logLossSum+=
+          -Math.log(
+            clamp(
+              blend25[ri],
+              1e-12,
+              1
+            )
+          );
+
+
+        /*
+          AI edge.
+        */
+
+        const edge=
+          edgeOf(
+            ai,
+            market
+          );
+
+
+        predictions.push({
+
+          season:
+            r.__season,
+
+          league:
+            r.__league,
+
+          date:
+            r.__date,
+
+          home:
+            r.Home,
+
+          away:
+            r.Away,
+
+          odds:
+
+            odds,
+
+          market:
+
+            market,
+
+          rawAI:
+
+            rawAI,
+
+          ai:
+
+            ai,
+
+          blend25:
+
+            blend25,
+
+          edge:
+
+            edge,
+
+          bet:
+
+            bet,
+
+          result:
+
+            ri
+
+        });
+
+
+        predictionCount++;
+      }
+
+
+      /*
+        NU avslöjas resultatet.
+      */
+
+      const xTrain=
+        features(
           r.Home,
           r.Away,
           r.__date,
@@ -1123,537 +2735,969 @@ async function runModel(){
           formN
         );
 
-        const rawAI=predictModel(model,x);
 
-        const ai=calibratedProb(cal,rawAI);
+      const ri=
+        resultIndex(r);
 
-        const blend25=blendProb(ai,market,0.25);
-
-        const bet=bestBet(blend25,odds);
-
-        const ri=resultIndex(r);
-
-        const pCorrect=Math.max(...blend25);
-
-        const predictedClass=blend25.indexOf(pCorrect);
-
-        if(predictedClass===ri) accuracyCorrect++;
-
-        accuracyTotal++;
-
-        let bs=0;
-
-        for(let k=0;k<3;k++){
-
-          const y=(k===ri)?1:0;
-
-          bs+=(blend25[k]-y)**2;
-        }
-
-        brierSum+=bs;
-
-        logLossSum+=
-          -Math.log(clamp(blend25[ri],1e-12,1));
-
-        const edge=edgeOf(ai,market);
-
-        globalPredictions.push({
-          season:r.__season,
-          league:r.__league,
-          date:r.__date,
-          home:r.Home,
-          away:r.Away,
-          odds,
-          market,
-          rawAI,
-          ai,
-          blend25,
-          edge,
-          bet,
-          result:ri
-        });
-      }
-
-      /*
-        Actual result is now revealed.
-        Update calibration and model AFTER the prediction.
-      */
-
-      const xTrain=features(
-        r.Home,
-        r.Away,
-        r.__date,
-        teams,
-        h2h,
-        formN
-      );
 
       const y=[
-        resultIndex(r)===0?1:0,
-        resultIndex(r)===1?1:0,
-        resultIndex(r)===2?1:0
+
+        ri===0 ? 1 : 0,
+
+        ri===1 ? 1 : 0,
+
+        ri===2 ? 1 : 0
+
       ];
 
-      const rawBefore=predictModel(model,xTrain);
-
-      updateCalibration(cal,rawBefore,y);
 
       /*
-        Start learning immediately, but keep the betting
-        engine from being considered "trained" until minTrain.
+        Kalibrering uppdateras
+        efter matchen.
       */
-      trainModel(model,xTrain,y);
 
-      updateState(teams,h2h,r);
+      const rawBefore=
+        predictModel(
+          model,
+          xTrain
+        );
 
-      seen++;
 
-      if(seen%150===0){
+      updateCalibration(
+        cal,
+        rawBefore,
+        y
+      );
 
-        const progress=20+(seen/allMatches.length*55);
 
-        bar.style.width=Math.min(75,progress)+"%";
+      /*
+        Online learning.
+      */
+
+      trainModel(
+        model,
+        xTrain,
+        y
+      );
+
+
+      /*
+        Team state uppdateras
+        sist.
+      */
+
+      updateState(
+        teams,
+        h2h,
+        r
+      );
+
+
+      seenMatches++;
+
+
+      if(
+        seenMatches%100===0
+      ){
+
+        const progress=
+          20+
+          (
+            seenMatches/
+            allMatches.length
+          )*55;
+
+
+        bar.style.width=
+          Math.min(
+            75,
+            progress
+          )+"%";
+
 
         status.textContent=
-          `Walk-forward: ${seen}/${allMatches.length} matcher...`;
+          `Walk-forward: `+
+          `${seenMatches}/`+
+          `${allMatches.length} matcher\n`+
+          `Predictioner: `+
+          `${predictionCount}`;
 
-        await new Promise(requestAnimationFrame);
+
+        await new Promise(
+          requestAnimationFrame
+        );
       }
     }
 
+
     /*
-      Only keep predictions after the model has had enough
-      historical observations.
+      Resultat
     */
-    const validPredictions=globalPredictions.filter((p,i)=>i>=minTrain);
-
-    predictions=validPredictions;
-
-    status.textContent="Beräknar bettingtester...";
-
-    renderResults(
-      validPredictions,
-      accuracyCorrect,
-      accuracyTotal,
-      brierSum,
-      logLossSum
-    );
-
-    bar.style.width="100%";
 
     status.textContent=
-      `Klart.\n${allMatches.length} matcher laddade.\n${validPredictions.length} walk-forward-prediktioner analyserade.`;
+      "Beräknar bettingtester...";
+
+
+    renderResults(
+
+      predictions,
+
+      accuracyCorrect,
+
+      accuracyTotal,
+
+      brierSum,
+
+      logLossSum
+
+    );
+
+
+    bar.style.width=
+      "100%";
+
+
+    status.textContent=
+      `KLART.\n\n`+
+      `${allMatches.length} matcher laddade.\n`+
+      `${predictions.length} matcher analyserade.\n\n`+
+      `Walk-forward utan look-ahead.`;
+
 
   }catch(err){
 
     console.error(err);
 
+
     status.textContent=
-      "Fel:\n"+err.message;
+      "FEL:\n"+
+      err.message;
   }
 }
 
 
-/* ---------------------------------------------------------
-   Evaluate condition
---------------------------------------------------------- */
+/* =========================================================
+   EVALUATE EV
+   ========================================================= */
 
-function evaluate(preds,edgeMin,edgeMax,evMin,aiWeight=0.25){
+function evaluateEV(
 
-  const stats=emptyStats();
-
-  for(const p of preds){
-
-    if(p.edge*100 < edgeMin) continue;
-    if(p.edge*100 >= edgeMax) continue;
-
-    const prob=blendProb(
-      p.ai,
-      p.market,
-      aiWeight
-    );
-
-    const bet=bestBet(prob,p.odds);
-
-    if(!bet) continue;
-
-    if(bet.ev*100 < evMin) continue;
-
-    addBet(stats,bet,p.result);
-  }
-
-  return stats;
-}
-
-
-/* ---------------------------------------------------------
-   Evaluate EV
---------------------------------------------------------- */
-
-function evaluateEV(preds,evMin,aiWeight=0.25){
-
-  const stats=emptyStats();
-
-  for(const p of preds){
-
-    const prob=blendProb(
-      p.ai,
-      p.market,
-      aiWeight
-    );
-
-    const bet=bestBet(prob,p.odds);
-
-    if(!bet) continue;
-
-    if(bet.ev*100 < evMin) continue;
-
-    addBet(stats,bet,p.result);
-  }
-
-  return stats;
-}
-
-
-/* ---------------------------------------------------------
-   Season evaluation
---------------------------------------------------------- */
-
-function evaluateSeason(
   preds,
- edgeMin,
- edgeMax,
- evMin,
- aiWeight
+
+  evMin,
+
+  aiWeight=0.25
+
 ){
 
-  const result={};
+  const stats=
+    emptyStats();
 
-  for(const season of SEASONS){
 
-    result[season]=emptyStats();
+  for(
+    const p of preds
+  ){
 
-    const arr=preds.filter(p=>p.season===season);
-
-    for(const p of arr){
-
-      if(p.edge*100<edgeMin) continue;
-      if(p.edge*100>=edgeMax) continue;
-
-      const prob=blendProb(
+    const prob=
+      blendProb(
         p.ai,
         p.market,
         aiWeight
       );
 
-      const bet=bestBet(prob,p.odds);
 
-      if(!bet) continue;
+    const bet=
+      bestBet(
+        prob,
+        p.odds
+      );
 
-      if(bet.ev*100<evMin) continue;
 
-      addBet(result[season],bet,p.result);
+    if(!bet){
+      continue;
+    }
+
+
+    if(
+      bet.ev*100<
+      evMin
+    ){
+      continue;
+    }
+
+
+    addBet(
+      stats,
+      bet,
+      p.result
+    );
+  }
+
+
+  return stats;
+}
+
+
+/* =========================================================
+   EVALUATE EDGE + EV
+   ========================================================= */
+
+function evaluate(
+
+  preds,
+
+  edgeMin,
+
+  edgeMax,
+
+  evMin,
+
+  aiWeight=0.25
+
+){
+
+  const stats=
+    emptyStats();
+
+
+  for(
+    const p of preds
+  ){
+
+    if(
+      p.edge*100<
+      edgeMin
+    ){
+      continue;
+    }
+
+
+    if(
+      p.edge*100>=
+      edgeMax
+    ){
+      continue;
+    }
+
+
+    const prob=
+      blendProb(
+        p.ai,
+        p.market,
+        aiWeight
+      );
+
+
+    const bet=
+      bestBet(
+        prob,
+        p.odds
+      );
+
+
+    if(!bet){
+      continue;
+    }
+
+
+    if(
+      bet.ev*100<
+      evMin
+    ){
+      continue;
+    }
+
+
+    addBet(
+      stats,
+      bet,
+      p.result
+    );
+  }
+
+
+  return stats;
+}
+
+
+/* =========================================================
+   SEASON
+   ========================================================= */
+
+function evaluateSeason(
+
+  preds,
+
+  edgeMin,
+
+  edgeMax,
+
+  evMin,
+
+  aiWeight
+
+){
+
+  const result={};
+
+
+  for(
+    const season of SEASONS
+  ){
+
+    result[season]=
+      emptyStats();
+
+
+    const arr=
+      preds.filter(
+        p=>
+          p.season===
+          season
+      );
+
+
+    for(
+      const p of arr
+    ){
+
+      if(
+        p.edge*100<
+        edgeMin
+      ){
+        continue;
+      }
+
+
+      if(
+        p.edge*100>=
+        edgeMax
+      ){
+        continue;
+      }
+
+
+      const prob=
+        blendProb(
+          p.ai,
+          p.market,
+          aiWeight
+        );
+
+
+      const bet=
+        bestBet(
+          prob,
+          p.odds
+        );
+
+
+      if(!bet){
+        continue;
+      }
+
+
+      if(
+        bet.ev*100<
+        evMin
+      ){
+        continue;
+      }
+
+
+      addBet(
+        result[season],
+        bet,
+        p.result
+      );
     }
   }
+
 
   return result;
 }
 
 
-/* ---------------------------------------------------------
-   Rendering helpers
---------------------------------------------------------- */
+/* =========================================================
+   TABLE HELPERS
+   ========================================================= */
 
 function statCells(s){
 
   return `
+
     <td>${s.bets}</td>
+
     <td>${s.wins}</td>
-    <td>${s.bets?fixed(s.wins/s.bets*100,2)+"%":"-"}</td>
-    <td class="${roi(s)>=0?"good":"bad"}">${pct(roi(s))}</td>
-    <td>${fixed(s.profit,2)} kr</td>
-    <td>${fixed(s.dd,2)} kr</td>
+
+    <td>
+      ${
+        s.bets
+        ?
+        fixed(
+          s.wins/
+          s.bets*
+          100,
+          2
+        )+"%"
+        :
+        "-"
+      }
+    </td>
+
+    <td class="${
+      roi(s)>=0
+      ?
+      "good"
+      :
+      "bad"
+    }">
+
+      ${pct(roi(s))}
+
+    </td>
+
+    <td>
+      ${fixed(
+        s.profit,
+        2
+      )} kr
+    </td>
+
+    <td>
+      ${fixed(
+        s.dd,
+        2
+      )} kr
+    </td>
+
   `;
 }
 
-function tableHeader(extra=""){
+
+function tableHeader(
+  extra
+){
 
   return `
+
   <thead>
+
   <tr>
+
     <th>${extra}</th>
+
     <th>Spel</th>
+
     <th>Vinst</th>
+
     <th>Hit rate</th>
+
     <th>ROI</th>
+
     <th>Profit</th>
+
     <th>Max DD</th>
+
   </tr>
-  </thead>`;
+
+  </thead>
+
+  `;
 }
 
 
-/* ---------------------------------------------------------
-   Render
---------------------------------------------------------- */
+/* =========================================================
+   RENDER RESULTS
+   ========================================================= */
 
 function renderResults(
+
   preds,
- accuracyCorrect,
- accuracyTotal,
-brierSum,
-logLossSum
+
+  accuracyCorrect,
+
+  accuracyTotal,
+
+  brierSum,
+
+  logLossSum
+
 ){
 
-  document.getElementById("results").classList.remove("hidden");
+  document
+    .getElementById(
+      "results"
+    )
+    .classList
+    .remove(
+      "hidden"
+    );
+
 
   /*
-    Main strategy
+    Inställningar
   */
-  const minEV=Number(document.getElementById("minEV").value)||5;
-  const aiWeight=Number(document.getElementById("aiWeight").value)||0.25;
 
-  const mainStats=evaluateEV(
-    preds,
-    minEV,
-    aiWeight
-  );
-
-  document.getElementById("mMatches").textContent=preds.length;
-  document.getElementById("mBets").textContent=mainStats.bets;
-  document.getElementById("mWins").textContent=mainStats.wins;
-  document.getElementById("mHit").textContent=
-    mainStats.bets?
-    (mainStats.wins/mainStats.bets*100).toFixed(2)+"%":"-";
-
-  const roiVal=roi(mainStats);
-
-  document.getElementById("mROI").textContent=
-    Number.isFinite(roiVal)?
-    (roiVal*100).toFixed(2)+"%":"-";
-
-  document.getElementById("mProfit").textContent=
-    fixed(mainStats.profit,2)+" kr";
-
-  document.getElementById("mDD").textContent=
-    fixed(mainStats.dd,2)+" kr";
-
-  document.getElementById("mAcc").textContent=
-    accuracyTotal?
-    (accuracyCorrect/accuracyTotal*100).toFixed(2)+"%":"-";
-
-  document.getElementById("mBrier").textContent=
-    accuracyTotal?
-    fixed(brierSum/accuracyTotal,4):"-";
-
-  document.getElementById("mLL").textContent=
-    accuracyTotal?
-    fixed(logLossSum/accuracyTotal,4):"-";
+  const minEV=
+    Number(
+      document.getElementById(
+        "minEV"
+      ).value
+    ) || 5;
 
 
-  /* -------------------------------------------------------
-     Season table
-  ------------------------------------------------------- */
+  const aiWeight=
+    Number(
+      document.getElementById(
+        "aiWeight"
+      ).value
+    );
 
-  let html=tableHeader("Säsong");
 
-  html+="<tbody>";
+  /*
+    Huvudresultat
+  */
 
-  for(const season of SEASONS){
-
-    const s=evaluateEV(
-      preds.filter(p=>p.season===season),
+  const mainStats=
+    evaluateEV(
+      preds,
       minEV,
       aiWeight
     );
 
-    html+=`<tr><td>${season}</td>${statCells(s)}</tr>`;
-  }
 
-  html+="</tbody>";
+  document.getElementById(
+    "mMatches"
+  ).textContent=
+    preds.length;
 
-  document.getElementById("seasonTable").innerHTML=html;
+
+  document.getElementById(
+    "mBets"
+  ).textContent=
+    mainStats.bets;
 
 
-  /* -------------------------------------------------------
-     EV thresholds
-  ------------------------------------------------------- */
+  document.getElementById(
+    "mWins"
+  ).textContent=
+    mainStats.wins;
 
-  html=tableHeader("EV-tröskel");
+
+  document.getElementById(
+    "mHit"
+  ).textContent=
+
+    mainStats.bets
+
+    ?
+
+    fixed(
+      mainStats.wins/
+      mainStats.bets*
+      100,
+      2
+    )+"%"
+
+    :
+
+    "-";
+
+
+  document.getElementById(
+    "mROI"
+  ).textContent=
+    pct(
+      roi(mainStats)
+    );
+
+
+  document.getElementById(
+    "mProfit"
+  ).textContent=
+    fixed(
+      mainStats.profit,
+      2
+    )+" kr";
+
+
+  document.getElementById(
+    "mDD"
+  ).textContent=
+    fixed(
+      mainStats.dd,
+      2
+    )+" kr";
+
+
+  document.getElementById(
+    "mAcc"
+  ).textContent=
+
+    accuracyTotal
+
+    ?
+
+    fixed(
+      accuracyCorrect/
+      accuracyTotal*
+      100,
+      2
+    )+"%"
+
+    :
+
+    "-";
+
+
+  document.getElementById(
+    "mBrier"
+  ).textContent=
+
+    accuracyTotal
+
+    ?
+
+    fixed(
+      brierSum/
+      accuracyTotal,
+      4
+    )
+
+    :
+
+    "-";
+
+
+  document.getElementById(
+    "mLL"
+  ).textContent=
+
+    accuracyTotal
+
+    ?
+
+    fixed(
+      logLossSum/
+      accuracyTotal,
+      4
+    )
+
+    :
+
+    "-";
+
+
+  /* =======================================================
+     SÄSONGER
+     ======================================================= */
+
+  let html=
+    tableHeader(
+      "Säsong"
+    );
+
 
   html+="<tbody>";
 
-  for(const ev of EV_LEVELS){
 
-    const s=evaluateEV(preds,ev,aiWeight);
+  for(
+    const season of SEASONS
+  ){
+
+    const s=
+      evaluateEV(
+        preds.filter(
+          p=>
+            p.season===
+            season
+        ),
+        minEV,
+        aiWeight
+      );
+
 
     html+=`
+
       <tr>
-        <td>≥ ${ev}%</td>
+
+        <td>${season}</td>
+
         ${statCells(s)}
-      </tr>`;
+
+      </tr>
+
+    `;
   }
+
 
   html+="</tbody>";
 
-  document.getElementById("evTable").innerHTML=html;
+
+  document.getElementById(
+    "seasonTable"
+  ).innerHTML=
+    html;
 
 
-  /* -------------------------------------------------------
-     Edge zones
-  ------------------------------------------------------- */
+  /* =======================================================
+     EV TEST
+     ======================================================= */
 
-  html=`
+  html=
+  `
+
   <thead>
-  <tr>
-    <th>Edge</th>
-    <th>Signaler</th>
-    <th>Value bets</th>
-    <th>Vinst</th>
-    <th>Hit rate</th>
-    <th>ROI</th>
-    <th>Profit</th>
-  </tr>
-  </thead>
-  <tbody>`;
 
-  for(const z of EDGE_ZONES){
+  <tr>
+
+    <th>EV-tröskel</th>
+
+    <th>Spel</th>
+
+    <th>Vinst</th>
+
+    <th>Hit rate</th>
+
+    <th>ROI</th>
+
+    <th>Profit</th>
+
+    <th>Max DD</th>
+
+  </tr>
+
+  </thead>
+
+  <tbody>
+
+  `;
+
+
+  for(
+    const ev of EV_LEVELS
+  ){
+
+    const s=
+      evaluateEV(
+        preds,
+        ev,
+        aiWeight
+      );
+
+
+    html+=`
+
+      <tr>
+
+        <td>≥ ${ev}%</td>
+
+        ${statCells(s)}
+
+      </tr>
+
+    `;
+  }
+
+
+  html+="</tbody>";
+
+
+  document.getElementById(
+    "evTable"
+  ).innerHTML=
+    html;
+
+
+  /* =======================================================
+     EDGE
+     ======================================================= */
+
+  html=
+
+  `
+
+  <thead>
+
+  <tr>
+
+    <th>Edge</th>
+
+    <th>Signaler</th>
+
+    <th>Value bets</th>
+
+    <th>Vinst</th>
+
+    <th>Hit rate</th>
+
+    <th>ROI</th>
+
+    <th>Profit</th>
+
+  </tr>
+
+  </thead>
+
+  <tbody>
+
+  `;
+
+
+  for(
+    const z of EDGE_ZONES
+  ){
 
     let signals=0;
 
-    for(const p of preds){
 
-      if(p.edge*100>=z.min &&
-         p.edge*100<z.max){
+    for(
+      const p of preds
+    ){
+
+      if(
+        p.edge*100>=
+        z.min &&
+
+        p.edge*100<
+        z.max
+      ){
 
         signals++;
       }
     }
 
-    const s=evaluate(
-      preds,
-      z.min,
-      z.max,
-      -Infinity,
-      aiWeight
-    );
 
-    html+=`
-    <tr>
-      <td>${z.name}</td>
-      <td>${signals}</td>
-      <td>${s.bets}</td>
-      <td>${s.wins}</td>
-      <td>${s.bets?fixed(s.wins/s.bets*100,2)+"%":"-"}</td>
-      <td class="${roi(s)>=0?"good":"bad"}">${pct(roi(s))}</td>
-      <td>${fixed(s.profit,2)} kr</td>
-    </tr>`;
-  }
-
-  html+="</tbody>";
-
-  document.getElementById("edgeTable").innerHTML=html;
-
-
-  /* -------------------------------------------------------
-     Edge x EV matrix
-  ------------------------------------------------------- */
-
-  let matrix=`
-  <thead>
-  <tr>
-    <th>Edge</th>
-    ${EV_LEVELS.map(x=>`<th>EV ≥ ${x}%</th>`).join("")}
-  </tr>
-  </thead>
-  <tbody>`;
-
-  let candidates=[];
-
-  for(const z of EDGE_ZONES){
-
-    matrix+=`<tr><td>${z.name}</td>`;
-
-    for(const ev of EV_LEVELS){
-
-      const s=evaluate(
+    const s=
+      evaluate(
         preds,
         z.min,
         z.max,
-        ev,
+        -Infinity,
         aiWeight
       );
 
-      let label="-";
 
-      if(s.bets){
+    html+=`
 
-        label=
-          `${pct(roi(s))}<br><span class="small">${s.bets} spel</span>`;
+    <tr>
 
-        if(s.bets>=50 && roi(s)>0){
+      <td>${z.name}</td>
 
-          label=
-            `<span class="good">${pct(roi(s))}</span>
-             <br><span class="small">${s.bets} spel</span>`;
+      <td>${signals}</td>
 
-          candidates.push({
-            zone:z,
-            ev,
-            stats:s
-          });
+      <td>${s.bets}</td>
+
+      <td>${s.wins}</td>
+
+      <td>
+
+        ${
+          s.bets
+          ?
+          fixed(
+            s.wins/
+            s.bets*
+            100,
+            2
+          )+"%"
+          :
+          "-"
         }
-      }
 
-      matrix+=`<td>${label}</td>`;
-    }
+      </td>
 
-    matrix+="</tr>";
+      <td class="${
+        roi(s)>=0
+        ?
+        "good"
+        :
+        "bad"
+      }">
+
+        ${pct(roi(s))}
+
+      </td>
+
+      <td>
+
+        ${fixed(
+          s.profit,
+          2
+        )} kr
+
+      </td>
+
+    </tr>
+
+    `;
   }
 
-  matrix+="</tbody>";
 
-  document.getElementById("matrixTable").innerHTML=matrix;
+  html+="</tbody>";
 
 
-  /* -------------------------------------------------------
-     Best candidate
-  ------------------------------------------------------- */
+  document.getElementById(
+    "edgeTable"
+  ).innerHTML=
+    html;
 
-  candidates.sort((a,b)=>{
 
-    /*
-      Prioritize ROI but penalize small samples.
-      This is deliberately NOT a pure ROI sort.
-    */
+  /* =======================================================
+     EDGE × EV MATRIX
+     ======================================================= */
 
-    const scoreA=
-      a.stats.profit *
-      Math.min(1,a.stats.bets/200);
+  let matrix=
 
-    const scoreB=
-      b.stats.profit *
-      Math.min(1,b.stats.bets/200);
+  `
 
-    return scoreB-scoreA;
-  });
+  <thead>
 
-  let best=candidates.length?candidates[0]:null;
+  <tr>
 
-  /*
-    If no positive >=50 candidate exists,
-    choose the best sample-sized result by profit.
-  */
+    <th>Edge</th>
 
-  if(!best){
+    ${
+      EV_LEVELS
+      .map(
+        x=>
+          `<th>EV ≥ ${x}%</th>`
+      )
+      .join("")
+    }
 
-    const allCandidates=[];
+  </tr>
 
-    for(const z of EDGE_ZONES){
+  </thead>
 
-      for(const ev of EV_LEVELS){
+  <tbody>
 
-        const s=evaluate(
+  `;
+
+
+  let candidates=[];
+
+
+  for(
+    const z of EDGE_ZONES
+  ){
+
+    matrix+=`
+
+      <tr>
+
+        <td>${z.name}</td>
+
+    `;
+
+
+    for(
+      const ev of EV_LEVELS
+    ){
+
+      const s=
+        evaluate(
           preds,
           z.min,
           z.max,
@@ -1661,245 +3705,865 @@ logLossSum
           aiWeight
         );
 
-        if(s.bets>=50){
 
-          allCandidates.push({
+      let label="-";
+
+
+      if(
+        s.bets
+      ){
+
+        label=
+
+          `${pct(
+            roi(s)
+          )}`+
+
+          `<br>`+
+
+          `<span class="small">`+
+
+          `${s.bets} spel`+
+
+          `</span>`;
+
+
+        /*
+          Kandidat:
+          minst 50 spel
+          och positiv ROI.
+        */
+
+        if(
+          s.bets>=50 &&
+          roi(s)>0
+        ){
+
+          label=
+
+            `<span class="good">`+
+
+            `${pct(
+              roi(s)
+            )}`+
+
+            `</span>`+
+
+            `<br>`+
+
+            `<span class="small">`+
+
+            `${s.bets} spel`+
+
+            `</span>`;
+
+
+          candidates.push({
+
             zone:z,
-            ev,
+
+            ev:ev,
+
             stats:s
+
+          });
+        }
+      }
+
+
+      matrix+=`
+
+        <td>${label}</td>
+
+      `;
+    }
+
+
+    matrix+=
+      "</tr>";
+  }
+
+
+  matrix+=
+    "</tbody>";
+
+
+  document.getElementById(
+    "matrixTable"
+  ).innerHTML=
+    matrix;
+
+
+  /* =======================================================
+     BEST CANDIDATE
+     ======================================================= */
+
+  /*
+    Vi använder en försiktig ranking:
+
+    profit × sample adjustment
+
+    så att ett litet urval inte automatiskt
+    vinner över ett större.
+  */
+
+  candidates.sort(
+    (a,b)=>{
+
+      const scoreA=
+        a.stats.profit*
+        Math.min(
+          1,
+          a.stats.bets/
+          200
+        );
+
+
+      const scoreB=
+        b.stats.profit*
+        Math.min(
+          1,
+          b.stats.bets/
+          200
+        );
+
+
+      return scoreB-scoreA;
+
+    }
+  );
+
+
+  let best=
+    candidates.length
+    ?
+    candidates[0]
+    :
+    null;
+
+
+  /*
+    Om ingen positiv kandidat finns:
+    välj bästa resultat med minst 50 spel.
+  */
+
+  if(!best){
+
+    const fallback=[];
+
+
+    for(
+      const z of EDGE_ZONES
+    ){
+
+      for(
+        const ev of EV_LEVELS
+      ){
+
+        const s=
+          evaluate(
+            preds,
+            z.min,
+            z.max,
+            ev,
+            aiWeight
+          );
+
+
+        if(
+          s.bets>=50
+        ){
+
+          fallback.push({
+
+            zone:z,
+
+            ev:ev,
+
+            stats:s
+
           });
         }
       }
     }
 
-    allCandidates.sort(
-      (a,b)=>b.stats.profit-a.stats.profit
+
+    fallback.sort(
+      (a,b)=>
+        b.stats.profit-
+        a.stats.profit
     );
 
-    if(allCandidates.length)
-      best=allCandidates[0];
+
+    if(
+      fallback.length
+    ){
+
+      best=
+        fallback[0];
+
+    }
   }
 
+
+  /* =======================================================
+     BEST SEASON
+     ======================================================= */
 
   if(best){
 
-    document.getElementById("bestDescription").innerHTML=`
+    document.getElementById(
+      "bestDescription"
+    ).innerHTML=
+
+    `
+
       <div class="note">
-        <b>Explorativ bästa kandidat:</b>
-        Edge <b>${best.zone.name}</b>,
-        EV ≥ <b>${best.ev}%</b>,
-        AI-vikt <b>${(aiWeight*100).toFixed(0)}%</b>.
-        <br>
-        ${best.stats.bets} spel ·
-        ${best.stats.wins} vinster ·
-        ROI <b>${pct(roi(best.stats))}</b> ·
-        Profit <b>${fixed(best.stats.profit,2)} kr</b>.
+
+        <b>
+        Explorativ bästa kandidat:
+        </b>
+
+        Edge
+
+        <b>
+        ${best.zone.name}
+        </b>
+
+        och
+
+        EV ≥
+
+        <b>
+        ${best.ev}%
+        </b>.
+
         <br><br>
+
+        AI-vikt:
+
+        <b>
+        ${(aiWeight*100).toFixed(0)}%
+        </b>
+
+        · Marknad:
+
+        <b>
+        ${((1-aiWeight)*100).toFixed(0)}%
+        </b>
+
+        <br>
+
+        ${best.stats.bets}
+        spel ·
+
+        ${best.stats.wins}
+        vinster ·
+
+        ROI
+
+        <b>
+        ${pct(
+          roi(best.stats)
+        )}
+        </b>
+
+        · Profit
+
+        <b>
+        ${fixed(
+          best.stats.profit,
+          2
+        )} kr
+        </b>
+
+        <br><br>
+
         <span class="warn">
-        Detta är ett historiskt urvalstest och därför känsligt för data-mining.
-        En positiv cell är inte tillräcklig för att kalla strategin robust.
+
+        Detta är ett explorativt urval
+        från samma historiska data.
+        Positiv ROI här är därför inte
+        tillräckligt för att kalla strategin
+        robust eller framtida lönsam.
+
         </span>
+
       </div>
+
     `;
 
-    const seasons=evaluateSeason(
-      preds,
-      best.zone.min,
-      best.zone.max,
-      best.ev,
-      aiWeight
-    );
 
-    let bestHtml=tableHeader("Säsong");
+    const seasons=
+      evaluateSeason(
+
+        preds,
+
+        best.zone.min,
+
+        best.zone.max,
+
+        best.ev,
+
+        aiWeight
+
+      );
+
+
+    let bestHtml=
+      tableHeader(
+        "Säsong"
+      );
+
 
     bestHtml+="<tbody>";
 
-    for(const season of SEASONS){
 
-      const s=seasons[season];
+    for(
+      const season of SEASONS
+    ){
+
+      const s=
+        seasons[season];
+
 
       bestHtml+=`
-      <tr>
-        <td>${season}</td>
-        ${statCells(s)}
-      </tr>`;
+
+        <tr>
+
+          <td>${season}</td>
+
+          ${statCells(s)}
+
+        </tr>
+
+      `;
     }
+
 
     bestHtml+="</tbody>";
 
-    document.getElementById("bestSeasonTable").innerHTML=bestHtml;
+
+    document.getElementById(
+      "bestSeasonTable"
+    ).innerHTML=
+      bestHtml;
 
   }else{
 
-    document.getElementById("bestDescription").innerHTML=
-      `<div class="note">Ingen kombination hade minst 50 spel.</div>`;
+    document.getElementById(
+      "bestDescription"
+    ).innerHTML=
 
-    document.getElementById("bestSeasonTable").innerHTML="";
+      `
+
+      <div class="note">
+
+      Ingen kombination hade
+      minst 50 spel.
+
+      </div>
+
+      `;
+
+
+    document.getElementById(
+      "bestSeasonTable"
+    ).innerHTML=
+      "";
   }
 
 
-  /* -------------------------------------------------------
-     Blend test
-  ------------------------------------------------------- */
+  /* =======================================================
+     BLEND
+     ======================================================= */
 
-  html=`
+  html=
+
+  `
+
   <thead>
+
   <tr>
+
     <th>AI-vikt</th>
+
     <th>Marknad</th>
+
     <th>Spel</th>
+
     <th>Vinst</th>
+
     <th>Hit rate</th>
+
     <th>ROI</th>
+
     <th>Profit</th>
+
     <th>Max DD</th>
+
   </tr>
+
   </thead>
-  <tbody>`;
 
-  for(const w of [0,0.25,0.5,0.75,1]){
+  <tbody>
 
-    const s=evaluateEV(
-      preds,
-      minEV,
-      w
-    );
+  `;
+
+
+  for(
+    const w of [
+      0,
+      0.25,
+      0.5,
+      0.75,
+      1
+    ]
+  ){
+
+    const s=
+      evaluateEV(
+        preds,
+        minEV,
+        w
+      );
+
 
     html+=`
-    <tr>
-      <td>${w*100}%</td>
-      <td>${(1-w)*100}%</td>
-      <td>${s.bets}</td>
-      <td>${s.wins}</td>
-      <td>${s.bets?fixed(s.wins/s.bets*100,2)+"%":"-"}</td>
-      <td class="${roi(s)>=0?"good":"bad"}">${pct(roi(s))}</td>
-      <td>${fixed(s.profit,2)} kr</td>
-      <td>${fixed(s.dd,2)} kr</td>
-    </tr>`;
+
+      <tr>
+
+        <td>
+          ${(w*100).toFixed(0)}%
+        </td>
+
+        <td>
+          ${((1-w)*100).toFixed(0)}%
+        </td>
+
+        <td>${s.bets}</td>
+
+        <td>${s.wins}</td>
+
+        <td>
+
+          ${
+            s.bets
+            ?
+            fixed(
+              s.wins/
+              s.bets*
+              100,
+              2
+            )+"%"
+            :
+            "-"
+          }
+
+        </td>
+
+        <td class="${
+          roi(s)>=0
+          ?
+          "good"
+          :
+          "bad"
+        }">
+
+          ${pct(
+            roi(s)
+          )}
+
+        </td>
+
+        <td>
+
+          ${fixed(
+            s.profit,
+            2
+          )} kr
+
+        </td>
+
+        <td>
+
+          ${fixed(
+            s.dd,
+            2
+          )} kr
+
+        </td>
+
+      </tr>
+
+    `;
   }
+
 
   html+="</tbody>";
 
-  document.getElementById("blendTable").innerHTML=html;
+
+  document.getElementById(
+    "blendTable"
+  ).innerHTML=
+    html;
 
 
-  /* -------------------------------------------------------
-     Calibration table
-  ------------------------------------------------------- */
+  /* =======================================================
+     CALIBRATION
+     ======================================================= */
 
   const buckets=[
+
     [0,0.1],
+
     [0.1,0.2],
+
     [0.2,0.3],
+
     [0.3,0.4],
+
     [0.4,0.5],
+
     [0.5,0.6],
+
     [0.6,0.7],
+
     [0.7,0.8],
+
     [0.8,0.9],
+
     [0.9,1.001]
+
   ];
 
-  html=`
-  <thead>
-  <tr>
-    <th>AI-probabilitet</th>
-    <th>Antal</th>
-    <th>Faktiskt utfall</th>
-  </tr>
-  </thead>
-  <tbody>`;
 
-  for(const z of buckets){
+  html=
+
+  `
+
+  <thead>
+
+  <tr>
+
+    <th>AI-probabilitet</th>
+
+    <th>Antal</th>
+
+    <th>Faktiskt utfall</th>
+
+  </tr>
+
+  </thead>
+
+  <tbody>
+
+  `;
+
+
+  for(
+    const z of buckets
+  ){
 
     const arr=[];
 
-    for(const p of preds){
 
-      const mx=Math.max(...p.ai);
-      const k=p.ai.indexOf(mx);
+    for(
+      const p of preds
+    ){
 
-      if(mx>=z[0] && mx<z[1]){
+      const mx=
+        Math.max(
+          ...p.ai
+        );
+
+
+      const k=
+        p.ai.indexOf(
+          mx
+        );
+
+
+      if(
+        mx>=z[0] &&
+        mx<z[1]
+      ){
 
         arr.push(
-          k===p.result ? 1:0
+          k===p.result
+          ?
+          1
+          :
+          0
         );
       }
     }
 
+
     const actual=
-      arr.length?
-      arr.reduce((a,b)=>a+b,0)/arr.length:
+      arr.length
+      ?
+      arr.reduce(
+        (a,b)=>a+b,
+        0
+      )/
+      arr.length
+      :
       NaN;
 
+
     html+=`
-    <tr>
-      <td>${(z[0]*100).toFixed(0)}–${Math.min(100,z[1]*100).toFixed(0)}%</td>
-      <td>${arr.length}</td>
-      <td>${Number.isFinite(actual)?pct(actual):"-"}</td>
-    </tr>`;
+
+      <tr>
+
+        <td>
+
+          ${
+            (
+              z[0]*100
+            ).toFixed(0)
+          }
+
+          –
+
+          ${
+            Math.min(
+              100,
+              z[1]*100
+            ).toFixed(0)
+          }%
+
+        </td>
+
+        <td>
+          ${arr.length}
+        </td>
+
+        <td>
+
+          ${
+            Number.isFinite(
+              actual
+            )
+            ?
+            pct(actual)
+            :
+            "-"
+          }
+
+        </td>
+
+      </tr>
+
+    `;
   }
+
 
   html+="</tbody>";
 
-  document.getElementById("calTable").innerHTML=html;
+
+  document.getElementById(
+    "calTable"
+  ).innerHTML=
+    html;
 
 
-  /* -------------------------------------------------------
-     Top signals
-  ------------------------------------------------------- */
+  /* =======================================================
+     TOP SIGNALS
+     ======================================================= */
 
-  const top=preds
+  const top=
+    preds
     .slice()
-    .sort((a,b)=>b.edge-a.edge)
-    .slice(0,50);
+    .sort(
+      (a,b)=>
+        b.edge-a.edge
+    )
+    .slice(
+      0,
+      50
+    );
 
-  html=`
+
+  html=
+
+  `
+
   <thead>
+
   <tr>
+
     <th>Datum</th>
+
     <th>Match</th>
+
     <th>Utfall</th>
+
     <th>AI</th>
+
     <th>Marknad</th>
+
     <th>Edge</th>
+
     <th>Odds</th>
+
     <th>EV</th>
+
     <th>Resultat</th>
+
   </tr>
+
   </thead>
-  <tbody>`;
 
-  for(const p of top){
+  <tbody>
 
-    const aiMax=Math.max(...p.ai);
-    const k=p.ai.indexOf(aiMax);
+  `;
 
-    const odds=p.odds[k===0?"h":k===1?"d":"a"];
 
-    const ev=aiMax*odds-1;
+  const resultNames=[
+    "H",
+    "D",
+    "A"
+  ];
 
-    const resultNames=["H","D","A"];
+
+  for(
+    const p of top
+  ){
+
+    const aiMax=
+      Math.max(
+        ...p.ai
+      );
+
+
+    const k=
+      p.ai.indexOf(
+        aiMax
+      );
+
+
+    const key=
+      k===0
+      ?
+      "h"
+      :
+      k===1
+      ?
+      "d"
+      :
+      "a";
+
+
+    const odds=
+      p.odds[key];
+
+
+    const ev=
+      aiMax*odds-1;
+
 
     html+=`
-    <tr>
-      <td>${p.date.toISOString().slice(0,10)}</td>
-      <td>${p.home} – ${p.away}</td>
-      <td>${resultNames[p.result]}</td>
-      <td>${pct(aiMax)}</td>
-      <td>${pct(p.market[k])}</td>
-      <td>${pct(p.edge)}</td>
-      <td>${fixed(odds,2)}</td>
-      <td>${pct(ev)}</td>
-      <td class="${k===p.result?"good":"bad"}">
-        ${k===p.result?"VINST":"FÖRLUST"}
-      </td>
-    </tr>`;
+
+      <tr>
+
+        <td>
+
+          ${
+            p.date
+            .toISOString()
+            .slice(
+              0,
+              10
+            )
+          }
+
+        </td>
+
+        <td>
+
+          ${p.home}
+          –
+          ${p.away}
+
+        </td>
+
+        <td>
+
+          ${resultNames[p.result]}
+
+        </td>
+
+        <td>
+
+          ${pct(aiMax)}
+
+        </td>
+
+        <td>
+
+          ${pct(
+            p.market[k]
+          )}
+
+        </td>
+
+        <td>
+
+          ${pct(
+            p.edge
+          )}
+
+        </td>
+
+        <td>
+
+          ${fixed(
+            odds,
+            2
+          )}
+
+        </td>
+
+        <td>
+
+          ${pct(
+            ev
+          )}
+
+        </td>
+
+        <td class="${
+          k===p.result
+          ?
+          "good"
+          :
+          "bad"
+        }">
+
+          ${
+            k===p.result
+            ?
+            "VINST"
+            :
+            "FÖRLUST"
+          }
+
+        </td>
+
+      </tr>
+
+    `;
   }
+
 
   html+="</tbody>";
 
-  document.getElementById("topTable").innerHTML=html;
+
+  document.getElementById(
+    "topTable"
+  ).innerHTML=
+    html;
 }
 
 </script>
