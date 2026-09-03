@@ -3,93 +3,93 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width,initial-scale=1">
-<title>Fotbolls AI V14.1 – Robust Backtest</title>
+<title>Fotbolls AI V14.2 – Robust Backtest</title>
 
 <style>
 body{
-  font-family:Arial,sans-serif;
-  max-width:1400px;
-  margin:auto;
-  padding:20px;
-  background:#f5f5f5;
-  color:#222
+font-family:Arial,sans-serif;
+max-width:1450px;
+margin:auto;
+padding:20px;
+background:#f5f5f5;
+color:#222
 }
 h1,h2,h3{margin-top:25px}
 .card{
-  background:white;
-  padding:18px;
-  margin:15px 0;
-  border-radius:10px;
-  box-shadow:0 2px 8px #0001
+background:#fff;
+padding:18px;
+margin:15px 0;
+border-radius:10px;
+box-shadow:0 2px 8px #0001
 }
 button{
-  background:#111;
-  color:white;
-  border:0;
-  padding:12px 22px;
-  border-radius:7px;
-  cursor:pointer;
-  font-weight:bold
+background:#111;
+color:#fff;
+border:0;
+padding:12px 22px;
+border-radius:7px;
+cursor:pointer;
+font-weight:bold
 }
 button:hover{opacity:.85}
 .grid{
-  display:grid;
-  grid-template-columns:repeat(auto-fit,minmax(160px,1fr));
-  gap:12px
+display:grid;
+grid-template-columns:repeat(auto-fit,minmax(160px,1fr));
+gap:12px
 }
 input{
-  width:100%;
-  box-sizing:border-box;
-  padding:8px;
-  margin-top:5px
+width:100%;
+box-sizing:border-box;
+padding:8px;
+margin-top:5px
 }
 table{
-  width:100%;
-  border-collapse:collapse;
-  margin-top:12px;
-  background:white
+width:100%;
+border-collapse:collapse;
+margin-top:12px;
+background:#fff
 }
 th,td{
-  padding:8px;
-  border:1px solid #ddd;
-  text-align:center
+padding:8px;
+border:1px solid #ddd;
+text-align:center
 }
 th{background:#eee}
 .pos{color:green}
 .neg{color:#b00020}
 .muted{color:#666}
 .metric{
-  background:#fafafa;
-  padding:12px;
-  border-radius:8px
+background:#fafafa;
+padding:12px;
+border-radius:8px
 }
 .metric b{
-  display:block;
-  font-size:22px;
-  margin-top:5px
+display:block;
+font-size:22px;
+margin-top:5px
 }
 .note{
-  background:#fff8d8;
-  border-left:5px solid #e0b000;
-  padding:12px;
-  margin:12px 0
+background:#fff8d8;
+border-left:5px solid #e0b000;
+padding:12px;
+margin:12px 0
 }
-pre{
-  white-space:pre-wrap;
-  word-break:break-word
+.small{
+font-size:13px;
+color:#666
 }
 </style>
 </head>
 
 <body>
 
-<h1>⚽ Fotbolls AI V14.1 – Robust Backtest</h1>
+<h1>⚽ Fotbolls AI V14.2 – Robust Backtest</h1>
 
 <p>
-Walk-forward · ingen look-ahead · låsta strategier · train / validation / out-of-sample
+Walk-forward · ingen look-ahead · låst huvudstrategi · korrekt signalutfall · train / validation / out-of-sample
 </p>
 
-<button onclick="run()">KÖR V14.1</button>
+<button onclick="run()">KÖR V14.2</button>
 
 <div class="card">
 
@@ -140,22 +140,33 @@ Min kombination
 </div>
 
 <div class="note">
-<b>V14.1:s huvudstrategi är låst:</b><br>
+
+<b>V14.2:s huvudstrategi är låst:</b><br>
+
 25 % AI / 75 % marknad · EV ≥7 % · signal-edge 10–15 %.
+
 <br><br>
-Övriga fasta zoner visas som jämförelse.
-Den bästa strategin väljs inte från OOS-resultatet.
+
+Edge och EV beräknas på
+<b>samma faktiskt valda spelutfall</b>.
+
+Strategin väljs inte från OOS-resultatet.
+
 </div>
 
 </div>
+
 
 <div class="card">
 
 <h2>Status</h2>
 
-<div id="status">Inte körd ännu.</div>
+<div id="status">
+Inte körd ännu.
+</div>
 
 </div>
+
 
 <div class="card">
 
@@ -165,6 +176,7 @@ Den bästa strategin väljs inte från OOS-resultatet.
 
 </div>
 
+
 <div class="card">
 
 <h2>Övergripande modell- och bettingresultat</h2>
@@ -172,6 +184,7 @@ Den bästa strategin väljs inte från OOS-resultatet.
 <div id="overview"></div>
 
 </div>
+
 
 <div class="card">
 
@@ -181,6 +194,7 @@ Den bästa strategin väljs inte från OOS-resultatet.
 
 </div>
 
+
 <div class="card">
 
 <h2>2. Train / Validation / Out-of-sample</h2>
@@ -188,6 +202,7 @@ Den bästa strategin väljs inte från OOS-resultatet.
 <div id="splits"></div>
 
 </div>
+
 
 <div class="card">
 
@@ -197,6 +212,7 @@ Den bästa strategin väljs inte från OOS-resultatet.
 
 </div>
 
+
 <div class="card">
 
 <h2>4. Fasta Edge × EV-zoner</h2>
@@ -204,6 +220,7 @@ Den bästa strategin väljs inte från OOS-resultatet.
 <div id="matrix"></div>
 
 </div>
+
 
 <div class="card">
 
@@ -213,6 +230,7 @@ Den bästa strategin väljs inte från OOS-resultatet.
 
 </div>
 
+
 <div class="card">
 
 <h2>6. EV-trösklar – hela historiken</h2>
@@ -220,6 +238,7 @@ Den bästa strategin väljs inte från OOS-resultatet.
 <div id="evZones"></div>
 
 </div>
+
 
 <div class="card">
 
@@ -229,6 +248,7 @@ Den bästa strategin väljs inte från OOS-resultatet.
 
 </div>
 
+
 <div class="card">
 
 <h2>8. Kalibrering</h2>
@@ -237,6 +257,7 @@ Den bästa strategin väljs inte från OOS-resultatet.
 
 </div>
 
+
 <div class="card">
 
 <h2>9. Kontroll av extrema signaler</h2>
@@ -244,6 +265,7 @@ Den bästa strategin väljs inte från OOS-resultatet.
 <div id="extremes"></div>
 
 </div>
+
 
 <div class="card">
 
@@ -257,1773 +279,3129 @@ Den bästa strategin väljs inte från OOS-resultatet.
 <script>
 
 const SEASONS=[
-  "1819",
-  "1920",
-  "2021",
-  "2122",
-  "2223",
-  "2324",
-  "2425",
-  "2526"
+"1819",
+"1920",
+"2021",
+"2122",
+"2223",
+"2324",
+"2425",
+"2526"
 ];
 
+
 const SPLITS={
-  train:["1819","1920","2021","2122"],
-  validation:["2223","2324"],
-  oos:["2425","2526"]
+train:[
+"1819",
+"1920",
+"2021",
+"2122"
+],
+
+validation:[
+"2223",
+"2324"
+],
+
+oos:[
+"2425",
+"2526"
+]
 };
 
-const OUTCOMES=["H","D","A"];
 
-let MATCHES=[];
-let PRED=[];
-
-
-function $(id){
-  return document.getElementById(id);
-}
-
-
-function pct(x){
-  if(!isFinite(x)) return "-";
-  return (x*100).toFixed(2)+"%";
-}
-
-
-function kr(x){
-  if(!isFinite(x)) return "-";
-  return x.toFixed(2)+" kr";
-}
-
-
-function esc(s){
-  return String(s)
-    .replaceAll("&","&amp;")
-    .replaceAll("<","&lt;")
-    .replaceAll(">","&gt;");
-}
-
-
-function table(headers,rows){
-
-  return `
-  <table>
-    <thead>
-      <tr>
-        ${headers.map(h=>`<th>${h}</th>`).join("")}
-      </tr>
-    </thead>
-    <tbody>
-      ${rows.join("")}
-    </tbody>
-  </table>`;
-}
-
-
-function parseCSV(text){
-
-  const rows=[];
-  let row=[];
-  let cell="";
-  let quote=false;
-
-  for(let i=0;i<text.length;i++){
-
-    const c=text[i];
-
-    if(c==='"'){
-
-      if(quote && text[i+1]==='"'){
-        cell+='"';
-        i++;
-      }else{
-        quote=!quote;
-      }
-
-    }else if(c==="," && !quote){
-
-      row.push(cell);
-      cell="";
-
-    }else if((c==="\n" || c==="\r") && !quote){
-
-      if(c==="\r" && text[i+1]==="\n") i++;
-
-      row.push(cell);
-      cell="";
-
-      if(row.some(v=>String(v).trim()!==""))
-        rows.push(row);
-
-      row=[];
-
-    }else{
-
-      cell+=c;
-
-    }
-  }
-
-  if(cell!=="" || row.length){
-
-    row.push(cell);
-
-    if(row.some(v=>String(v).trim()!==""))
-      rows.push(row);
-  }
-
-  if(!rows.length) return [];
-
-  const headers=rows[0].map(x=>String(x).trim());
-
-  return rows.slice(1).map(r=>{
-
-    const o={};
-
-    headers.forEach((h,i)=>{
-      o[h]=String(r[i] ?? "").trim();
-    });
-
-    return o;
-  });
-}
-
-
-function num(v){
-
-  const n=parseFloat(String(v).replace(",","."));
-
-  return isFinite(n) ? n : null;
-}
-
-
-function parseDate(v){
-
-  if(!v) return null;
-
-  let s=String(v).trim();
-
-  if(s.includes("/")){
-
-    const p=s.split("/");
-
-    if(p.length===3){
-
-      let d=parseInt(p[0]);
-      let m=parseInt(p[1])-1;
-      let y=parseInt(p[2]);
-
-      if(y<100)
-        y += y>=70 ? 1900 : 2000;
-
-      const dt=new Date(Date.UTC(y,m,d));
-
-      if(!isNaN(dt.getTime()))
-        return dt;
-    }
-  }
-
-  const dt=new Date(s);
-
-  return isNaN(dt.getTime()) ? null : dt;
-}
-
-
-function normalizeMatch(r,season){
-
-  const home=r.Home || r.HomeTeam || r.home || r.Hometeam;
-  const away=r.Away || r.AwayTeam || r.away || r.Awayteam;
-
-  const ftr=r.FTR || r.Result || r.result;
-
-  const date=parseDate(r.Date || r.date);
-
-  if(!home || !away || !date || !OUTCOMES.includes(ftr))
-    return null;
-
-  return {
-    season,
-    date,
-    home:String(home).trim(),
-    away:String(away).trim(),
-    result:ftr,
-
-    avgH:num(r.AvgH),
-    avgD:num(r.AvgD),
-    avgA:num(r.AvgA),
-
-    b365H:num(r.B365H),
-    b365D:num(r.B365D),
-    b365A:num(r.B365A),
-
-    bwH:num(r.BWH),
-    bwD:num(r.BWD),
-    bwA:num(r.BWA),
-
-    whH:num(r.WHH),
-    whD:num(r.WHD),
-    whA:num(r.WHA)
-  };
-}
-
-
-function oddsFor(m){
-
-  const sets=[
-
-    [m.avgH,m.avgD,m.avgA],
-
-    [m.b365H,m.b365D,m.b365A],
-
-    [m.bwH,m.bwD,m.bwA],
-
-    [m.whH,m.whD,m.whA]
-
-  ];
-
-  for(const s of sets){
-
-    if(s.every(x=>x!==null && x>1))
-      return s;
-  }
-
-  return null;
-}
-
-
-function marketProb(m){
-
-  const o=oddsFor(m);
-
-  if(!o) return null;
-
-  const inv=o.map(x=>1/x);
-
-  const sum=inv.reduce((a,b)=>a+b,0);
-
-  return inv.map(x=>x/sum);
-}
-
-
-function softmax(z){
-
-  const mx=Math.max(...z);
-
-  const e=z.map(x=>Math.exp(x-mx));
-
-  const s=e.reduce((a,b)=>a+b,0);
-
-  return e.map(x=>x/s);
-}
-
-
-class OnlineModel{
-
-  constructor(){
-
-    this.w=[
-      [0,0,0,0,0,0,0,0,0,0],
-      [0,0,0,0,0,0,0,0,0,0],
-      [0,0,0,0,0,0,0,0,0,0]
-    ];
-
-    this.lr=0.025;
-    this.l2=0.0005;
-
-  }
-
-  predict(x){
-
-    const z=this.w.map(w=>
-      w.reduce((s,v,i)=>s+v*x[i],0)
-    );
-
-    return softmax(z);
-  }
-
-  update(x,y){
-
-    const p=this.predict(x);
-
-    for(let k=0;k<3;k++){
-
-      const target=k===y ? 1 : 0;
-
-      const err=target-p[k];
-
-      for(let j=0;j<x.length;j++){
-
-        this.w[k][j]+=
-          this.lr*(err*x[j]-this.l2*this.w[k][j]);
-
-      }
-    }
-  }
-}
-
-
-function state(){
-
-  return {
-
-    matches:[],
-
-    lastDate:{},
-
-    form:{},
-
-    gf:{},
-
-    ga:{},
-
-    games:{},
-
-    h2h:{}
-
-  };
-}
-
-
-function ensureTeam(st,t){
-
-  if(!st.form[t]) st.form[t]=[];
-
-  if(!st.gf[t]) st.gf[t]=0;
-
-  if(!st.ga[t]) st.ga[t]=0;
-
-  if(!st.games[t]) st.games[t]=0;
-
-}
-
-
-function avg(a,n){
-
-  if(!a || !a.length) return 0;
-
-  const x=a.slice(-n);
-
-  return x.reduce((s,v)=>s+v,0)/x.length;
-}
-
-
-function ppg(st,t){
-
-  ensureTeam(st,t);
-
-  const f=st.form[t];
-
-  if(!f.length) return 1;
-
-  return avg(f,10);
-}
-
-
-function attack(st,t){
-
-  ensureTeam(st,t);
-
-  if(st.games[t]<1) return 1;
-
-  return st.gf[t]/st.games[t];
-}
-
-
-function defence(st,t){
-
-  ensureTeam(st,t);
-
-  if(st.games[t]<1) return 1;
-
-  return st.ga[t]/st.games[t];
-}
-
-
-function recentForm(st,t,n){
-
-  ensureTeam(st,t);
-
-  return avg(st.form[t],n);
-}
-
-
-function trend(st,t,n){
-
-  ensureTeam(st,t);
-
-  const f=st.form[t];
-
-  if(f.length<4) return 0;
-
-  const a=avg(f.slice(0,Math.max(1,f.length-n)),5);
-  const b=avg(f.slice(-5),5);
-
-  return b-a;
-}
-
-
-function restDays(st,t,date){
-
-  const last=st.lastDate[t];
-
-  if(!last) return 7;
-
-  const d=(date-last)/86400000;
-
-  return Math.max(0,Math.min(30,d));
-}
-
-
-function h2hValue(st,h,a){
-
-  const key=h+"|"+a;
-
-  const arr=st.h2h[key] || [];
-
-  if(!arr.length) return 0;
-
-  return avg(arr,5);
-}
-
-
-function features(st,m,formN){
-
-  const h=m.home;
-  const a=m.away;
-
-  ensureTeam(st,h);
-  ensureTeam(st,a);
-
-  const hf=recentForm(st,h,formN);
-  const af=recentForm(st,a,formN);
-
-  const hppg=ppg(st,h);
-  const appg=ppg(st,a);
-
-  const hatt=attack(st,h);
-  const aatt=attack(st,a);
-
-  const hdef=defence(st,h);
-  const adef=defence(st,a);
-
-  const ht=trend(st,h,formN);
-  const at=trend(st,a,formN);
-
-  const hr=restDays(st,h,m.date);
-  const ar=restDays(st,a,m.date);
-
-  const hh=h2hValue(st,h,a);
-
-  return [
-    1,
-    hf-af,
-    hppg-appg,
-    hatt-aatt,
-    adef-hdef,
-    1,
-    ht-at,
-    Math.max(-5,Math.min(5,(hr-ar)/7)),
-    hh,
-    (st.games[h]-st.games[a])/20
-  ];
-}
-
-
-function updateState(st,m){
-
-  const h=m.home;
-  const a=m.away;
-
-  ensureTeam(st,h);
-  ensureTeam(st,a);
-
-  let hp=0;
-  let ap=0;
-
-  if(m.result==="H"){
-    hp=3;
-    ap=0;
-  }else if(m.result==="D"){
-    hp=1;
-    ap=1;
-  }else{
-    hp=0;
-    ap=3;
-  }
-
-  st.form[h].push(hp);
-  st.form[a].push(ap);
-
-  if(st.form[h].length>30)
-    st.form[h].shift();
-
-  if(st.form[a].length>30)
-    st.form[a].shift();
-
-  /*
-    Vi använder inte exakta mål här eftersom den historiska
-    backtestmodellen arbetar med resultat/form.
-  */
-
-  st.gf[h]+=m.result==="H" ? 1 : 0;
-  st.ga[h]+=m.result==="A" ? 1 : 0;
-
-  st.gf[a]+=m.result==="A" ? 1 : 0;
-  st.ga[a]+=m.result==="H" ? 1 : 0;
-
-  st.games[h]++;
-  st.games[a]++;
-
-  st.lastDate[h]=m.date;
-  st.lastDate[a]=m.date;
-
-  const key=h+"|"+a;
-
-  if(!st.h2h[key])
-    st.h2h[key]=[];
-
-  st.h2h[key].push(
-    m.result==="H" ? 1 :
-    m.result==="D" ? 0 : -1
-  );
-
-  if(st.h2h[key].length>10)
-    st.h2h[key].shift();
-}
-
-
-function calibratedProb(raw,history,window){
-
-  if(!history.length)
-    return raw.slice();
-
-  const h=history.slice(-window);
-
-  return raw.map((p,k)=>{
-
-    const nearest=h
-      .map(x=>({
-        d:Math.abs(x.p[k]-p),
-        win:x.result===k ? 1 : 0
-      }))
-      .sort((a,b)=>a.d-b.d)
-      .slice(0,30);
-
-    if(nearest.length<30)
-      return p;
-
-    const empirical=
-      nearest.reduce((s,x)=>s+x.win,0)/nearest.length;
-
-    return 0.65*p+0.35*empirical;
-
-  });
-
-}
-
-
-function blend(ai,market,w){
-
-  return ai.map((x,i)=>
-    w*x+(1-w)*market[i]
-  );
-}
-
-
-function argmax(a){
-
-  let ix=0;
-
-  for(let i=1;i<a.length;i++)
-    if(a[i]>a[ix]) ix=i;
-
-  return ix;
-}
-
-
-function betStats(arr){
-
-  if(!arr.length)
-    return {
-      n:0,
-      wins:0,
-      hit:0,
-      roi:0,
-      profit:0,
-      dd:0
-    };
-
-  let wins=0;
-  let profit=0;
-  let peak=0;
-  let dd=0;
-
-  for(const x of arr){
-
-    if(x.win) wins++;
-
-    profit+=x.win
-      ? x.odds-1
-      : -1;
-
-    peak=Math.max(peak,profit);
-
-    dd=Math.max(dd,peak-profit);
-
-  }
-
-  return {
-    n:arr.length,
-    wins,
-    hit:wins/arr.length,
-    roi:profit/arr.length,
-    profit,
-    dd
-  };
-}
-
-
-function metrics(arr){
-
-  if(!arr.length)
-    return {
-      n:0,
-      acc:0,
-      brier:0,
-      ll:0
-    };
-
-  let correct=0;
-  let brier=0;
-  let ll=0;
-
-  for(const x of arr){
-
-    if(x.pick===x.resultIndex)
-      correct++;
-
-    for(let k=0;k<3;k++){
-
-      const target=x.resultIndex===k ? 1 : 0;
-
-      brier+=Math.pow(x.probs[k]-target,2);
-
-    }
-
-    ll-=Math.log(
-      Math.max(1e-12,x.probs[x.resultIndex])
-    );
-
-  }
-
-  return {
-    n:arr.length,
-    acc:correct/arr.length,
-    brier:brier/(arr.length*3),
-    ll:ll/arr.length
-  };
-}
-
-
-function edgeForPick(x){
-
-  return x.ai[x.pick]-x.market[x.pick];
-}
-
-
-function evForPick(x){
-
-  return x.probs[x.pick]*x.odds-1;
-}
-
-
-function makeBet(x,edgeMin,edgeMax,evMin){
-
-  const edge=edgeForPick(x);
-  const ev=evForPick(x);
-
-  if(edge<edgeMin)
-    return null;
-
-  if(edgeMax!==Infinity && edge>=edgeMax)
-    return null;
-
-  if(ev<evMin)
-    return null;
-
-  if(x.odds>6)
-    return null;
-
-  return {
-    ...x,
-    edge,
-    ev,
-    win:x.pick===x.resultIndex
-  };
-}
-
-
-function loadSeason(season){
-
-  return fetch("data/"+season+".csv")
-    .then(r=>{
-
-      if(!r.ok)
-        throw new Error("HTTP "+r.status);
-
-      return r.text();
-
-    })
-    .then(text=>{
-
-      const rows=parseCSV(text);
-
-      const matches=rows
-        .map(r=>normalizeMatch(r,season))
-        .filter(Boolean)
-        .sort((a,b)=>a.date-b.date);
-
-      return {
-        season,
-        rows:rows.length,
-        matches
-      };
-
-    });
-
-}
-
-
-async function run(){
-
-  $("status").innerHTML="Laddar data…";
-
-  MATCHES=[];
-  PRED=[];
-
-  try{
-
-    const loaded=[];
-
-    for(const season of SEASONS){
-
-      try{
-
-        const x=await loadSeason(season);
-
-        loaded.push(x);
-
-      }catch(e){
-
-        loaded.push({
-          season,
-          rows:0,
-          matches:[],
-          error:e.message
-        });
-
-      }
-
-    }
-
-    for(const x of loaded)
-      MATCHES.push(...x.matches);
-
-    MATCHES.sort((a,b)=>a.date-b.date);
-
-    renderData(loaded);
-
-    if(!MATCHES.length){
-
-      $("status").innerHTML=
-        '<span class="neg">FEL: inga giltiga matcher hittades.</span>';
-
-      return;
-    }
-
-    $("status").innerHTML="Kör walk-forward…";
-
-    const model=new OnlineModel();
-    const st=state();
-
-    const calibration=[];
-
-    const formN=parseInt($("formN").value)||10;
-    const calWindow=parseInt($("calWindow").value)||250;
-    const minTrain=parseInt($("minTrain").value)||150;
-
-    let analyzed=0;
-
-    for(const m of MATCHES){
-
-      if(st.games[m.home]===undefined)
-        ensureTeam(st,m.home);
-
-      if(st.games[m.away]===undefined)
-        ensureTeam(st,m.away);
-
-      const totalGames=
-        Object.values(st.games)
-          .reduce((a,b)=>a+b,0);
-
-      /*
-        Prediction happens BEFORE update.
-      */
-
-      if(totalGames>=minTrain){
-
-        const x=features(st,m,formN);
-
-        const rawAI=model.predict(x);
-
-        const ai=calibratedProb(
-          rawAI,
-          calibration,
-          calWindow
-        );
-
-        const market=marketProb(m);
-
-        if(market){
-
-          const probs=blend(
-            ai,
-            market,
-            0.25
-          );
-
-          const pick=argmax(probs);
-
-          const oddsSet=oddsFor(m);
-
-          const odds=oddsSet[pick];
-
-          const resultIndex=
-            OUTCOMES.indexOf(m.result);
-
-          const rec={
-            season:m.season,
-            date:m.date,
-            home:m.home,
-            away:m.away,
-            result:m.result,
-            resultIndex,
-            ai,
-            market,
-            probs,
-            pick,
-            odds
-          };
-
-          PRED.push(rec);
-
-          calibration.push({
-            p:ai.slice(),
-            result:resultIndex
-          });
-
-          analyzed++;
-
-        }
-
-        /*
-          Online learning update AFTER the match result.
-        */
-
-        model.update(x,OUTCOMES.indexOf(m.result));
-
-      }else{
-
-        /*
-          Even before enough history, the model may still
-          be updated with the result to build experience.
-        */
-
-        const x=features(st,m,formN);
-
-        model.update(
-          x,
-          OUTCOMES.indexOf(m.result)
-        );
-
-      }
-
-      updateState(st,m);
-
-    }
-
-    renderAll();
-
-    $("status").innerHTML=
-      '<span class="pos"><b>KLART.</b></span> '+
-      MATCHES.length+
-      ' matcher laddade. '+
-      PRED.length+
-      ' matcher analyserade. Walk-forward utan look-ahead.';
-
-  }catch(e){
-
-    console.error(e);
-
-    $("status").innerHTML=
-      '<span class="neg"><b>FEL:</b> '+
-      esc(e.message)+
-      '</span>';
-
-  }
-
-}
-
-
-function renderData(loaded){
-
-  $("dataInfo").innerHTML=table(
-
-    ["Säsong","Status","CSV-rader","Giltiga matcher","Fil"],
-
-    loaded.map(x=>`
-
-      <tr>
-        <td>${x.season}</td>
-        <td class="${x.matches.length ? "pos":"neg"}">
-          <b>${x.matches.length ? "OK":"FEL"}</b>
-        </td>
-        <td>${x.rows}</td>
-        <td>${x.matches.length}</td>
-        <td>data/${x.season}.csv</td>
-      </tr>
-
-    `)
-
-  )+
-
-  `<p>
-  <b>Totalt CSV-rader:</b>
-  ${loaded.reduce((s,x)=>s+x.rows,0)}
-  ·
-  <b>Totalt giltiga matcher:</b>
-  ${loaded.reduce((s,x)=>s+x.matches.length,0)}
-  </p>`;
-
-}
-
-
-function renderAll(){
-
-  const main=
-    PRED
-      .map(x=>makeBet(
-        x,
-        0.10,
-        0.15,
-        0.07
-      ))
-      .filter(Boolean);
-
-  const m=metrics(PRED);
-  const b=betStats(main);
-
-  $("overview").innerHTML=`
-
-  <div class="grid">
-
-    <div class="metric">
-      <span class="muted">Prediktioner</span>
-      <b>${PRED.length}</b>
-    </div>
-
-    <div class="metric">
-      <span class="muted">Accuracy</span>
-      <b>${pct(m.acc)}</b>
-    </div>
-
-    <div class="metric">
-      <span class="muted">Brier</span>
-      <b>${m.brier.toFixed(4)}</b>
-    </div>
-
-    <div class="metric">
-      <span class="muted">Log Loss</span>
-      <b>${m.ll.toFixed(4)}</b>
-    </div>
-
-    <div class="metric">
-      <span class="muted">Huvudstrategi spel</span>
-      <b>${b.n}</b>
-    </div>
-
-    <div class="metric">
-      <span class="muted">Hit rate</span>
-      <b>${pct(b.hit)}</b>
-    </div>
-
-    <div class="metric">
-      <span class="muted">ROI</span>
-      <b class="${b.roi>=0?"pos":"neg"}">
-        ${pct(b.roi)}
-      </b>
-    </div>
-
-    <div class="metric">
-      <span class="muted">Profit</span>
-      <b>${kr(b.profit)}</b>
-    </div>
-
-  </div>
-
-  <div class="note">
-  <b>Viktigt:</b>
-  "Huvudstrategi spel" är endast spel som uppfyller
-  Edge 10–15 % + EV ≥7 %.
-  Predictioner är separerade från bettingresultaten.
-  </div>
-
-  `;
-
-  $("mainStrategy").innerHTML=`
-
-  <p>
-  <b>Fördefinierad huvudstrategi:</b>
-  Edge 10–15 % · EV ≥7 % · AI 25 % / marknad 75 %.
-  </p>
-
-  ${table(
-
-    ["Strategi","Spel","Vinster","Hit rate","ROI","Profit","Max DD"],
-
-    [`
-
-      <tr>
-        <td>V14.1 huvudstrategi</td>
-        <td>${b.n}</td>
-        <td>${b.wins}</td>
-        <td>${pct(b.hit)}</td>
-        <td class="${b.roi>=0?"pos":"neg"}">
-          <b>${pct(b.roi)}</b>
-        </td>
-        <td>${kr(b.profit)}</td>
-        <td>${kr(b.dd)}</td>
-      </tr>
-
-    `]
-
-  )}
-
-  `;
-
-  renderSplits(main);
-
-  renderOOS(main);
-
-  renderMatrix();
-
-  renderEdgeZones();
-
-  renderEVZones();
-
-  renderBlends();
-
-  renderCalibration();
-
-  renderExtremes();
-
-  renderInterpretation(main);
-
-}
-
-
-function splitData(seasons){
-
-  return PRED.filter(x=>
-    seasons.includes(x.season)
-  );
-
-}
-
-
-function renderSplits(main){
-
-  const rows=[];
-
-  for(const [name,seasons] of Object.entries(SPLITS)){
-
-    const pred=splitData(seasons);
-
-    const bets=main.filter(x=>
-      seasons.includes(x.season)
-    );
-
-    rows.push({
-
-      name,
-      seasons,
-      m:metrics(pred),
-      b:betStats(bets)
-
-    });
-
-  }
-
-  $("splits").innerHTML=
-
-    table(
-
-      ["Del","Säsonger","Spel","Vinster","Hit rate","ROI","Profit","Max DD"],
-
-      rows.map(x=>`
-
-        <tr>
-
-          <td>${x.name.toUpperCase()}</td>
-
-          <td>${x.seasons.join(", ")}</td>
-
-          <td>${x.b.n}</td>
-
-          <td>${x.b.wins}</td>
-
-          <td>${pct(x.b.hit)}</td>
-
-          <td class="${x.b.roi>=0?"pos":"neg"}">
-            <b>${pct(x.b.roi)}</b>
-          </td>
-
-          <td>${kr(x.b.profit)}</td>
-
-          <td>${kr(x.b.dd)}</td>
-
-        </tr>
-
-      `)
-
-    )
-
-    +
-
-    "<h3>Prediktionsmått per del</h3>"
-
-    +
-
-    table(
-
-      ["Del","N","Accuracy","Brier","Log Loss"],
-
-      rows.map(x=>`
-
-        <tr>
-
-          <td>${x.name.toUpperCase()}</td>
-
-          <td>${x.m.n}</td>
-
-          <td>${pct(x.m.acc)}</td>
-
-          <td>${x.m.brier.toFixed(4)}</td>
-
-          <td>${x.m.ll.toFixed(4)}</td>
-
-        </tr>
-
-      `)
-
-    );
-
-}
-
-
-function renderOOS(main){
-
-  const oos=main.filter(x=>
-    SPLITS.oos.includes(x.season)
-  );
-
-  const by={};
-
-  for(const x of oos){
-
-    if(!by[x.season])
-      by[x.season]=[];
-
-    by[x.season].push(x);
-
-  }
-
-  $("oosSeason").innerHTML=table(
-
-    ["Säsong","Spel","Vinster","Hit rate","ROI","Profit","Max DD"],
-
-    SEASONS
-      .filter(s=>SPLITS.oos.includes(s))
-      .map(s=>{
-
-        const b=betStats(by[s]||[]);
-
-        return `
-
-        <tr>
-
-          <td>${s}</td>
-
-          <td>${b.n}</td>
-
-          <td>${b.wins}</td>
-
-          <td>${pct(b.hit)}</td>
-
-          <td class="${b.roi>=0?"pos":"neg"}">
-            <b>${pct(b.roi)}</b>
-          </td>
-
-          <td>${kr(b.profit)}</td>
-
-          <td>${kr(b.dd)}</td>
-
-        </tr>
-
-        `;
-
-      })
-
-  );
-
-}
+const OUTCOMES=[
+"H",
+"D",
+"A"
+];
 
 
 const EDGE_ZONES=[
 
-  [0,0.05,"0–5%"],
-  [0.05,0.10,"5–10%"],
-  [0.10,0.15,"10–15%"],
-  [0.15,0.20,"15–20%"],
-  [0.20,0.25,"20–25%"],
-  [0.25,Infinity,"25%+"]
+[0,0.05,"0–5%"],
+
+[0.05,0.10,"5–10%"],
+
+[0.10,0.15,"10–15%"],
+
+[0.15,0.20,"15–20%"],
+
+[0.20,0.25,"20–25%"],
+
+[0.25,Infinity,"25%+"]
 
 ];
+
 
 const EV_ZONES=[
-  0.03,
-  0.05,
-  0.07,
-  0.10,
-  0.15
+
+0.03,
+0.05,
+0.07,
+0.10,
+0.15
+
 ];
 
 
-function getSignal(x){
+let MATCHES=[];
 
-  return {
-    edge:edgeForPick(x),
-    ev:evForPick(x)
-  };
+let PRED=[];
+
+
+
+function $(id){
+
+return document.getElementById(id);
 
 }
+
+
+
+function pct(x){
+
+if(!isFinite(x))
+return "-";
+
+return (x*100).toFixed(2)+"%";
+
+}
+
+
+
+function kr(x){
+
+if(!isFinite(x))
+return "-";
+
+return x.toFixed(2)+" kr";
+
+}
+
+
+
+function esc(s){
+
+return String(s)
+
+.replaceAll("&","&amp;")
+
+.replaceAll("<","&lt;")
+
+.replaceAll(">","&gt;");
+
+}
+
+
+
+function table(headers,rows){
+
+return `
+
+<table>
+
+<thead>
+
+<tr>
+
+${headers.map(h=>`<th>${h}</th>`).join("")}
+
+</tr>
+
+</thead>
+
+<tbody>
+
+${rows.join("")}
+
+</tbody>
+
+</table>
+
+`;
+
+}
+
+
+
+function parseCSV(text){
+
+const rows=[];
+
+let row=[];
+
+let cell="";
+
+let quote=false;
+
+
+for(let i=0;i<text.length;i++){
+
+const c=text[i];
+
+
+if(c==='"'){
+
+if(quote && text[i+1]==='"'){
+
+cell+='"';
+
+i++;
+
+}else{
+
+quote=!quote;
+
+}
+
+}
+
+
+else if(c===","&&!quote){
+
+row.push(cell);
+
+cell="";
+
+}
+
+
+else if((c==="\n"||c==="\r")&&!quote){
+
+if(c==="\r"&&text[i+1]==="\n")
+i++;
+
+row.push(cell);
+
+cell="";
+
+
+if(row.some(v=>String(v).trim()!==""))
+
+rows.push(row);
+
+row=[];
+
+}
+
+
+else{
+
+cell+=c;
+
+}
+
+}
+
+
+if(cell!==""||row.length){
+
+row.push(cell);
+
+if(row.some(v=>String(v).trim()!==""))
+
+rows.push(row);
+
+}
+
+
+if(!rows.length)
+
+return [];
+
+
+const headers=rows[0].map(x=>String(x).trim());
+
+
+return rows.slice(1).map(r=>{
+
+const o={};
+
+headers.forEach((h,i)=>{
+
+o[h]=String(r[i]??"").trim();
+
+});
+
+return o;
+
+});
+
+}
+
+
+
+function num(v){
+
+const n=parseFloat(
+String(v).replace(",",".")
+);
+
+return isFinite(n)?n:null;
+
+}
+
+
+
+function parseDate(v){
+
+if(!v)
+return null;
+
+
+const s=String(v).trim();
+
+
+if(s.includes("/")){
+
+const p=s.split("/");
+
+
+if(p.length===3){
+
+let d=parseInt(p[0]);
+
+let m=parseInt(p[1])-1;
+
+let y=parseInt(p[2]);
+
+
+if(y<100)
+
+y+=y>=70?1900:2000;
+
+
+const dt=new Date(
+Date.UTC(y,m,d)
+);
+
+
+if(!isNaN(dt.getTime()))
+
+return dt;
+
+}
+
+}
+
+
+const dt=new Date(s);
+
+
+return isNaN(dt.getTime())?null:dt;
+
+}
+
+
+
+function normalizeMatch(r,season){
+
+const home=
+r.Home||
+r.HomeTeam||
+r.home||
+r.Hometeam;
+
+
+const away=
+r.Away||
+r.AwayTeam||
+r.away||
+r.Awayteam;
+
+
+const ftr=
+r.FTR||
+r.Result||
+r.result;
+
+
+const date=
+parseDate(r.Date||r.date);
+
+
+if(
+!home||
+!away||
+!date||
+!OUTCOMES.includes(ftr)
+)
+
+return null;
+
+
+return{
+
+season,
+
+date,
+
+home:String(home).trim(),
+
+away:String(away).trim(),
+
+result:ftr,
+
+avgH:num(r.AvgH),
+
+avgD:num(r.AvgD),
+
+avgA:num(r.AvgA),
+
+b365H:num(r.B365H),
+
+b365D:num(r.B365D),
+
+b365A:num(r.B365A),
+
+bwH:num(r.BWH),
+
+bwD:num(r.BWD),
+
+bwA:num(r.BWA),
+
+whH:num(r.WHH),
+
+whD:num(r.WHD),
+
+whA:num(r.WHA)
+
+};
+
+}
+
+
+
+function oddsFor(m){
+
+const sets=[
+
+[
+m.avgH,
+m.avgD,
+m.avgA
+],
+
+[
+m.b365H,
+m.b365D,
+m.b365A
+],
+
+[
+m.bwH,
+m.bwD,
+m.bwA
+],
+
+[
+m.whH,
+m.whD,
+m.whA
+]
+
+];
+
+
+for(const s of sets){
+
+if(
+s.every(
+x=>x!==null&&x>1
+)
+)
+
+return s;
+
+}
+
+
+return null;
+
+}
+
+
+
+function marketProb(m){
+
+const o=oddsFor(m);
+
+
+if(!o)
+
+return null;
+
+
+const inv=o.map(x=>1/x);
+
+
+const sum=
+inv.reduce(
+(a,b)=>a+b,
+0
+);
+
+
+return inv.map(
+x=>x/sum
+);
+
+}
+
+
+
+function softmax(z){
+
+const mx=Math.max(...z);
+
+
+const e=
+z.map(
+x=>Math.exp(x-mx)
+);
+
+
+const s=
+e.reduce(
+(a,b)=>a+b,
+0
+);
+
+
+return e.map(
+x=>x/s
+);
+
+}
+
+
+
+class OnlineModel{
+
+constructor(){
+
+this.w=[
+
+[0,0,0,0,0,0,0,0,0,0],
+
+[0,0,0,0,0,0,0,0,0,0],
+
+[0,0,0,0,0,0,0,0,0,0]
+
+];
+
+
+this.lr=.025;
+
+this.l2=.0005;
+
+}
+
+
+predict(x){
+
+return softmax(
+
+this.w.map(
+
+w=>
+w.reduce(
+(s,v,i)=>s+v*x[i],
+0
+)
+
+)
+
+);
+
+}
+
+
+update(x,y){
+
+const p=this.predict(x);
+
+
+for(let k=0;k<3;k++){
+
+const err=
+(k===y?1:0)-p[k];
+
+
+for(
+let j=0;
+j<x.length;
+j++
+){
+
+this.w[k][j]+=
+this.lr*
+(
+err*x[j]
+-
+this.l2*this.w[k][j]
+);
+
+}
+
+}
+
+}
+
+}
+
+
+
+function state(){
+
+return{
+
+lastDate:{},
+
+form:{},
+
+gf:{},
+
+ga:{},
+
+games:{},
+
+h2h:{}
+
+};
+
+}
+
+
+
+function ensureTeam(st,t){
+
+if(!st.form[t])
+st.form[t]=[];
+
+
+if(!st.gf[t])
+st.gf[t]=0;
+
+
+if(!st.ga[t])
+st.ga[t]=0;
+
+
+if(!st.games[t])
+st.games[t]=0;
+
+}
+
+
+
+function avg(a,n){
+
+if(!a||!a.length)
+
+return 0;
+
+
+const x=a.slice(-n);
+
+
+return x.reduce(
+(s,v)=>s+v,
+0
+)/x.length;
+
+}
+
+
+
+function ppg(st,t){
+
+ensureTeam(st,t);
+
+
+return st.form[t].length?
+avg(st.form[t],10):
+1;
+
+}
+
+
+
+function attack(st,t){
+
+ensureTeam(st,t);
+
+
+return st.games[t]?
+st.gf[t]/st.games[t]:
+1;
+
+}
+
+
+
+function defence(st,t){
+
+ensureTeam(st,t);
+
+
+return st.games[t]?
+st.ga[t]/st.games[t]:
+1;
+
+}
+
+
+
+function recentForm(st,t,n){
+
+ensureTeam(st,t);
+
+
+return avg(
+st.form[t],
+n
+);
+
+}
+
+
+
+function trend(st,t,n){
+
+ensureTeam(st,t);
+
+
+const f=st.form[t];
+
+
+if(f.length<4)
+
+return 0;
+
+
+const recent=
+avg(
+f.slice(-Math.min(5,f.length)),
+5
+);
+
+
+const older=
+avg(
+f.slice(0,
+Math.max(1,f.length-n)
+),
+5
+);
+
+
+return recent-older;
+
+}
+
+
+
+function restDays(st,t,date){
+
+const last=st.lastDate[t];
+
+
+if(!last)
+
+return 7;
+
+
+return Math.max(
+
+0,
+
+Math.min(
+
+30,
+
+(date-last)/86400000
+
+)
+
+);
+
+}
+
+
+
+function h2hValue(st,h,a){
+
+const arr=
+st.h2h[h+"|"+a]||[];
+
+
+return arr.length?
+avg(arr,5):
+0;
+
+}
+
+
+
+function features(st,m,formN){
+
+const h=m.home;
+
+const a=m.away;
+
+
+ensureTeam(st,h);
+
+ensureTeam(st,a);
+
+
+return[
+
+1,
+
+recentForm(st,h,formN)
+-
+recentForm(st,a,formN),
+
+ppg(st,h)
+-
+ppg(st,a),
+
+attack(st,h)
+-
+attack(st,a),
+
+defence(st,a)
+-
+defence(st,h),
+
+1,
+
+trend(st,h,formN)
+-
+trend(st,a,formN),
+
+Math.max(
+-5,
+Math.min(
+5,
+(
+restDays(st,h,m.date)
+-
+restDays(st,a,m.date)
+)/7
+)
+),
+
+h2hValue(st,h,a),
+
+(
+st.games[h]
+-
+st.games[a]
+)/20
+
+];
+
+}
+
+
+
+function updateState(st,m){
+
+const h=m.home;
+
+const a=m.away;
+
+
+ensureTeam(st,h);
+
+ensureTeam(st,a);
+
+
+const hp=
+m.result==="H"
+?3
+:m.result==="D"
+?1
+:0;
+
+
+const ap=
+m.result==="A"
+?3
+:m.result==="D"
+?1
+:0;
+
+
+st.form[h].push(hp);
+
+st.form[a].push(ap);
+
+
+if(st.form[h].length>30)
+
+st.form[h].shift();
+
+
+if(st.form[a].length>30)
+
+st.form[a].shift();
+
+
+st.gf[h]+=
+m.result==="H"
+?1
+:0;
+
+
+st.ga[h]+=
+m.result==="A"
+?1
+:0;
+
+
+st.gf[a]+=
+m.result==="A"
+?1
+:0;
+
+
+st.ga[a]+=
+m.result==="H"
+?1
+:0;
+
+
+st.games[h]++;
+
+st.games[a]++;
+
+
+st.lastDate[h]=m.date;
+
+st.lastDate[a]=m.date;
+
+
+const key=h+"|"+a;
+
+
+if(!st.h2h[key])
+
+st.h2h[key]=[];
+
+
+st.h2h[key].push(
+
+m.result==="H"
+?1
+:m.result==="D"
+?0
+:-1
+
+);
+
+
+if(st.h2h[key].length>10)
+
+st.h2h[key].shift();
+
+}
+
+
+
+function calibratedProb(raw,history,window){
+
+if(!history.length)
+
+return raw.slice();
+
+
+const h=
+history.slice(-window);
+
+
+return raw.map(
+
+(p,k)=>{
+
+const nearest=
+
+h
+
+.map(
+
+x=>({
+
+d:Math.abs(
+x.p[k]-p
+),
+
+win:
+x.result===k
+?1
+:0
+
+})
+
+)
+
+.sort(
+(a,b)=>a.d-b.d
+)
+
+.slice(0,30);
+
+
+if(nearest.length<30)
+
+return p;
+
+
+const empirical=
+
+nearest.reduce(
+(s,x)=>s+x.win,
+0
+)/nearest.length;
+
+
+return .65*p+.35*empirical;
+
+}
+
+);
+
+}
+
+
+
+function blend(ai,market,w){
+
+return ai.map(
+
+(x,i)=>
+w*x+(1-w)*market[i]
+
+);
+
+}
+
+
+
+function argmax(a){
+
+let ix=0;
+
+
+for(
+let i=1;
+i<a.length;
+i++
+){
+
+if(a[i]>a[ix])
+
+ix=i;
+
+}
+
+
+return ix;
+
+}
+
+
+
+function betStats(arr){
+
+if(!arr.length)
+
+return{
+
+n:0,
+
+wins:0,
+
+hit:0,
+
+roi:0,
+
+profit:0,
+
+dd:0
+
+};
+
+
+let wins=0;
+
+let profit=0;
+
+let peak=0;
+
+let dd=0;
+
+
+for(const x of arr){
+
+if(x.win)
+
+wins++;
+
+
+profit+=
+x.win
+?
+x.odds-1
+:
+-1;
+
+
+peak=
+Math.max(
+peak,
+profit
+);
+
+
+dd=
+Math.max(
+dd,
+peak-profit
+);
+
+}
+
+
+return{
+
+n:arr.length,
+
+wins,
+
+hit:wins/arr.length,
+
+roi:profit/arr.length,
+
+profit,
+
+dd
+
+};
+
+}
+
+
+
+function metrics(arr){
+
+if(!arr.length)
+
+return{
+
+n:0,
+
+acc:0,
+
+brier:0,
+
+ll:0
+
+};
+
+
+let correct=0;
+
+let brier=0;
+
+let ll=0;
+
+
+for(const x of arr){
+
+if(
+x.pick===
+x.resultIndex
+)
+
+correct++;
+
+
+for(
+let k=0;
+k<3;
+k++
+){
+
+const target=
+x.resultIndex===k
+?1
+:0;
+
+
+brier+=
+(
+x.probs[k]
+-
+target
+)**2;
+
+}
+
+
+ll-=Math.log(
+
+Math.max(
+1e-12,
+x.probs[x.resultIndex]
+)
+
+);
+
+}
+
+
+return{
+
+n:arr.length,
+
+acc:correct/arr.length,
+
+brier:brier/(arr.length*3),
+
+ll:ll/arr.length
+
+};
+
+}
+
+
+
+/*
+==================================================
+V14.2 SIGNALLOGIK
+==================================================
+
+1. AI-prognos
+2. Marknadsprobabilitet
+3. 25/75 blend
+4. Välj faktiskt spelutfall
+5. Edge = AI - marknad för DETTA utfall
+6. EV = blend * odds - 1 för DETTA utfall
+7. Applicera filter
+
+==================================================
+*/
+
+
+function makeSignal(x,aiWeight){
+
+const probs=
+blend(
+x.ai,
+x.market,
+aiWeight
+);
+
+
+const pick=
+argmax(probs);
+
+
+const odds=
+x.odds;
+
+
+const edge=
+x.ai[pick]
+-
+x.market[pick];
+
+
+const ev=
+probs[pick]
+*
+odds
+-
+1;
+
+
+return{
+
+...x,
+
+probs,
+
+pick,
+
+edge,
+
+ev,
+
+win:
+pick===x.resultIndex
+
+};
+
+}
+
+
+
+function makeBet(
+x,
+aiWeight,
+edgeMin,
+edgeMax,
+evMin,
+maxOdds
+){
+
+const s=
+makeSignal(
+x,
+aiWeight
+);
+
+
+if(s.edge<edgeMin)
+
+return null;
+
+
+if(
+edgeMax!==Infinity &&
+s.edge>=edgeMax
+)
+
+return null;
+
+
+if(s.ev<evMin)
+
+return null;
+
+
+if(s.odds>maxOdds)
+
+return null;
+
+
+return s;
+
+}
+
+
+
+async function loadSeason(season){
+
+const r=
+await fetch(
+"data/"+season+".csv"
+);
+
+
+if(!r.ok)
+
+throw new Error(
+"HTTP "+r.status
+);
+
+
+const text=
+await r.text();
+
+
+const rows=
+parseCSV(text);
+
+
+const matches=
+rows
+
+.map(
+r=>
+normalizeMatch(
+r,
+season
+)
+)
+
+.filter(Boolean)
+
+.sort(
+(a,b)=>
+a.date-b.date
+);
+
+
+return{
+
+season,
+
+rows:rows.length,
+
+matches
+
+};
+
+}
+
+
+
+async function run(){
+
+$("status").innerHTML=
+"Laddar data…";
+
+
+MATCHES=[];
+
+PRED=[];
+
+
+try{
+
+const loaded=[];
+
+
+for(
+const season of SEASONS
+){
+
+try{
+
+loaded.push(
+await loadSeason(season)
+);
+
+}catch(e){
+
+loaded.push({
+
+season,
+
+rows:0,
+
+matches:[],
+
+error:e.message
+
+});
+
+}
+
+}
+
+
+for(
+const x of loaded
+)
+
+MATCHES.push(
+...x.matches
+);
+
+
+MATCHES.sort(
+(a,b)=>
+a.date-b.date
+);
+
+
+renderData(loaded);
+
+
+if(!MATCHES.length){
+
+$("status").innerHTML=
+'<span class="neg">FEL: inga giltiga matcher hittades.</span>';
+
+return;
+
+}
+
+
+$("status").innerHTML=
+"Kör walk-forward…";
+
+
+const model=
+new OnlineModel();
+
+
+const st=
+state();
+
+
+const calibration=[];
+
+
+const formN=
+parseInt(
+$("formN").value
+)||10;
+
+
+const calWindow=
+parseInt(
+$("calWindow").value
+)||250;
+
+
+const minTrain=
+parseInt(
+$("minTrain").value
+)||150;
+
+
+for(
+const m of MATCHES
+){
+
+ensureTeam(
+st,
+m.home
+);
+
+
+ensureTeam(
+st,
+m.away
+);
+
+
+const totalGames=
+Object.values(
+st.games
+).reduce(
+(a,b)=>a+b,
+0
+);
+
+
+/*
+PREDIKTION FÖRE RESULTAT
+*/
+
+if(
+totalGames>=minTrain
+){
+
+const x=
+features(
+st,
+m,
+formN
+);
+
+
+const rawAI=
+model.predict(x);
+
+
+const ai=
+calibratedProb(
+rawAI,
+calibration,
+calWindow
+);
+
+
+const market=
+marketProb(m);
+
+
+if(market){
+
+const odds=
+oddsFor(m);
+
+
+PRED.push({
+
+season:m.season,
+
+date:m.date,
+
+home:m.home,
+
+away:m.away,
+
+result:m.result,
+
+resultIndex:
+OUTCOMES.indexOf(
+m.result
+),
+
+ai,
+
+market,
+
+odds
+
+});
+
+
+calibration.push({
+
+p:ai.slice(),
+
+result:
+OUTCOMES.indexOf(
+m.result
+)
+
+});
+
+}
+
+
+/*
+UPPDATERA MODELLEN EFTER RESULTATET
+*/
+
+model.update(
+
+x,
+
+OUTCOMES.indexOf(
+m.result
+)
+
+);
+
+}
+
+else{
+
+const x=
+features(
+st,
+m,
+formN
+);
+
+
+model.update(
+
+x,
+
+OUTCOMES.indexOf(
+m.result
+)
+
+);
+
+}
+
+
+updateState(
+st,
+m
+);
+
+}
+
+
+renderAll();
+
+
+$("status").innerHTML=
+
+'<span class="pos"><b>KLART.</b></span> '+
+
+MATCHES.length+
+
+' matcher laddade. '+
+
+PRED.length+
+
+' matcher analyserade. Walk-forward utan look-ahead.';
+
+}
+
+
+catch(e){
+
+console.error(e);
+
+
+$("status").innerHTML=
+
+'<span class="neg"><b>FEL:</b> '+
+
+esc(e.message)+
+
+'</span>';
+
+}
+
+}
+
+
+
+function renderData(loaded){
+
+$("dataInfo").innerHTML=
+
+table(
+
+[
+"Säsong",
+"Status",
+"CSV-rader",
+"Giltiga matcher",
+"Fil"
+],
+
+loaded.map(
+
+x=>
+
+`<tr>
+
+<td>${x.season}</td>
+
+<td class="${x.matches.length?"pos":"neg"}">
+
+<b>
+${x.matches.length?"OK":"FEL"}
+</b>
+
+</td>
+
+<td>${x.rows}</td>
+
+<td>${x.matches.length}</td>
+
+<td>
+data/${x.season}.csv
+</td>
+
+</tr>`
+
+)
+
+)
+
++
+
+`
+
+<p>
+
+<b>Totalt CSV-rader:</b>
+
+${loaded.reduce(
+(s,x)=>s+x.rows,
+0
+)}
+
+·
+
+<b>Totalt giltiga matcher:</b>
+
+${loaded.reduce(
+(s,x)=>s+x.matches.length,
+0
+)}
+
+</p>
+
+`;
+
+}
+
+
+
+function renderAll(){
+
+const aiWeight=
+parseFloat(
+$("aiWeight").value
+)||.25;
+
+
+const minEV=
+(
+parseFloat(
+$("minEV").value
+)||7
+)/100;
+
+
+const maxOdds=
+parseFloat(
+$("maxOdds").value
+)||6;
+
+
+const main=
+
+PRED
+
+.map(
+
+x=>
+makeBet(
+x,
+aiWeight,
+.10,
+.15,
+minEV,
+maxOdds
+)
+
+)
+
+.filter(Boolean);
+
+
+const m=
+metrics(PRED);
+
+
+const b=
+betStats(main);
+
+
+$("overview").innerHTML=`
+
+<div class="grid">
+
+<div class="metric">
+
+<span class="muted">
+Prediktioner
+</span>
+
+<b>
+${PRED.length}
+</b>
+
+</div>
+
+
+<div class="metric">
+
+<span class="muted">
+Accuracy
+</span>
+
+<b>
+${pct(m.acc)}
+</b>
+
+</div>
+
+
+<div class="metric">
+
+<span class="muted">
+Brier
+</span>
+
+<b>
+${m.brier.toFixed(4)}
+</b>
+
+</div>
+
+
+<div class="metric">
+
+<span class="muted">
+Log Loss
+</span>
+
+<b>
+${m.ll.toFixed(4)}
+</b>
+
+</div>
+
+
+<div class="metric">
+
+<span class="muted">
+Huvudstrategi spel
+</span>
+
+<b>
+${b.n}
+</b>
+
+</div>
+
+
+<div class="metric">
+
+<span class="muted">
+Hit rate
+</span>
+
+<b>
+${pct(b.hit)}
+</b>
+
+</div>
+
+
+<div class="metric">
+
+<span class="muted">
+ROI
+</span>
+
+<b class="${b.roi>=0?"pos":"neg"}">
+
+${pct(b.roi)}
+
+</b>
+
+</div>
+
+
+<div class="metric">
+
+<span class="muted">
+Profit
+</span>
+
+<b>
+${kr(b.profit)}
+</b>
+
+</div>
+
+</div>
+
+
+<div class="note">
+
+<b>V14.2:</b>
+
+Edge och EV räknas på exakt samma utfall
+som modellen faktiskt väljer att spela.
+
+</div>
+
+`;
+
+
+$("mainStrategy").innerHTML=
+
+`
+
+<p>
+
+<b>Fördefinierad huvudstrategi:</b>
+
+Edge 10–15 %
+
+· EV ≥${Math.round(minEV*100)} %
+
+· AI ${Math.round(aiWeight*100)} %
+
+/ marknad ${Math.round((1-aiWeight)*100)} %.
+
+</p>
+
+`
+
++
+
+table(
+
+[
+"Strategi",
+"Spel",
+"Vinster",
+"Hit rate",
+"ROI",
+"Profit",
+"Max DD"
+],
+
+[`
+
+<tr>
+
+<td>
+V14.2 huvudstrategi
+</td>
+
+<td>
+${b.n}
+</td>
+
+<td>
+${b.wins}
+</td>
+
+<td>
+${pct(b.hit)}
+</td>
+
+<td class="${b.roi>=0?"pos":"neg"}">
+
+<b>
+${pct(b.roi)}
+</b>
+
+</td>
+
+<td>
+${kr(b.profit)}
+</td>
+
+<td>
+${kr(b.dd)}
+</td>
+
+</tr>
+
+`]
+
+);
+
+
+renderSplits(main);
+
+renderOOS(main);
+
+renderMatrix();
+
+renderEdgeZones();
+
+renderEVZones();
+
+renderBlends();
+
+renderCalibration();
+
+renderExtremes();
+
+renderInterpretation(main);
+
+}
+
+
+
+function renderSplits(main){
+
+const rows=[];
+
+
+for(
+const [name,seasons]
+of Object.entries(SPLITS)
+){
+
+const pred=
+PRED.filter(
+x=>seasons.includes(
+x.season
+)
+);
+
+
+const bets=
+main.filter(
+x=>seasons.includes(
+x.season
+)
+);
+
+
+rows.push({
+
+name,
+
+seasons,
+
+m:metrics(pred),
+
+b:betStats(bets)
+
+});
+
+}
+
+
+$("splits").innerHTML=
+
+table(
+
+[
+"Del",
+"Säsonger",
+"Spel",
+"Vinster",
+"Hit rate",
+"ROI",
+"Profit",
+"Max DD"
+],
+
+rows.map(
+
+x=>
+
+`<tr>
+
+<td>
+${x.name.toUpperCase()}
+</td>
+
+<td>
+${x.seasons.join(", ")}
+</td>
+
+<td>
+${x.b.n}
+</td>
+
+<td>
+${x.b.wins}
+</td>
+
+<td>
+${pct(x.b.hit)}
+</td>
+
+<td class="${x.b.roi>=0?"pos":"neg"}">
+
+<b>
+${pct(x.b.roi)}
+</b>
+
+</td>
+
+<td>
+${kr(x.b.profit)}
+</td>
+
+<td>
+${kr(x.b.dd)}
+</td>
+
+</tr>`
+
+)
+
+)
+
++
+
+"<h3>Prediktionsmått per del</h3>"
+
++
+
+table(
+
+[
+"Del",
+"N",
+"Accuracy",
+"Brier",
+"Log Loss"
+],
+
+rows.map(
+
+x=>
+
+`<tr>
+
+<td>
+${x.name.toUpperCase()}
+</td>
+
+<td>
+${x.m.n}
+</td>
+
+<td>
+${pct(x.m.acc)}
+</td>
+
+<td>
+${x.m.brier.toFixed(4)}
+</td>
+
+<td>
+${x.m.ll.toFixed(4)}
+</td>
+
+</tr>`
+
+)
+
+);
+
+}
+
+
+
+function renderOOS(main){
+
+const oos=
+main.filter(
+x=>SPLITS.oos.includes(
+x.season
+)
+);
+
+
+const by={};
+
+
+for(
+const x of oos
+){
+
+if(!by[x.season])
+
+by[x.season]=[];
+
+
+by[x.season].push(x);
+
+}
+
+
+$("oosSeason").innerHTML=
+
+table(
+
+[
+"Säsong",
+"Spel",
+"Vinster",
+"Hit rate",
+"ROI",
+"Profit",
+"Max DD"
+],
+
+SEASONS
+
+.filter(
+s=>SPLITS.oos.includes(s)
+)
+
+.map(
+
+s=>{
+
+const b=
+betStats(
+by[s]||[]
+);
+
+
+return`
+
+<tr>
+
+<td>${s}</td>
+
+<td>${b.n}</td>
+
+<td>${b.wins}</td>
+
+<td>${pct(b.hit)}</td>
+
+<td class="${b.roi>=0?"pos":"neg"}">
+
+<b>
+${pct(b.roi)}
+</b>
+
+</td>
+
+<td>
+${kr(b.profit)}
+</td>
+
+<td>
+${kr(b.dd)}
+</td>
+
+</tr>
+
+`;
+
+}
+
+)
+
+);
+
+}
+
 
 
 function renderMatrix(){
 
-  const rows=[];
+const minCombo=
+parseInt(
+$("minCombo").value
+)||50;
 
-  for(const ez of EDGE_ZONES){
 
-    const cells=[];
+const rows=
 
-    for(const ev of EV_ZONES){
+EDGE_ZONES.map(
 
-      const bets=PRED
-        .map(x=>makeBet(
-          x,
-          ez[0],
-          ez[1],
-          ev
-        ))
-        .filter(Boolean);
+ez=>{
 
-      if(bets.length<50){
+const cells=
 
-        cells.push(
-          `<td>–<br>${bets.length} spel</td>`
-        );
+EV_ZONES.map(
 
-      }else{
+ev=>{
 
-        const b=betStats(bets);
+const bets=
 
-        cells.push(`
+PRED
 
-          <td class="${b.roi>=0?"pos":"neg"}">
+.map(
 
-            <b>${pct(b.roi)}</b><br>
-            ${bets.length} spel
+x=>
+makeBet(
+x,
+.25,
+ez[0],
+ez[1],
+ev,
+6
+)
 
-          </td>
+)
 
-        `);
+.filter(Boolean);
 
-      }
 
-    }
+if(
+bets.length<minCombo
+){
 
-    rows.push(`
+return`
 
-      <tr>
+<td>
 
-        <td><b>${ez[2]}</b></td>
+–
 
-        ${cells.join("")}
+<br>
 
-      </tr>
+${bets.length}
+spel
 
-    `);
+</td>
 
-  }
-
-  $("matrix").innerHTML=`
-
-  <p>
-  Endast kombinationer med minst 50 spel visas som historiskt
-  tillräckligt stora för att vara jämförbara.
-  Streck = för få spel.
-  </p>
-
-  `+
-
-  table(
-
-    ["Edge","EV ≥3%","EV ≥5%","EV ≥7%","EV ≥10%","EV ≥15%"],
-
-    rows
-
-  );
+`;
 
 }
+
+
+const b=
+betStats(bets);
+
+
+return`
+
+<td class="${b.roi>=0?"pos":"neg"}">
+
+<b>
+${pct(b.roi)}
+</b>
+
+<br>
+
+${bets.length}
+spel
+
+</td>
+
+`;
+
+}
+
+);
+
+
+return`
+
+<tr>
+
+<td>
+<b>${ez[2]}</b>
+</td>
+
+${cells.join("")}
+
+</tr>
+
+`;
+
+}
+
+);
+
+
+$("matrix").innerHTML=
+
+`
+
+<p>
+
+Matrisen använder den låsta V14.2-vikten
+25/75.
+
+Minst ${minCombo} spel krävs.
+
+</p>
+
+`
+
++
+
+table(
+
+[
+"Edge",
+"EV ≥3%",
+"EV ≥5%",
+"EV ≥7%",
+"EV ≥10%",
+"EV ≥15%"
+],
+
+rows
+
+);
+
+}
+
 
 
 function renderEdgeZones(){
 
-  $("edgeZones").innerHTML=table(
+$("edgeZones").innerHTML=
 
-    ["Edge","Spel","Vinster","Hit rate","ROI","Profit","Max DD"],
+table(
 
-    EDGE_ZONES.map(z=>{
+[
+"Edge",
+"Spel",
+"Vinster",
+"Hit rate",
+"ROI",
+"Profit",
+"Max DD"
+],
 
-      const bets=PRED
-        .map(x=>{
+EDGE_ZONES.map(
 
-          const edge=edgeForPick(x);
+z=>{
 
-          if(
-            edge>=z[0] &&
-            edge<z[1]
-          ){
+const bets=
 
-            const ev=evForPick(x);
+PRED
 
-            return {
-              ...x,
-              edge,
-              ev,
-              win:x.pick===x.resultIndex
-            };
+.map(
 
-          }
+x=>{
 
-          return null;
+const s=
+makeSignal(
+x,
+.25
+);
 
-        })
-        .filter(Boolean);
 
-      const b=betStats(bets);
+return
 
-      return `
+s.edge>=z[0]&&
+s.edge<z[1]
 
-      <tr>
-
-        <td>${z[2]}</td>
-        <td>${b.n}</td>
-        <td>${b.wins}</td>
-        <td>${pct(b.hit)}</td>
-
-        <td class="${b.roi>=0?"pos":"neg"}">
-          <b>${pct(b.roi)}</b>
-        </td>
-
-        <td>${kr(b.profit)}</td>
-        <td>${kr(b.dd)}</td>
-
-      </tr>
-
-      `;
-
-    })
-
-  );
+?s
+:null;
 
 }
+
+)
+
+.filter(Boolean);
+
+
+const b=
+betStats(bets);
+
+
+return`
+
+<tr>
+
+<td>
+${z[2]}
+</td>
+
+<td>
+${b.n}
+</td>
+
+<td>
+${b.wins}
+</td>
+
+<td>
+${pct(b.hit)}
+</td>
+
+<td class="${b.roi>=0?"pos":"neg"}">
+
+<b>
+${pct(b.roi)}
+</b>
+
+</td>
+
+<td>
+${kr(b.profit)}
+</td>
+
+<td>
+${kr(b.dd)}
+</td>
+
+</tr>
+
+`;
+
+}
+
+)
+
+);
+
+}
+
 
 
 function renderEVZones(){
 
-  $("evZones").innerHTML=table(
+$("evZones").innerHTML=
 
-    ["EV","Spel","Vinster","Hit rate","ROI","Profit","Max DD"],
+table(
 
-    EV_ZONES.map(ev=>{
+[
+"EV",
+"Spel",
+"Vinster",
+"Hit rate",
+"ROI",
+"Profit",
+"Max DD"
+],
 
-      const bets=PRED
-        .map(x=>makeBet(
-          x,
-          0,
-          Infinity,
-          ev
-        ))
-        .filter(Boolean);
+EV_ZONES.map(
 
-      const b=betStats(bets);
+ev=>{
 
-      return `
+const bets=
 
-      <tr>
+PRED
 
-        <td>EV ≥${(ev*100).toFixed(0)}%</td>
+.map(
 
-        <td>${b.n}</td>
+x=>
+makeBet(
+x,
+.25,
+0,
+Infinity,
+ev,
+6
+)
 
-        <td>${b.wins}</td>
+)
 
-        <td>${pct(b.hit)}</td>
+.filter(Boolean);
 
-        <td class="${b.roi>=0?"pos":"neg"}">
-          <b>${pct(b.roi)}</b>
-        </td>
 
-        <td>${kr(b.profit)}</td>
+const b=
+betStats(bets);
 
-        <td>${kr(b.dd)}</td>
 
-      </tr>
+return`
 
-      `;
+<tr>
 
-    })
+<td>
+EV ≥${Math.round(ev*100)}%
+</td>
 
-  );
+<td>
+${b.n}
+</td>
+
+<td>
+${b.wins}
+</td>
+
+<td>
+${pct(b.hit)}
+</td>
+
+<td class="${b.roi>=0?"pos":"neg"}">
+
+<b>
+${pct(b.roi)}
+</b>
+
+</td>
+
+<td>
+${kr(b.profit)}
+</td>
+
+<td>
+${kr(b.dd)}
+</td>
+
+</tr>
+
+`;
 
 }
+
+)
+
+);
+
+}
+
 
 
 function renderBlends(){
 
-  const weights=[
-    0,
-    0.25,
-    0.50,
-    0.75,
-    1
-  ];
+const rows=[];
 
-  const rows=[];
 
-  for(const w of weights){
+for(
+const w of [
+0,
+.25,
+.50,
+.75,
+1
+]
+){
 
-    if(w===0){
+if(w===0){
 
-      rows.push(`
+rows.push(`
 
-      <tr>
+<tr>
 
-        <td>0%</td>
-        <td>100%</td>
-        <td>–</td>
-        <td>–</td>
-        <td>–</td>
-        <td>–</td>
-        <td>–</td>
+<td>0%</td>
 
-      </tr>
+<td>100%</td>
 
-      `);
+<td>–</td>
 
-      continue;
+<td>–</td>
 
-    }
+<td>–</td>
 
-    const bets=[];
+<td>–</td>
 
-    for(const x of PRED){
+<td>–</td>
 
-      const probs=blend(
-        x.ai,
-        x.market,
-        w
-      );
+<td>–</td>
 
-      const pick=argmax(probs);
+</tr>
 
-      const odds=x.odds;
+`);
 
-      const ev=probs[pick]*odds-1;
-
-      if(ev<0.07)
-        continue;
-
-      if(odds>6)
-        continue;
-
-      bets.push({
-
-        win:pick===x.resultIndex,
-
-        odds
-
-      });
-
-    }
-
-    const b=betStats(bets);
-
-    rows.push(`
-
-    <tr>
-
-      <td>${Math.round(w*100)}%</td>
-
-      <td>${Math.round((1-w)*100)}%</td>
-
-      <td>${b.n}</td>
-
-      <td>${b.wins}</td>
-
-      <td>${pct(b.hit)}</td>
-
-      <td class="${b.roi>=0?"pos":"neg"}">
-        <b>${pct(b.roi)}</b>
-      </td>
-
-      <td>${kr(b.profit)}</td>
-
-      <td>${kr(b.dd)}</td>
-
-    </tr>
-
-    `);
-
-  }
-
-  $("blendTable").innerHTML=table(
-
-    ["AI","Marknad","Spel","Vinster","Hit rate","ROI","Profit","Max DD"],
-
-    rows
-
-  );
+continue;
 
 }
+
+
+const bets=
+
+PRED
+
+.map(
+
+x=>
+makeBet(
+x,
+w,
+0,
+Infinity,
+.07,
+6
+)
+
+)
+
+.filter(Boolean);
+
+
+const b=
+betStats(bets);
+
+
+rows.push(`
+
+<tr>
+
+<td>
+${Math.round(w*100)}%
+</td>
+
+<td>
+${Math.round((1-w)*100)}%
+</td>
+
+<td>
+${b.n}
+</td>
+
+<td>
+${b.wins}
+</td>
+
+<td>
+${pct(b.hit)}
+</td>
+
+<td class="${b.roi>=0?"pos":"neg"}">
+
+<b>
+${pct(b.roi)}
+</b>
+
+</td>
+
+<td>
+${kr(b.profit)}
+</td>
+
+<td>
+${kr(b.dd)}
+</td>
+
+</tr>
+
+`);
+
+}
+
+
+$("blendTable").innerHTML=
+
+table(
+
+[
+"AI",
+"Marknad",
+"Spel",
+"Vinster",
+"Hit rate",
+"ROI",
+"Profit",
+"Max DD"
+],
+
+rows
+
+);
+
+}
+
 
 
 function renderCalibration(){
 
-  const bins=[];
+const bins=[];
 
-  for(let i=0;i<10;i++){
 
-    const lo=i/10;
-    const hi=(i+1)/10;
+for(
+let i=0;
+i<10;
+i++
+){
 
-    const a=PRED.filter(x=>{
+const lo=i/10;
 
-      const p=Math.max(...x.ai);
+const hi=(i+1)/10;
 
-      return p>=lo && p<hi;
 
-    });
+const a=
 
-    if(!a.length){
+PRED.filter(
 
-      bins.push(`
+x=>{
 
-      <tr>
+const p=
+Math.max(
+...x.ai
+);
 
-        <td>${lo*100}–${hi*100}%</td>
-        <td>0</td>
-        <td>–</td>
 
-      </tr>
-
-      `);
-
-      continue;
-
-    }
-
-    const wins=a.filter(x=>
-      x.pick===x.resultIndex
-    ).length;
-
-    bins.push(`
-
-    <tr>
-
-      <td>${lo*100}–${hi*100}%</td>
-
-      <td>${a.length}</td>
-
-      <td>${pct(wins/a.length)}</td>
-
-    </tr>
-
-    `);
-
-  }
-
-  $("calibration").innerHTML=table(
-
-    ["AI sannolikhet","Antal","Faktiskt valt utfall vann"],
-
-    bins
-
-  );
+return
+p>=lo&&
+p<hi;
 
 }
+
+);
+
+
+if(!a.length){
+
+bins.push(`
+
+<tr>
+
+<td>
+${lo*100}–${hi*100}%
+</td>
+
+<td>
+0
+</td>
+
+<td>
+–
+</td>
+
+</tr>
+
+`);
+
+continue;
+
+}
+
+
+const wins=
+
+a.filter(
+
+x=>
+argmax(x.ai)===
+x.resultIndex
+
+).length;
+
+
+bins.push(`
+
+<tr>
+
+<td>
+${lo*100}–${hi*100}%
+</td>
+
+<td>
+${a.length}
+</td>
+
+<td>
+${pct(wins/a.length)}
+</td>
+
+</tr>
+
+`);
+
+}
+
+
+$("calibration").innerHTML=
+
+table(
+
+[
+"AI sannolikhet",
+"Antal",
+"Faktiskt AI-val vann"
+],
+
+bins
+
+);
+
+}
+
 
 
 function renderExtremes(){
 
-  const arr=PRED
-    .map(x=>{
+const arr=
 
-      const edge=edgeForPick(x);
-      const ev=evForPick(x);
+PRED
 
-      return {
-        ...x,
-        edge,
-        ev,
-        win:x.pick===x.resultIndex
-      };
+.map(
+x=>
+makeSignal(
+x,
+.25
+)
+)
 
-    })
-    .sort((a,b)=>b.edge-a.edge)
-    .slice(0,25);
+.sort(
+(a,b)=>
+b.edge-a.edge
+)
 
-  $("extremes").innerHTML=table(
+.slice(
+0,
+25
+);
 
-    [
-      "Datum",
-      "Match",
-      "Utfall",
-      "AI",
-      "Marknad",
-      "Edge",
-      "Odds",
-      "EV",
-      "Resultat"
-    ],
 
-    arr.map(x=>`
+$("extremes").innerHTML=
 
-      <tr>
+table(
 
-        <td>${x.date.toISOString().slice(0,10)}</td>
+[
+"Datum",
+"Match",
+"Utfall",
+"AI",
+"Marknad",
+"Edge",
+"Odds",
+"EV",
+"Resultat"
+],
 
-        <td>
-          ${esc(x.home)} – ${esc(x.away)}
-        </td>
+arr.map(
 
-        <td>${x.result}</td>
+x=>
 
-        <td>${pct(x.ai[x.pick])}</td>
+`<tr>
 
-        <td>${pct(x.market[x.pick])}</td>
+<td>
+${x.date.toISOString().slice(0,10)}
+</td>
 
-        <td>${pct(x.edge)}</td>
+<td>
+${esc(x.home)}
+–
+${esc(x.away)}
+</td>
 
-        <td>${x.odds.toFixed(2)}</td>
+<td>
+${x.result}
+</td>
 
-        <td>${pct(x.ev)}</td>
+<td>
+${pct(x.ai[x.pick])}
+</td>
 
-        <td class="${x.win?"pos":"neg"}">
+<td>
+${pct(x.market[x.pick])}
+</td>
 
-          <b>
-          ${x.win?"VINST":"FÖRLUST"}
-          </b>
+<td>
+${pct(x.edge)}
+</td>
 
-        </td>
+<td>
+${x.odds.toFixed(2)}
+</td>
 
-      </tr>
+<td>
+${pct(x.ev)}
+</td>
 
-    `)
+<td class="${x.win?"pos":"neg"}">
 
-  );
+<b>
+${x.win?"VINST":"FÖRLUST"}
+</b>
+
+</td>
+
+</tr>`
+
+)
+
+);
 
 }
+
 
 
 function renderInterpretation(main){
 
-  const oos=main.filter(x=>
-    SPLITS.oos.includes(x.season)
-  );
+const train=
 
-  const train=main.filter(x=>
-    SPLITS.train.includes(x.season)
-  );
+betStats(
 
-  const validation=main.filter(x=>
-    SPLITS.validation.includes(x.season)
-  );
+main.filter(
+x=>SPLITS.train.includes(
+x.season
+)
+)
 
-  const bt=betStats(train);
-  const bv=betStats(validation);
-  const bo=betStats(oos);
+);
 
-  $("interpretation").innerHTML=`
 
-  <div class="note">
+const validation=
 
-  <b>V14.1 är ett robusthetstest – inte en optimering.</b>
+betStats(
 
-  <p>
-  Huvudstrategin låstes före OOS:
-  <b>25 % AI / 75 % marknad · Edge 10–15 % · EV ≥7 %.</b>
-  </p>
+main.filter(
+x=>SPLITS.validation.includes(
+x.season
+)
+)
 
-  <p>
-  TRAIN:
-  <b>${bt.n} spel</b>,
-  ROI <b>${pct(bt.roi)}</b>
-  </p>
+);
 
-  <p>
-  VALIDATION:
-  <b>${bv.n} spel</b>,
-  ROI <b>${pct(bv.roi)}</b>
-  </p>
 
-  <p>
-  OUT-OF-SAMPLE:
-  <b>${bo.n} spel</b>,
-  ROI <b>${pct(bo.roi)}</b>
-  </p>
+const oos=
 
-  <hr>
+betStats(
 
-  <p>
-  OOS-resultatet är den viktigaste siffran eftersom
-  strategin inte valdes utifrån OOS-resultatet.
-  </p>
+main.filter(
+x=>SPLITS.oos.includes(
+x.season
+)
+)
 
-  <p>
-  Ett positivt OOS-resultat är fortfarande inte bevis på
-  framtida lönsamhet. Ett negativt OOS-resultat är däremot
-  en stark varningssignal mot att signalen är robust.
-  </p>
+);
 
-  </div>
 
-  `;
+$("interpretation").innerHTML=
+
+`
+
+<div class="note">
+
+<b>
+V14.2 är ett robusthetstest – inte en optimering.
+</b>
+
+
+<p>
+
+Huvudstrategin är låst före OOS:
+
+<b>
+25 % AI / 75 % marknad
+· Edge 10–15 %
+· EV ≥7 %.
+</b>
+
+</p>
+
+
+<p>
+
+Edge och EV avser nu
+
+<b>
+samma valda spelutfall
+</b>.
+
+</p>
+
+
+<p>
+
+TRAIN:
+
+<b>
+${train.n} spel
+</b>,
+
+ROI
+
+<b>
+${pct(train.roi)}
+</b>
+
+</p>
+
+
+<p>
+
+VALIDATION:
+
+<b>
+${validation.n} spel
+</b>,
+
+ROI
+
+<b>
+${pct(validation.roi)}
+</b>
+
+</p>
+
+
+<p>
+
+OUT-OF-SAMPLE:
+
+<b>
+${oos.n} spel
+</b>,
+
+ROI
+
+<b>
+${pct(oos.roi)}
+</b>
+
+</p>
+
+
+<hr>
+
+
+<p>
+
+OOS är den viktigaste kontrollen eftersom
+huvudstrategin inte väljs från OOS-resultatet.
+
+</p>
+
+
+<p>
+
+Även positiv OOS-ROI är inte ett bevis på
+framtida lönsamhet.
+
+Ett positivt resultat som håller över flera
+separata perioder är däremot betydligt mer
+intressant än ett resultat som bara finns
+i hela historiken.
+
+</p>
+
+</div>
+
+`;
 
 }
-
 
 </script>
 
