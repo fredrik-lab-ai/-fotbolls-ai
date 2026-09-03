@@ -4,7 +4,7 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width,initial-scale=1">
 
-<title>Fotbolls AI V15.1</title>
+<title>Fotbolls AI V15.2</title>
 
 <style>
 
@@ -61,7 +61,7 @@ box-sizing:border-box;
 padding:9px;
 margin-top:5px;
 border:1px solid #aaa;
-border-radius:3px;
+border-radius:4px;
 }
 
 table{
@@ -126,17 +126,16 @@ color:#666;
 </style>
 </head>
 
-
 <body>
 
-<h1>⚽ Fotbolls AI V15.1</h1>
+<h1>⚽ Fotbolls AI V15.2</h1>
 
 <p>
-Stabiliserad Poissonmodell · mål · hemma/borta · form · lagstyrka · walk-forward
+Robust Poissonmodell · mål · hemma/borta · shrinkage · form · lagstyrka · walk-forward
 </p>
 
 <button id="runButton">
-KÖR V15.1
+KÖR V15.2
 </button>
 
 
@@ -188,35 +187,32 @@ Min kombination
 
 </div>
 
-
 <div class="note">
 
-<b>V15.1:s huvudstrategi är låst:</b>
+<b>Huvudstrategi:</b>
 
-<br>
-
-25 % AI / 75 % marknad · EV ≥ 7 % · signal-edge 10–15 %.
+25 % AI / 75 % marknad · EV ≥ 7 % · Edge 10–15 %.
 
 <br><br>
 
-<b>Ny modell:</b>
+<b>V15.2:</b>
 
-AI:n använder riktiga mål, hemma/bortastatistik,
-viktad form, målskillnad och lagstyrka.
+Poissonmodell baserad på riktiga mål,
+hemma/bortastatistik, viktad form och lagstyrka.
 
 <br><br>
 
-Statistiken shrinkas mot ligasnittet för att
-förhindra extrema signaler från små stickprov.
+Statistiken shrinkas mot ligasnittet.
+
+<br><br>
+
+Alla sannolikheter valideras innan de används.
+Om en matematisk beräkning skulle ge NaN eller
+Infinity stoppas den direkt.
 
 <br><br>
 
 <b>Min träning = 150 tidigare matcher.</b>
-
-<br><br>
-
-Edge och EV beräknas på
-<b>samma faktiskt valda spelutfall</b>.
 
 </div>
 
@@ -238,9 +234,7 @@ Inte körd ännu.
 
 <h2>Datakontroll</h2>
 
-<div id="dataInfo">
-–
-</div>
+<div id="dataInfo">–</div>
 
 </div>
 
@@ -249,9 +243,7 @@ Inte körd ännu.
 
 <h2>Övergripande modellresultat</h2>
 
-<div id="overview">
-–
-</div>
+<div id="overview">–</div>
 
 </div>
 
@@ -260,9 +252,7 @@ Inte körd ännu.
 
 <h2>1. Huvudstrategi</h2>
 
-<div id="mainStrategy">
-–
-</div>
+<div id="mainStrategy">–</div>
 
 </div>
 
@@ -271,9 +261,7 @@ Inte körd ännu.
 
 <h2>2. Train / Validation / OOS</h2>
 
-<div id="splits">
-–
-</div>
+<div id="splits">–</div>
 
 </div>
 
@@ -282,9 +270,7 @@ Inte körd ännu.
 
 <h2>3. OOS per säsong</h2>
 
-<div id="oosSeason">
-–
-</div>
+<div id="oosSeason">–</div>
 
 </div>
 
@@ -293,9 +279,7 @@ Inte körd ännu.
 
 <h2>4. Edge × EV</h2>
 
-<div id="matrix">
-–
-</div>
+<div id="matrix">–</div>
 
 </div>
 
@@ -304,9 +288,7 @@ Inte körd ännu.
 
 <h2>5. Edge-zoner</h2>
 
-<div id="edgeZones">
-–
-</div>
+<div id="edgeZones">–</div>
 
 </div>
 
@@ -315,9 +297,7 @@ Inte körd ännu.
 
 <h2>6. EV-trösklar</h2>
 
-<div id="evZones">
-–
-</div>
+<div id="evZones">–</div>
 
 </div>
 
@@ -326,9 +306,7 @@ Inte körd ännu.
 
 <h2>7. Blend-test</h2>
 
-<div id="blendTable">
-–
-</div>
+<div id="blendTable">–</div>
 
 </div>
 
@@ -337,9 +315,7 @@ Inte körd ännu.
 
 <h2>8. AI-kalibrering</h2>
 
-<div id="calibration">
-–
-</div>
+<div id="calibration">–</div>
 
 </div>
 
@@ -348,9 +324,7 @@ Inte körd ännu.
 
 <h2>9. Poissonmodellens förväntade mål</h2>
 
-<div id="goalModel">
-–
-</div>
+<div id="goalModel">–</div>
 
 </div>
 
@@ -359,9 +333,7 @@ Inte körd ännu.
 
 <h2>10. Extrema signaler</h2>
 
-<div id="extremes">
-–
-</div>
+<div id="extremes">–</div>
 
 </div>
 
@@ -370,9 +342,7 @@ Inte körd ännu.
 
 <h2>11. Tolkning</h2>
 
-<div id="interpretation">
-–
-</div>
+<div id="interpretation">–</div>
 
 </div>
 
@@ -383,7 +353,7 @@ Inte körd ännu.
 
 
 /* =========================================================
-   V15.1
+   V15.2
 ========================================================= */
 
 
@@ -431,7 +401,7 @@ let PRED=[];
 
 
 /* =========================================================
-   HJÄLPFUNKTIONER
+   HJÄLP
 ========================================================= */
 
 
@@ -510,6 +480,41 @@ ${rows.join("")}
 
 
 /* =========================================================
+   SÄKRA TAL
+========================================================= */
+
+
+function safeNumber(
+value,
+fallback=0
+){
+
+return Number.isFinite(value)
+?
+value
+:
+fallback;
+
+}
+
+
+function validProbabilityArray(
+p
+){
+
+return Array.isArray(p) &&
+p.length===3 &&
+p.every(
+x=>
+Number.isFinite(x) &&
+x>=0 &&
+x<=1
+);
+
+}
+
+
+/* =========================================================
    CSV
 ========================================================= */
 
@@ -558,6 +563,7 @@ c==="," &&
 ){
 
 row.push(cell);
+
 cell="";
 
 }
@@ -684,8 +690,10 @@ String(value)
 
 
 return Number.isFinite(n)
-?n
-:null;
+?
+n
+:
+null;
 
 }
 
@@ -722,8 +730,10 @@ if(y<100){
 
 y+=
 y>=70
-?1900
-:2000;
+?
+1900
+:
+2000;
 
 }
 
@@ -758,7 +768,10 @@ return dt;
 ========================================================= */
 
 
-function normalizeMatch(row,season){
+function normalizeMatch(
+row,
+season
+){
 
 const home=
 row.HomeTeam ||
@@ -902,7 +915,9 @@ const odds of sources
 
 if(
 odds.every(
-x=>Number.isFinite(x) && x>1
+x=>
+Number.isFinite(x) &&
+x>1
 )
 ){
 
@@ -919,7 +934,7 @@ return null;
 
 
 /* =========================================================
-   MARKNADSPROBABILITET
+   MARKNAD
 ========================================================= */
 
 
@@ -933,7 +948,9 @@ return null;
 
 
 const inverse=
-odds.map(x=>1/x);
+odds.map(
+x=>1/x
+);
 
 
 const total=
@@ -943,13 +960,27 @@ inverse.reduce(
 );
 
 
-if(!total)
+if(
+!Number.isFinite(total) ||
+total<=0
+){
+
 return null;
 
+}
 
-return inverse.map(
+
+const result=
+inverse.map(
 x=>x/total
 );
+
+
+return validProbabilityArray(result)
+?
+result
+:
+null;
 
 }
 
@@ -961,12 +992,26 @@ x=>x/total
 
 function normalize(values){
 
+if(
+!Array.isArray(values) ||
+values.length!==3
+){
+
+throw new Error(
+"Ogiltig sannolikhetsvektor."
+);
+
+}
+
+
 const safe=
 values.map(
-x=>Math.max(
-0.000001,
-x
-)
+x=>
+Number.isFinite(x)
+?
+Math.max(0.000001,x)
+:
+0.000001
 );
 
 
@@ -977,9 +1022,36 @@ safe.reduce(
 );
 
 
-return safe.map(
+if(
+!Number.isFinite(total) ||
+total<=0
+){
+
+throw new Error(
+"Normalisering misslyckades."
+);
+
+}
+
+
+const result=
+safe.map(
 x=>x/total
 );
+
+
+if(
+!validProbabilityArray(result)
+){
+
+throw new Error(
+"Ogiltiga sannolikheter efter normalisering."
+);
+
+}
+
+
+return result;
 
 }
 
@@ -991,7 +1063,7 @@ x=>x/total
 
 function factorial(n){
 
-let r=1;
+let result=1;
 
 
 for(
@@ -1000,12 +1072,12 @@ i<=n;
 i++
 ){
 
-r*=i;
+result*=i;
 
 }
 
 
-return r;
+return result;
 
 }
 
@@ -1015,9 +1087,35 @@ goals,
 lambda
 ){
 
-return Math.exp(-lambda) *
-Math.pow(lambda,goals) /
+if(
+!Number.isFinite(lambda) ||
+lambda<=0
+){
+
+throw new Error(
+"Ogiltigt lambda-värde: "+
+lambda
+);
+
+}
+
+
+const p=
+Math.exp(-lambda)*
+Math.pow(lambda,goals)/
 factorial(goals);
+
+
+if(!Number.isFinite(p)){
+
+throw new Error(
+"Poisson gav ogiltigt värde."
+);
+
+}
+
+
+return p;
 
 }
 
@@ -1027,14 +1125,32 @@ homeLambda,
 awayLambda
 ){
 
+if(
+!Number.isFinite(homeLambda) ||
+!Number.isFinite(awayLambda) ||
+homeLambda<=0 ||
+awayLambda<=0
+){
+
+throw new Error(
+"Ogiltiga expected goals."
+);
+
+}
+
+
 let home=0;
 let draw=0;
 let away=0;
 
 
+/*
+9 mål räcker i praktiken.
+*/
+
 for(
 let hg=0;
-hg<=8;
+hg<=9;
 hg++
 ){
 
@@ -1047,7 +1163,7 @@ homeLambda
 
 for(
 let ag=0;
-ag<=8;
+ag<=9;
 ag++
 ){
 
@@ -1160,17 +1276,21 @@ team,
 n
 ){
 
-if(!team.form.length)
-return 1;
+if(
+!team.form.length
+){
+
+return 0.5;
+
+}
 
 
 const values=
 team.form.slice(-n);
 
 
-let weightedSum=0;
-
-let weightTotal=0;
+let sum=0;
+let weightSum=0;
 
 
 for(
@@ -1181,22 +1301,31 @@ i++
 
 const weight=i+1;
 
-
-weightedSum+=
+sum+=
 values[i]*weight;
 
-weightTotal+=weight;
+weightSum+=weight;
 
 }
 
 
-if(!weightTotal)
-return 1;
+if(!weightSum)
+return 0.5;
 
 
-return (
-weightedSum/weightTotal
+const result=
+(
+sum/weightSum
 )/3;
+
+
+return Math.max(
+0,
+Math.min(
+1,
+result
+)
+);
 
 }
 
@@ -1206,23 +1335,22 @@ weightedSum/weightTotal
 ========================================================= */
 
 
-/*
-Shrinkar hemma/borta-tal mot ligasnitt.
-
-Ju färre matcher laget spelat,
-desto mer dras siffran mot ligasnittet.
-
-Detta ska minska extrema signaler
-från små stickprov.
-*/
-
-
 function shrink(
 observed,
 sampleSize,
 leagueAverage,
 priorGames
 ){
+
+if(
+!Number.isFinite(observed) ||
+!Number.isFinite(leagueAverage)
+){
+
+return leagueAverage;
+
+}
+
 
 if(
 sampleSize<=0
@@ -1241,37 +1369,54 @@ priorGames
 );
 
 
-return
+const result=
 weight*observed+
 (1-weight)*leagueAverage;
+
+
+return Number.isFinite(result)
+?
+result
+:
+leagueAverage;
 
 }
 
 
 /* =========================================================
-   LAGSTYRKA
+   RATING
 ========================================================= */
 
 
 function updateRating(
 team,
-actualGoals,
-expectedGoals
+actual,
+expected
 ){
 
-const difference=
-actualGoals-expectedGoals;
+if(
+!Number.isFinite(actual) ||
+!Number.isFinite(expected)
+){
+
+return;
+
+}
 
 
-team.rating +=
-0.035*difference;
+const diff=
+actual-expected;
+
+
+team.rating+=
+0.025*diff;
 
 
 team.rating=
 Math.max(
--1.50,
+-1.25,
 Math.min(
-1.50,
+1.25,
 team.rating
 )
 );
@@ -1327,105 +1472,120 @@ state.leagueMatches
 
 
 /*
-Prior styr hur snabbt vi litar
-på hemma/bortastatistik.
+Säkerhetskontroll.
 */
 
-const prior=8;
+const LH=
+Number.isFinite(leagueHome) &&
+leagueHome>0
+
+?
+leagueHome
+:
+1.50;
+
+
+const LA=
+Number.isFinite(leagueAway) &&
+leagueAway>0
+
+?
+leagueAway
+:
+1.20;
 
 
 /*
-HEMMAANFALL
+Prior = 12 matcher.
+*/
+
+const prior=12;
+
+
+/*
+Hemma-anfall.
 */
 
 const rawHomeAttack=
 home.homeGames>0
 
 ?
-home.homeGF/
-home.homeGames
-
+home.homeGF/home.homeGames
 :
-leagueHome;
+LH;
 
 
 const homeAttack=
 shrink(
 rawHomeAttack,
 home.homeGames,
-leagueHome,
+LH,
 prior
 );
 
 
 /*
-HEMMAFÖRSVAR
+Hemmaförsvar.
 */
 
 const rawHomeDefence=
 home.homeGames>0
 
 ?
-home.homeGA/
-home.homeGames
-
+home.homeGA/home.homeGames
 :
-leagueAway;
+LA;
 
 
 const homeDefence=
 shrink(
 rawHomeDefence,
 home.homeGames,
-leagueAway,
+LA,
 prior
 );
 
 
 /*
-BORTAANFALL
+Bortaanfall.
 */
 
 const rawAwayAttack=
 away.awayGames>0
 
 ?
-away.awayGF/
-away.awayGames
-
+away.awayGF/away.awayGames
 :
-leagueAway;
+LA;
 
 
 const awayAttack=
 shrink(
 rawAwayAttack,
 away.awayGames,
-leagueAway,
+LA,
 prior
 );
 
 
 /*
-BORTAFÖRSVAR
+Bortaförsvar.
 */
 
 const rawAwayDefence=
 away.awayGames>0
 
 ?
-away.awayGA/
-away.awayGames
-
+away.awayGA/away.awayGames
 :
-leagueHome;
+LH;
 
 
 const awayDefence=
 shrink(
 rawAwayDefence,
 away.awayGames,
-leagueHome,
+LH,
 prior
 );
 
@@ -1437,69 +1597,64 @@ Attackstyrka.
 const homeAttackStrength=
 homeAttack/
 Math.max(
-0.5,
-leagueHome
+0.60,
+LH
 );
 
 
 const awayAttackStrength=
 awayAttack/
 Math.max(
-0.5,
-leagueAway
+0.60,
+LA
 );
 
 
 /*
 Försvarsstyrka.
-Lägre insläppta = bättre försvar.
 */
 
 const homeDefenceStrength=
-leagueAway/
+LA/
 Math.max(
-0.5,
+0.60,
 homeDefence
 );
 
 
 const awayDefenceStrength=
-leagueHome/
+LH/
 Math.max(
-0.5,
+0.60,
 awayDefence
 );
 
 
 /*
-Grundmodell.
+Grund.
 */
 
 let homeLambda=
-leagueHome*
+LH*
 homeAttackStrength*
 awayDefenceStrength;
 
 
 let awayLambda=
-leagueAway*
+LA*
 awayAttackStrength*
 homeDefenceStrength;
 
 
 /*
-HEMMAFÖRDEL.
-
-Fast och försiktig faktor.
+Hemmafördel.
 */
 
-homeLambda*=1.05;
+homeLambda*=1.04;
 
 
 /*
-FORM.
-
-Senaste matcher får större vikt.
+Form.
 */
 
 const homeForm=
@@ -1516,57 +1671,53 @@ away,
 );
 
 
-const formDifference=
+const formDiff=
 homeForm-awayForm;
 
 
 /*
-Form påverkar högst cirka 10 %.
+Mycket försiktig formpåverkan.
 */
 
 homeLambda*=
 1+
-0.08*formDifference;
+0.06*formDiff;
 
 
 awayLambda*=
 1-
-0.08*formDifference;
+0.06*formDiff;
 
 
 /*
-LAGSTYRKA.
-
-Även denna effekt är medvetet liten.
+Lagstyrka.
 */
 
-const ratingDifference=
+const ratingDiff=
 home.rating-away.rating;
 
 
 homeLambda*=
 Math.exp(
-0.06*ratingDifference
+0.04*ratingDiff
 );
 
 
 awayLambda*=
 Math.exp(
--0.06*ratingDifference
+-0.04*ratingDiff
 );
 
 
 /*
-Rimliga gränser.
-
-Betydligt mindre aggressiva än V15.
+Slutliga bounds.
 */
 
 homeLambda=
 Math.max(
-0.35,
+0.40,
 Math.min(
-3.20,
+2.90,
 homeLambda
 )
 );
@@ -1574,12 +1725,24 @@ homeLambda
 
 awayLambda=
 Math.max(
-0.25,
+0.30,
 Math.min(
-2.80,
+2.60,
 awayLambda
 )
 );
+
+
+if(
+!Number.isFinite(homeLambda) ||
+!Number.isFinite(awayLambda)
+){
+
+throw new Error(
+"V15.2: expected goals blev NaN."
+);
+
+}
 
 
 return {
@@ -1617,15 +1780,24 @@ goals.awayLambda
 );
 
 
+if(
+!validProbabilityArray(
+probabilities
+)
+){
+
+throw new Error(
+"V15.2: AI-sannolikhet ogiltig."
+);
+
+}
+
+
 return {
 
-probabilities:
-
 probabilities,
-
 homeLambda:
 goals.homeLambda,
-
 awayLambda:
 goals.awayLambda
 
@@ -1635,7 +1807,7 @@ goals.awayLambda
 
 
 /* =========================================================
-   STATE UPDATE
+   UPDATE
 ========================================================= */
 
 
@@ -1659,8 +1831,7 @@ match.away
 
 
 /*
-Förväntade mål räknas ut före
-den aktuella matchen uppdaterar state.
+Expected före resultatet.
 */
 
 const expected=
@@ -1745,14 +1916,12 @@ hp=3;
 ap=0;
 
 }
-
 else if(match.result==="D"){
 
 hp=1;
 ap=1;
 
 }
-
 else{
 
 hp=0;
@@ -1774,7 +1943,7 @@ away.form.shift();
 
 
 /*
-Ligadata.
+League.
 */
 
 state.leagueMatches++;
@@ -1799,8 +1968,22 @@ history,
 windowSize
 ){
 
-if(history.length<50)
+if(
+!validProbabilityArray(raw)
+){
+
+throw new Error(
+"Kalibrering fick ogiltig AI."
+);
+
+}
+
+
+if(history.length<50){
+
 return raw.slice();
+
+}
 
 
 const hist=
@@ -1818,8 +2001,8 @@ let bestLoss=Infinity;
 
 
 for(
-let t=0.70;
-t<=1.50;
+let t=0.75;
+t<=1.35;
 t+=0.025
 ){
 
@@ -1829,6 +2012,15 @@ let loss=0;
 for(
 const item of hist
 ){
+
+if(
+!validProbabilityArray(item.raw)
+){
+
+continue;
+
+}
+
 
 const p=
 normalize(
@@ -1845,7 +2037,7 @@ x
 );
 
 
-loss -=
+loss-=
 Math.log(
 Math.max(
 0.000001,
@@ -1856,7 +2048,10 @@ p[item.result]
 }
 
 
-if(loss<bestLoss){
+if(
+Number.isFinite(loss) &&
+loss<bestLoss
+){
 
 bestLoss=loss;
 bestT=t;
@@ -1866,8 +2061,8 @@ bestT=t;
 }
 
 
-return normalize(
-
+const result=
+normalize(
 raw.map(
 x=>
 Math.pow(
@@ -1878,8 +2073,10 @@ x
 1/bestT
 )
 )
-
 );
+
+
+return result;
 
 }
 
@@ -1895,15 +2092,29 @@ market,
 aiWeight
 ){
 
-return normalize(
+if(
+!validProbabilityArray(ai) ||
+!validProbabilityArray(market)
+){
 
+throw new Error(
+"Blend fick ogiltiga sannolikheter."
+);
+
+}
+
+
+const result=
+normalize(
 ai.map(
 (x,i)=>
 aiWeight*x+
 (1-aiWeight)*market[i]
 )
-
 );
+
+
+return result;
 
 }
 
@@ -1920,9 +2131,8 @@ aiWeight
 
 if(
 !prediction ||
-!prediction.ai ||
-!prediction.market ||
-!prediction.odds
+!validProbabilityArray(prediction.ai) ||
+!validProbabilityArray(prediction.market)
 ){
 
 return null;
@@ -1973,37 +2183,38 @@ return null;
 }
 
 
-/*
-VIKTIGT:
-
-Edge och EV gäller exakt samma
-utfall som valdes av blenden.
-*/
-
 const edge=
 prediction.ai[pick]-
 prediction.market[pick];
 
 
 const ev=
-probs[pick]*
-odds-
-1;
+probs[pick]*odds-1;
+
+
+if(
+!Number.isFinite(edge) ||
+!Number.isFinite(ev)
+){
+
+return null;
+
+}
 
 
 return {
 
 ...prediction,
 
-probs:probs,
+probs,
 
-pick:pick,
+pick,
 
-odds:odds,
+odds,
 
-edge:edge,
+edge,
 
-ev:ev,
+ev,
 
 win:
 pick===prediction.resultIndex
@@ -2038,13 +2249,8 @@ if(!signal)
 return null;
 
 
-if(
-signal.edge<edgeMin
-){
-
+if(signal.edge<edgeMin)
 return null;
-
-}
 
 
 if(
@@ -2057,22 +2263,12 @@ return null;
 }
 
 
-if(
-signal.ev<evMin
-){
-
+if(signal.ev<evMin)
 return null;
 
-}
 
-
-if(
-signal.odds>maxOdds
-){
-
+if(signal.odds>maxOdds)
 return null;
-
-}
 
 
 return signal;
@@ -2106,11 +2302,8 @@ drawdown:0
 
 
 let wins=0;
-
 let profit=0;
-
 let peak=0;
-
 let drawdown=0;
 
 
@@ -2150,15 +2343,15 @@ return {
 
 n:bets.length,
 
-wins:wins,
+wins,
 
 hit:wins/bets.length,
 
 roi:profit/bets.length,
 
-profit:profit,
+profit,
 
-drawdown:drawdown
+drawdown
 
 };
 
@@ -2189,9 +2382,7 @@ logLoss:0
 
 
 let correct=0;
-
 let brier=0;
-
 let logLoss=0;
 
 
@@ -2216,8 +2407,10 @@ k++
 
 const target=
 p.resultIndex===k
-?1
-:0;
+?
+1
+:
+0;
 
 
 brier+=
@@ -2259,7 +2452,7 @@ logLoss/predictions.length
 
 
 /* =========================================================
-   LOAD
+   LOAD SEASON
 ========================================================= */
 
 
@@ -2267,15 +2460,13 @@ async function loadSeason(
 season
 ){
 
-const url=
+const response=
+await fetch(
 "data/"+
 season+
 ".csv?cache="+
-Date.now();
-
-
-const response=
-await fetch(url);
+Date.now()
+);
 
 
 if(!response.ok){
@@ -2301,9 +2492,9 @@ const matches=
 rows
 
 .map(
-row=>
+r=>
 normalizeMatch(
-row,
+r,
 season
 )
 )
@@ -2318,11 +2509,9 @@ a.date-b.date
 
 return {
 
-season:season,
-
+season,
 rows:rows.length,
-
-matches:matches
+matches
 
 };
 
@@ -2330,7 +2519,7 @@ matches:matches
 
 
 /* =========================================================
-   KÖR
+   RUN
 ========================================================= */
 
 
@@ -2369,12 +2558,9 @@ console.error(error);
 
 loaded.push({
 
-season:season,
-
+season,
 rows:0,
-
 matches:[],
-
 error:error.message
 
 });
@@ -2409,14 +2595,14 @@ loaded
 if(!MATCHES.length){
 
 throw new Error(
-"Inga giltiga matcher hittades."
+"Inga giltiga matcher."
 );
 
 }
 
 
 status.innerHTML=
-"Data laddad. Kör V15.1 walk-forward…";
+"Data laddad. Kör V15.2…";
 
 
 const state=
@@ -2448,7 +2634,7 @@ const match of MATCHES
 ){
 
 /*
-PREDIKTION FÖRE RESULTAT.
+Prediction före resultat.
 */
 
 if(
@@ -2471,10 +2657,7 @@ calWindow
 
 
 const market=
-marketProbability(
-match
-);
-
+marketProbability(match);
 
 const odds=
 getOdds(match);
@@ -2484,6 +2667,17 @@ if(
 market &&
 odds
 ){
+
+if(
+!validProbabilityArray(calibrated)
+){
+
+throw new Error(
+"V15.2: ogiltig kalibrerad AI."
+);
+
+}
+
 
 PRED.push({
 
@@ -2545,7 +2739,7 @@ match.result
 
 
 /*
-UPPDATERA EFTER MATCHEN.
+Uppdatera först efter matchen.
 */
 
 updateState(
@@ -2600,7 +2794,7 @@ tidigare matcher som träning.
 
 
 /* =========================================================
-   DATAKONTROLL
+   DATA
 ========================================================= */
 
 
@@ -2632,15 +2826,19 @@ x=>`
 
 <td class="${
 x.matches.length
-?"pos"
-:"neg"
+?
+"pos"
+:
+"neg"
 }">
 
 <b>
 ${
 x.matches.length
-?"OK"
-:"FEL"
+?
+"OK"
+:
+"FEL"
 }
 </b>
 
@@ -2799,8 +2997,10 @@ el("overview").innerHTML=
 <span>ROI</span>
 <b class="${
 mainStats.roi>=0
-?"pos"
-:"neg"
+?
+"pos"
+:
+"neg"
 }">
 ${pct(mainStats.roi)}
 </b>
@@ -2818,18 +3018,8 @@ ${pct(mainStats.roi)}
 
 </div>
 
-<div class="note">
-
-<b>V15.1 är en modellförbättring – inte en bettingoptimering.</b>
-
-<br><br>
-
-Poissonmodellen använder riktiga mål,
-hemma/bortastatistik och shrinkage mot ligasnittet.
-
-</div>
-
 `;
+
 
 
 el("mainStrategy").innerHTML=
@@ -2875,8 +3065,10 @@ makeTable(
 
 <td class="${
 mainStats.roi>=0
-?"pos"
-:"neg"
+?
+"pos"
+:
+"neg"
 }">
 
 <b>
@@ -2978,8 +3170,10 @@ return `
 
 <td class="${
 stats.roi>=0
-?"pos"
-:"neg"
+?
+"pos"
+:
+"neg"
 }">
 
 <b>
@@ -3049,17 +3243,16 @@ return `
 <tr>
 
 <td>${season}</td>
-
 <td>${stats.n}</td>
-
 <td>${stats.wins}</td>
-
 <td>${pct(stats.hit)}</td>
 
 <td class="${
 stats.roi>=0
-?"pos"
-:"neg"
+?
+"pos"
+:
+"neg"
 }">
 
 <b>
@@ -3069,7 +3262,6 @@ ${pct(stats.roi)}
 </td>
 
 <td>${money(stats.profit)}</td>
-
 <td>${money(stats.drawdown)}</td>
 
 </tr>
@@ -3120,13 +3312,11 @@ const edges=[
 
 
 const evs=[
-
 0.03,
 0.05,
 0.07,
 0.10,
 0.15
-
 ];
 
 
@@ -3194,8 +3384,10 @@ return `
 
 <td class="${
 stats.roi>=0
-?"pos"
-:"neg"
+?
+"pos"
+:
+"neg"
 }">
 
 <b>
@@ -3240,9 +3432,6 @@ el("matrix").innerHTML=
 
 25/75-blend · max odds 6.0.
 
-Endast kombinationer med minst
-${minCombo} spel visas.
-
 </p>
 
 `
@@ -3268,7 +3457,7 @@ rows
 
 
 /* =========================================================
-   EDGE
+   EDGE ZONES
 ========================================================= */
 
 
@@ -3323,8 +3512,10 @@ return `
 
 <td class="${
 stats.roi>=0
-?"pos"
-:"neg"
+?
+"pos"
+:
+"neg"
 }">
 
 <b>
@@ -3412,18 +3603,20 @@ return `
 
 <tr>
 
-<td>EV ≥${Math.round(t*100)}%</td>
+<td>
+EV ≥${Math.round(t*100)}%
+</td>
 
 <td>${stats.n}</td>
-
 <td>${stats.wins}</td>
-
 <td>${pct(stats.hit)}</td>
 
 <td class="${
 stats.roi>=0
-?"pos"
-:"neg"
+?
+"pos"
+:
+"neg"
 }">
 
 <b>
@@ -3433,7 +3626,6 @@ ${pct(stats.roi)}
 </td>
 
 <td>${money(stats.profit)}</td>
-
 <td>${money(stats.drawdown)}</td>
 
 </tr>
@@ -3514,15 +3706,15 @@ return `
 <td>${Math.round((1-weight)*100)}%</td>
 
 <td>${stats.n}</td>
-
 <td>${stats.wins}</td>
-
 <td>${pct(stats.hit)}</td>
 
 <td class="${
 stats.roi>=0
-?"pos"
-:"neg"
+?
+"pos"
+:
+"neg"
 }">
 
 <b>
@@ -3532,7 +3724,6 @@ ${pct(stats.roi)}
 </td>
 
 <td>${money(stats.profit)}</td>
-
 <td>${money(stats.drawdown)}</td>
 
 </tr>
@@ -3651,19 +3842,6 @@ ${Math.round(high*100)}%
 
 el("calibration").innerHTML=
 
-`
-
-<p class="small">
-
-AI:s sannolikhet jämförs med hur ofta
-AI:s val faktiskt vann.
-
-</p>
-
-`
-
-+
-
 makeTable(
 
 [
@@ -3680,7 +3858,7 @@ rows
 
 
 /* =========================================================
-   MÅLMODELL
+   GOAL MODEL
 ========================================================= */
 
 
@@ -3767,7 +3945,7 @@ el("goalModel").innerHTML=
 <div class="metric">
 
 <span>
-Snitt förväntade hemmamål
+Snitt hemma
 </span>
 
 <b>
@@ -3779,7 +3957,7 @@ ${avgHome.toFixed(2)}
 <div class="metric">
 
 <span>
-Snitt förväntade bortamål
+Snitt borta
 </span>
 
 <b>
@@ -3874,14 +4052,18 @@ ${pct(s.ev)}
 
 <td class="${
 s.win
-?"pos"
-:"neg"
+?
+"pos"
+:
+"neg"
 }">
 
 <b>
 ${s.win
-?"VINST"
-:"FÖRLUST"}
+?
+"VINST"
+:
+"FÖRLUST"}
 </b>
 
 </td>
@@ -3953,32 +4135,30 @@ el("interpretation").innerHTML=
 
 <div class="note">
 
-<h3>V15.1 – vad vi testar</h3>
+<h3>V15.2</h3>
 
 
 <p>
 
-V15.1 har samma grundprincip som V15,
-men statistiken är stabiliserad med
-<b>shrinkage mot ligasnittet</b>.
+V15.2 är framför allt en robusthetsversion.
+Vi har inte ändrat bettingstrategin för att
+försöka förbättra historisk ROI.
 
 </p>
 
 
 <p>
 
-Det gör att ett lag inte lika lätt får
-extrema förväntade mål efter bara några
-få hemma- eller bortamatcher.
+Shrinkage gör att små stickprov får mindre
+inflytande och drar statistik mot ligasnittet.
 
 </p>
 
 
 <p>
 
-Formen viktas mot de senaste matcherna
-och lagstyrkan uppdateras efter varje
-spelad match.
+Förväntade mål begränsas till rimliga nivåer
+och alla sannolikhetsvektorer kontrolleras.
 
 </p>
 
@@ -3991,9 +4171,7 @@ spelad match.
 <b>TRAIN</b><br>
 
 ${train.n} spel ·
-
 ROI ${pct(train.roi)} ·
-
 Profit ${money(train.profit)}
 
 </p>
@@ -4004,9 +4182,7 @@ Profit ${money(train.profit)}
 <b>VALIDATION</b><br>
 
 ${validation.n} spel ·
-
 ROI ${pct(validation.roi)} ·
-
 Profit ${money(validation.profit)}
 
 </p>
@@ -4014,12 +4190,10 @@ Profit ${money(validation.profit)}
 
 <p>
 
-<b>OUT-OF-SAMPLE</b><br>
+<b>OOS</b><br>
 
 ${oos.n} spel ·
-
 ROI ${pct(oos.roi)} ·
-
 Profit ${money(oos.profit)}
 
 </p>
@@ -4030,26 +4204,19 @@ Profit ${money(oos.profit)}
 
 <p>
 
-<b>OOS är det viktigaste testet.</b>
+<b>
+OOS ska inte användas för att välja parametrar.
+</b>
 
 </p>
 
 
 <p>
 
-Vi ska inte välja parametrar efter OOS-resultatet.
-OOS används som ett riktigt sluttest.
-
-</p>
-
-
-<p>
-
-Om V15.1 ger bättre kalibrering och mer
-stabila signaler utan att bettingresultatet
-förbättras, är det fortfarande ett viktigt
-resultat: då vet vi att problemet inte bara
-var överkonfidens.
+Det viktigaste efter körningen är om
+sannolikheterna är stabila, om extrema
+signaler minskar och om eventuell edge
+överlever Validation och OOS.
 
 </p>
 
@@ -4111,7 +4278,7 @@ finally{
 button.disabled=false;
 
 button.textContent=
-"KÖR V15.1";
+"KÖR V15.2";
 
 }
 
